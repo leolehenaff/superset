@@ -9,7 +9,13 @@ import { toast } from "@superset/ui/sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { memo, useEffect, useState } from "react";
-import { LuGitBranch, LuMonitor, LuTimer, LuX } from "react-icons/lu";
+import {
+	LuGitBranch,
+	LuMonitor,
+	LuNetwork,
+	LuTimer,
+	LuX,
+} from "react-icons/lu";
 import {
 	getPresetIcon,
 	useIsDarkTheme,
@@ -182,6 +188,13 @@ export const AgentSessionCard = memo(function AgentSessionCard({
 								? ` · ${formatModel(session.model, session.effort)}`
 								: null}
 						</span>
+						{session.subagentCount > 0 ? (
+							<span className="flex shrink-0 items-center gap-1 rounded-full bg-foreground/10 px-1.5 py-px tabular-nums text-foreground/80">
+								<LuNetwork className="size-3" />
+								{session.subagentCount} sous-agent
+								{session.subagentCount > 1 ? "s" : null}
+							</span>
+						) : null}
 						{session.messageCount !== null ? (
 							<span className="ml-auto whitespace-nowrap tabular-nums">
 								{session.messageCount} messages
