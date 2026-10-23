@@ -190,6 +190,7 @@ export function useAgentSessions(): {
 						lastEventType: binding.lastEventType,
 						lastEventAt: binding.lastEventAt,
 						lastSeenAt: terminalSeenAt[binding.terminalId],
+						hasLiveSubagents: (binding.subagents?.length ?? 0) > 0,
 					}),
 					lastEventAt: binding.lastEventAt,
 					subagentCount: binding.subagents?.length ?? 0,

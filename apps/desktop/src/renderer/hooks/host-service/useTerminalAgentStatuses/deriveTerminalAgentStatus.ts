@@ -10,12 +10,17 @@ export function deriveTerminalAgentStatus({
 	lastEventType,
 	lastEventAt,
 	lastSeenAt,
+	hasLiveSubagents = false,
 }: {
 	lastEventType: string;
 	lastEventAt: number;
 	lastSeenAt: number | undefined;
+	hasLiveSubagents?: boolean;
 }): PaneStatus {
 	const status = agentStatusFromEvent(lastEventType);
+	if (hasLiveSubagents && (status === null || status === "review")) {
+		return "working";
+	}
 	if (status === "review") {
 		return lastEventAt > (lastSeenAt ?? 0) ? "review" : "idle";
 	}

@@ -81,4 +81,15 @@ describe("deriveTerminalAgentStatus", () => {
 			}),
 		).toBe("idle");
 	});
+
+	it("keeps a stopped parent working while a subagent is live", () => {
+		expect(
+			deriveTerminalAgentStatus({
+				lastEventType: "Stop",
+				lastEventAt: 100,
+				lastSeenAt: 200,
+				hasLiveSubagents: true,
+			}),
+		).toBe("working");
+	});
 });

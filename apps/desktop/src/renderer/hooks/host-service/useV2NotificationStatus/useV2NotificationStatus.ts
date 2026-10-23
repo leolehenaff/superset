@@ -99,6 +99,7 @@ export function useV2AttentionWorkspaceCount(): number {
 					lastEventType: binding.lastEventType,
 					lastEventAt: binding.lastEventAt,
 					lastSeenAt: terminalSeenAt[binding.terminalId],
+					hasLiveSubagents: (binding.subagents?.length ?? 0) > 0,
 				});
 				if (
 					status === "permission" ||

@@ -693,6 +693,7 @@ export function useAccessibleV2Workspaces(
 					lastEventType: binding.lastEventType,
 					lastEventAt: binding.lastEventAt,
 					lastSeenAt: terminalSeenAt[binding.terminalId],
+					hasLiveSubagents: (binding.subagents?.length ?? 0) > 0,
 				});
 				const prev = byWorkspace.get(binding.workspaceId) ?? {
 					status: "idle" as PaneStatus,
