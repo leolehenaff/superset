@@ -1,13 +1,15 @@
 import { msg } from "@lingui/core/macro";
 import { i18n } from "@superset/i18n";
-import { dialog } from "electron";
+import { BrowserWindow, dialog } from "electron";
 import { quitAppCompletely } from "main/index";
 import { getAppDisplayName } from "./app-display-name";
 
 export async function confirmAndQuitCompletely(): Promise<void> {
 	const displayName = getAppDisplayName();
 	try {
-		const { response } = await dialog.showMessageBox({
+		const parent =
+			BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+		const options: Electron.MessageBoxOptions = {
 			type: "warning",
 			buttons: [
 				i18n._(
@@ -34,7 +36,10 @@ export async function confirmAndQuitCompletely(): Promise<void> {
 					message: `All open terminal sessions will be killed and any running host-services will be stopped. Use “Close ${displayName}” instead if you want services to keep running for the next launch.`,
 				}),
 			),
-		});
+		};
+		const { response } = parent
+			? await dialog.showMessageBox(parent, options)
+			: await dialog.showMessageBox(options);
 		if (response === 0) {
 			quitAppCompletely();
 		}

@@ -12,14 +12,11 @@ import { cn } from "@superset/ui/utils";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { useFeatureFlagEnabled } from "posthog-js/react";
 import { useRef } from "react";
-import { GoGitPullRequest } from "react-icons/go";
-import { HiOutlineClipboardDocumentList } from "react-icons/hi2";
 import {
+	LuBot,
 	LuClock,
 	LuCloud,
-	LuFileText,
 	LuGauge,
-	LuLayers,
 	LuPlus,
 	LuPuzzle,
 	LuSearch,
@@ -57,14 +54,6 @@ import {
 } from "renderer/routes/_authenticated/_dashboard/components/WindowChrome";
 import { useFailedAutomations } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
 import { useShowsAppTopBar } from "renderer/routes/_authenticated/_dashboard/hooks/useShowsAppTopBar";
-import {
-	pullRequestsSearchFromFilters,
-	usePullRequestsFilterStore,
-} from "renderer/routes/_authenticated/_dashboard/pull-requests/stores/pullRequestsFilterStore";
-import {
-	tasksSearchFromFilters,
-	useTasksFilterStore,
-} from "renderer/routes/_authenticated/_dashboard/tasks/stores/tasks-filter-state";
 import { useHostWorkspaces } from "renderer/routes/_authenticated/providers/HostWorkspacesProvider";
 import {
 	getUsageLastSection,
@@ -153,7 +142,7 @@ export function DashboardSidebarHeader({
 	const zoomFactor = useZoomFactor();
 	const matchRoute = useMatchRoute();
 	const { gateFeature, hasAccess } = usePaywall();
-	const isWorkspacesListOpen = !!matchRoute({ to: "/v2-workspaces" });
+	const isAgentsOpen = !!matchRoute({ to: "/agents" });
 	const isCloudWorkspacesOpen = !!matchRoute({
 		to: "/cloud-workspaces",
 		fuzzy: true,
@@ -176,14 +165,8 @@ export function DashboardSidebarHeader({
 					(workspace) => workspace.id === v2WorkspaceMatch.workspaceId,
 				)?.projectId ?? undefined)
 			: undefined;
-	const isTasksOpen = !!matchRoute({ to: "/tasks", fuzzy: true });
-	const isPullRequestsOpen = !!matchRoute({
-		to: "/pull-requests",
-		fuzzy: true,
-	});
 	const isAutomationsOpen = !!matchRoute({ to: "/automations", fuzzy: true });
 	const isPluginsOpen = !!matchRoute({ to: "/plugins", fuzzy: true });
-	const isPagesOpen = !!matchRoute({ to: "/pages", fuzzy: true });
 	// `?? false`: the hook returns undefined until PostHog flags resolve.
 	// Dev builds bypass the flag — the local dev account isn't in the
 	// @superset.sh release condition.
@@ -193,26 +176,8 @@ export function DashboardSidebarHeader({
 	const cloudUtils = cloudTrpc.useUtils();
 	const { myFailedCount } = useFailedAutomations();
 
-	const {
-		tab: lastTab,
-		assignee: lastAssignee,
-		label: lastLabel,
-		search: lastSearch,
-		typeTab: lastTypeTab,
-		projectFilters: lastProjectFilters,
-		includeClosedIssues: lastIncludeClosedIssues,
-	} = useTasksFilterStore();
-	const {
-		search: lastPullRequestsSearch,
-		projectFilters: lastPullRequestsProjectFilters,
-		authorFilter: lastPullRequestsAuthorFilter,
-		reviewFilter: lastPullRequestsReviewFilter,
-		includeClosed: lastPullRequestsIncludeClosed,
-		mergedOnly: lastPullRequestsMergedOnly,
-	} = usePullRequestsFilterStore();
-
-	const handleWorkspacesClick = () => {
-		navigate({ to: "/v2-workspaces" });
+	const handleAgentsClick = () => {
+		navigate({ to: "/agents" });
 	};
 
 	const handleCloudWorkspacesClick = () => {
@@ -253,46 +218,11 @@ export function DashboardSidebarHeader({
 		});
 	};
 
-	const handleTasksClick = () => {
-		gateFeature(GATED_FEATURES.TASKS, () => {
-			navigate({
-				to: "/tasks",
-				search: tasksSearchFromFilters({
-					tab: lastTab,
-					assignee: lastAssignee,
-					label: lastLabel,
-					search: lastSearch,
-					typeTab: lastTypeTab,
-					projectFilters: lastProjectFilters,
-					includeClosedIssues: lastIncludeClosedIssues,
-				}),
-			});
-		});
-	};
-
 	const { data: isUsageInSidebarEnabled } =
 		electronTrpc.settings.getShowUsageInSidebar.useQuery();
 
-	const handlePagesClick = () => {
-		navigate({ to: "/pages" });
-	};
-
 	const handlePluginsClick = () => {
 		navigate({ to: "/plugins" });
-	};
-
-	const handlePullRequestsClick = () => {
-		navigate({
-			to: "/pull-requests",
-			search: pullRequestsSearchFromFilters({
-				search: lastPullRequestsSearch,
-				projectFilters: lastPullRequestsProjectFilters,
-				authorFilter: lastPullRequestsAuthorFilter,
-				reviewFilter: lastPullRequestsReviewFilter,
-				includeClosed: lastPullRequestsIncludeClosed,
-				mergedOnly: lastPullRequestsMergedOnly,
-			}),
-		});
 	};
 
 	const handleUsageClick = () => {
@@ -375,20 +305,19 @@ export function DashboardSidebarHeader({
 						<TooltipTrigger asChild>
 							<button
 								type="button"
-								onClick={handleWorkspacesClick}
+								onClick={handleAgentsClick}
+								aria-current={isAgentsOpen ? "page" : undefined}
 								className={cn(
 									"flex size-7 items-center justify-center rounded-md transition-colors",
-									isWorkspacesListOpen
+									isAgentsOpen
 										? "bg-fill-selected text-muted-foreground"
 										: "text-muted-foreground hover:bg-fill-hover",
 								)}
 							>
-								<LuLayers className="size-3.5" strokeWidth={1.5} />
+								<LuBot className="size-3.5" strokeWidth={1.5} />
 							</button>
 						</TooltipTrigger>
-						<TooltipContent side="right">
-							<Trans>Workspaces</Trans>
-						</TooltipContent>
+						<TooltipContent side="right">Agents</TooltipContent>
 					</Tooltip>
 
 					{showsCloudAndProjectsLinks && (
@@ -482,54 +411,6 @@ export function DashboardSidebarHeader({
 						</TooltipContent>
 					</Tooltip>
 
-					<Tooltip delayDuration={300}>
-						<TooltipTrigger asChild>
-							<button
-								type="button"
-								onClick={handleTasksClick}
-								aria-label={t({
-									message: "Tasks",
-								})}
-								aria-current={isTasksOpen ? "page" : undefined}
-								className={cn(
-									"flex size-7 items-center justify-center rounded-md transition-colors",
-									isTasksOpen
-										? "bg-fill-selected text-muted-foreground"
-										: "text-muted-foreground hover:bg-fill-hover",
-								)}
-							>
-								<HiOutlineClipboardDocumentList className="size-3.5" />
-							</button>
-						</TooltipTrigger>
-						<TooltipContent side="right">
-							<Trans>Tasks</Trans>
-						</TooltipContent>
-					</Tooltip>
-
-					<Tooltip delayDuration={300}>
-						<TooltipTrigger asChild>
-							<button
-								type="button"
-								onClick={handlePullRequestsClick}
-								aria-label={t({
-									message: "Pull requests",
-								})}
-								aria-current={isPullRequestsOpen ? "page" : undefined}
-								className={cn(
-									"flex size-7 items-center justify-center rounded-md transition-colors",
-									isPullRequestsOpen
-										? "bg-fill-selected text-muted-foreground"
-										: "text-muted-foreground hover:bg-fill-hover",
-								)}
-							>
-								<GoGitPullRequest className="size-3.5" />
-							</button>
-						</TooltipTrigger>
-						<TooltipContent side="right">
-							<Trans>Pull requests</Trans>
-						</TooltipContent>
-					</Tooltip>
-
 					{isUsageInSidebarEnabled && (
 						<Tooltip delayDuration={300}>
 							<TooltipTrigger asChild>
@@ -549,30 +430,6 @@ export function DashboardSidebarHeader({
 							</TooltipContent>
 						</Tooltip>
 					)}
-
-					<Tooltip delayDuration={300}>
-						<TooltipTrigger asChild>
-							<button
-								type="button"
-								onClick={handlePagesClick}
-								aria-label={t({
-									message: "Pages",
-								})}
-								aria-current={isPagesOpen ? "page" : undefined}
-								className={cn(
-									"flex size-7 items-center justify-center rounded-md transition-colors",
-									isPagesOpen
-										? "bg-fill-selected text-muted-foreground"
-										: "text-muted-foreground hover:bg-fill-hover",
-								)}
-							>
-								<LuFileText className="size-3.5" strokeWidth={1.5} />
-							</button>
-						</TooltipTrigger>
-						<TooltipContent side="right">
-							<Trans>Pages</Trans>
-						</TooltipContent>
-					</Tooltip>
 
 					{isPluginsEnabled && (
 						<Tooltip delayDuration={300}>
@@ -733,21 +590,20 @@ export function DashboardSidebarHeader({
 
 			<button
 				type="button"
-				onClick={handleWorkspacesClick}
+				onClick={handleAgentsClick}
+				aria-current={isAgentsOpen ? "page" : undefined}
 				className={cn(
 					"flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium transition-colors",
-					isWorkspacesListOpen
+					isAgentsOpen
 						? "bg-fill-selected text-foreground"
 						: "text-muted-foreground hover:bg-fill-hover hover:text-foreground",
 				)}
 			>
-				<LuLayers
+				<LuBot
 					className="size-4 shrink-0 text-muted-foreground"
 					strokeWidth={1.5}
 				/>
-				<span className="flex-1 text-left">
-					<Trans>Workspaces</Trans>
-				</span>
+				<span className="flex-1 text-left">Agents</span>
 			</button>
 
 			{showsCloudAndProjectsLinks && (
@@ -824,46 +680,6 @@ export function DashboardSidebarHeader({
 				)}
 			</div>
 
-			<button
-				type="button"
-				onClick={handleTasksClick}
-				aria-label={t({
-					message: "Tasks",
-				})}
-				aria-current={isTasksOpen ? "page" : undefined}
-				className={cn(
-					"flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium transition-colors",
-					isTasksOpen
-						? "bg-fill-selected text-foreground"
-						: "text-muted-foreground hover:bg-fill-hover hover:text-foreground",
-				)}
-			>
-				<HiOutlineClipboardDocumentList className="size-4 shrink-0 text-muted-foreground" />
-				<span className="flex-1 text-left">
-					<Trans>Tasks</Trans>
-				</span>
-			</button>
-
-			<button
-				type="button"
-				onClick={handlePullRequestsClick}
-				aria-label={t({
-					message: "Pull requests",
-				})}
-				aria-current={isPullRequestsOpen ? "page" : undefined}
-				className={cn(
-					"flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium transition-colors",
-					isPullRequestsOpen
-						? "bg-fill-selected text-foreground"
-						: "text-muted-foreground hover:bg-fill-hover hover:text-foreground",
-				)}
-			>
-				<GoGitPullRequest className="size-4 shrink-0 text-muted-foreground" />
-				<span className="flex-1 text-left">
-					<Trans>Pull requests</Trans>
-				</span>
-			</button>
-
 			{isUsageInSidebarEnabled && (
 				<button
 					type="button"
@@ -882,29 +698,6 @@ export function DashboardSidebarHeader({
 					</span>
 				</button>
 			)}
-
-			<button
-				type="button"
-				onClick={handlePagesClick}
-				aria-label={t({
-					message: "Pages",
-				})}
-				aria-current={isPagesOpen ? "page" : undefined}
-				className={cn(
-					"flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium transition-colors",
-					isPagesOpen
-						? "bg-fill-selected text-foreground"
-						: "text-muted-foreground hover:bg-fill-hover hover:text-foreground",
-				)}
-			>
-				<LuFileText
-					className="size-4 shrink-0 text-muted-foreground"
-					strokeWidth={1.5}
-				/>
-				<span className="flex-1 text-left">
-					<Trans>Pages</Trans>
-				</span>
-			</button>
 
 			{isPluginsEnabled && (
 				<button

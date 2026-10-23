@@ -77,6 +77,7 @@ export const V2_WORKSPACES_SORT_MODES = [
 	"activity",
 	"created",
 	"churn",
+	"resources",
 	"name",
 ] as const;
 export type V2WorkspacesSortMode = (typeof V2_WORKSPACES_SORT_MODES)[number];
@@ -94,6 +95,7 @@ export const V2_WORKSPACES_SORT_LABELS: Record<
 	churn: msg({
 		message: "Diff size",
 	}),
+	resources: msg({ message: "Resources" }),
 	name: msg({ message: "Name" }),
 };
 
@@ -201,10 +203,12 @@ export const useV2WorkspacesFilterStore = create<V2WorkspacesFilterState>()(
 		}),
 		{
 			name: "v2-workspaces-view",
-			// Fixed-size singleton: only the list/board choice survives reloads.
-			// Filters and search stay per-visit (a `?view=` deep link still wins
-			// — the page hydrates URL params over the rehydrated value on mount).
-			partialize: (state) => ({ viewMode: state.viewMode }),
+			// Fixed-size singleton: the list/board and sort choices survive reloads.
+			// Filters and search stay per-visit.
+			partialize: (state) => ({
+				viewMode: state.viewMode,
+				sortMode: state.sortMode,
+			}),
 		},
 	),
 );

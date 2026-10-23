@@ -32,6 +32,11 @@ export function compareWorkspaces(
 		case "churn":
 			cmp = workspaceChurn(b) - workspaceChurn(a);
 			break;
+		case "resources":
+			cmp =
+				(b.resources?.memory ?? -1) - (a.resources?.memory ?? -1) ||
+				(b.resources?.cpu ?? -1) - (a.resources?.cpu ?? -1);
+			break;
 		case "name":
 			cmp = a.name.localeCompare(b.name);
 			break;

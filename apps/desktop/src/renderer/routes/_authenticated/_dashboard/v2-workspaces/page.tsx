@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useDeferredValue, useEffect, useRef } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef } from "react";
+import { useResourceSnapshot } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/hooks/useResourceSnapshot";
 import { V2WorkspacesBoard } from "./components/V2WorkspacesBoard";
 import { V2WorkspacesHeader } from "./components/V2WorkspacesHeader";
 import { V2WorkspacesList } from "./components/V2WorkspacesList";
@@ -228,7 +229,25 @@ function V2WorkspacesPage() {
 	// deferred values flip in the same background render, whereas a sync
 	// isReady=true against still-empty deferred rows would flash the empty
 	// state while the first rows are being rendered.
-	const deferredWorkspaces = useDeferredValue(all);
+	const { snapshot } = useResourceSnapshot("v2");
+	const withResources = useMemo(() => {
+		const byId = new Map(
+			(snapshot?.workspaces ?? []).map((metrics) => [
+				metrics.workspaceId,
+				metrics,
+			]),
+		);
+		return all.map((workspace) => {
+			const metrics = byId.get(workspace.id);
+			return metrics
+				? {
+						...workspace,
+						resources: { cpu: metrics.cpu, memory: metrics.memory },
+					}
+				: workspace;
+		});
+	}, [all, snapshot]);
+	const deferredWorkspaces = useDeferredValue(withResources);
 	const deferredIsReady = useDeferredValue(isReady);
 
 	return (

@@ -42,7 +42,7 @@ const REPORTED_FILE_ID_WINDOW_BYTES = 1024 * 1024;
  * unauthenticated, so the file must name the session itself before it is
  * read into another agent's prompt.
  */
-function reportedSessionFile(
+export function reportedSessionFile(
 	reportedPath: string | null | undefined,
 	sessionId: string,
 ): string | null {

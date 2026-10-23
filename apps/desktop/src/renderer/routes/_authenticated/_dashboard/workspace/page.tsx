@@ -38,7 +38,7 @@ function WorkspaceIndexPage() {
 	// keyed only on isV2CloudEnabled so v1 query churn can't re-trigger it.
 	useEffect(() => {
 		if (isV2CloudEnabled) {
-			navigate({ to: "/new-workspace", replace: true });
+			navigate({ to: "/agents", replace: true });
 		}
 	}, [isV2CloudEnabled, navigate]);
 

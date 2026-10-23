@@ -17,6 +17,7 @@ import {
 	useSettingsOriginRoute,
 	useSettingsSearchQuery,
 } from "renderer/stores/settings-state";
+import { AppTabsBar } from "../_dashboard/components/AppTabsBar";
 import { WindowControlsInset } from "../_dashboard/components/WindowControlsInset";
 import { ContentBoundary } from "../components/ContentBoundary";
 import { SearchResultsBanner } from "./components/SearchResultsBanner";
@@ -201,34 +202,39 @@ function SettingsLayout() {
 	);
 
 	return (
-		<div className="flex h-screen w-screen bg-background">
-			{/* CommandPaletteHost (Cmd/Ctrl+K etc.) only mounts inside the
+		<div className="flex h-screen w-screen flex-col bg-background">
+			{isV2CloudEnabled && <AppTabsBar />}
+			<div className="flex min-h-0 flex-1">
+				{/* CommandPaletteHost (Cmd/Ctrl+K etc.) only mounts inside the
 			    _dashboard route tree; CHECK_RESOURCES needs its own mount here so
 			    the hotkey and native "Resources" menu item still work in Settings. */}
-			<CheckResourcesHotkeyMount />
-			<SettingsSidebar />
-			<div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-				<div className="flex h-12 shrink-0">
-					<div className="drag h-full min-w-0 flex-1" />
-					<WindowControlsInset />
-				</div>
-				<div ref={contentRef} className="flex-1 overflow-auto">
-					{isSearchActive && (
-						<SearchResultsBanner
-							query={normalizedSearchQuery}
-							matchCount={totalMatches}
-							onClear={() => setSearchQuery("")}
-						/>
+				<CheckResourcesHotkeyMount />
+				<SettingsSidebar />
+				<div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+					{!isV2CloudEnabled && (
+						<div className="flex h-12 shrink-0">
+							<div className="drag h-full min-w-0 flex-1" />
+							<WindowControlsInset />
+						</div>
 					)}
-					<ContentBoundary>
-						{usesFullWidthContent ? (
-							<Outlet />
-						) : (
-							<div className="mx-auto max-w-4xl">
-								<Outlet />
-							</div>
+					<div ref={contentRef} className="flex-1 overflow-auto">
+						{isSearchActive && (
+							<SearchResultsBanner
+								query={normalizedSearchQuery}
+								matchCount={totalMatches}
+								onClear={() => setSearchQuery("")}
+							/>
 						)}
-					</ContentBoundary>
+						<ContentBoundary>
+							{usesFullWidthContent ? (
+								<Outlet />
+							) : (
+								<div className="mx-auto max-w-4xl">
+									<Outlet />
+								</div>
+							)}
+						</ContentBoundary>
+					</div>
 				</div>
 			</div>
 		</div>

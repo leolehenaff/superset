@@ -49,7 +49,6 @@ import { DashboardSidebarHoverCardOverlay } from "./components/DashboardSidebarH
 import { DashboardSidebarPinnedSection } from "./components/DashboardSidebarPinnedSection";
 import { DashboardSidebarProjectSection } from "./components/DashboardSidebarProjectSection";
 import { DashboardSidebarSectionRenameProvider } from "./components/DashboardSidebarSectionRenameContext";
-import { DashboardSidebarSessionsSection } from "./components/DashboardSidebarSessionsSection";
 import { DashboardSidebarWorkspacesHeader } from "./components/DashboardSidebarWorkspacesHeader";
 import { useGettingStartedCard } from "./components/GettingStartedCard";
 import { useV2SetupScriptCard } from "./components/V2SetupScriptCard";
@@ -174,13 +173,7 @@ export const DashboardSidebar = memo(function DashboardSidebar({
 		refreshWorkspacePullRequest,
 		toggleProjectCollapsed,
 	} = useDashboardSidebarData({ inlineCloudWorkspaces });
-	const {
-		deleteSection,
-		reorderProjects,
-		renameSection,
-		setProjectHidden,
-		toggleSectionCollapsed,
-	} = useDashboardSidebarState();
+	const { reorderProjects, setProjectHidden } = useDashboardSidebarState();
 	const showHiddenProject = useCallback(
 		(projectId: string) => setProjectHidden(projectId, false),
 		[setProjectHidden],
@@ -254,15 +247,6 @@ export const DashboardSidebar = memo(function DashboardSidebar({
 						matchesHostFilter(workspace, hostFilter),
 					),
 		[pinnedWorkspaces, hostFilter],
-	);
-	const displayedSessionWorkspaces = useMemo(
-		() =>
-			hostFilter === "all"
-				? sessionWorkspaces
-				: sessionWorkspaces.filter((workspace) =>
-						matchesHostFilter(workspace, hostFilter),
-					),
-		[sessionWorkspaces, hostFilter],
 	);
 	const displayedGroups = useMemo(
 		() =>
@@ -525,15 +509,6 @@ export const DashboardSidebar = memo(function DashboardSidebar({
 													onWorkspaceHover={refreshWorkspacePullRequest}
 												/>
 											)}
-											<DashboardSidebarSessionsSection
-												sessionWorkspaces={displayedSessionWorkspaces}
-												isCollapsed={isCollapsed}
-												workspaceShortcutLabels={workspaceShortcutLabels}
-												onWorkspaceHover={refreshWorkspacePullRequest}
-												onDeleteSection={deleteSection}
-												onRenameSection={renameSection}
-												onToggleSectionCollapse={toggleSectionCollapsed}
-											/>
 											{!isCollapsed && (
 												<div className="mt-3 first:mt-0">
 													<DashboardSidebarBulkActions projects={orderedGroups}>

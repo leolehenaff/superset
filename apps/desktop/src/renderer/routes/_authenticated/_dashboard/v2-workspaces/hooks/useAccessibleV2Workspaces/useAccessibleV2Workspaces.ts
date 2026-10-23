@@ -98,6 +98,10 @@ export interface AccessibleV2Workspace {
 	lastAgentEventAt: number | null;
 	/** Working-tree + against-base churn; null until the host answers. */
 	diffStats: V2WorkspaceDiffStats | null;
+	/** Titles of the workspace's live terminal sessions (null title = untitled shell). */
+	terminalTitles: (string | null)[];
+	/** Live CPU (%) and memory (bytes) of the workspace's processes; null when nothing runs or not sampled. */
+	resources: { cpu: number; memory: number } | null;
 	/** Non-null = archived tombstone (soft-deleted workspace). */
 	archivedAt: number | null;
 	archiveReason: "merged" | "deleted" | null;
@@ -620,6 +624,38 @@ export function useAccessibleV2Workspaces(
 			},
 		})),
 	});
+	const terminalSessionQueries = useQueries({
+		queries: pullRequestQueryTargets.map((target) => ({
+			queryKey: [
+				"v2-workspaces",
+				"terminal-sessions",
+				target.organizationId,
+				target.machineId,
+			] as const,
+			refetchInterval: 10_000,
+			enabled: target.hostUrl !== null,
+			queryFn: async () => {
+				if (!target.hostUrl) return { sessions: [] };
+				const client = getHostServiceClientByUrl(target.hostUrl);
+				return client.terminal.list.query();
+			},
+		})),
+	});
+	const terminalTitleEntries = useMemo<[string, (string | null)[]][]>(() => {
+		const byWorkspace = new Map<string, (string | null)[]>();
+		for (const query of terminalSessionQueries) {
+			for (const session of query.data?.sessions ?? []) {
+				if (session.exited) continue;
+				const titles = byWorkspace.get(session.workspaceId) ?? [];
+				titles.push(session.title);
+				byWorkspace.set(session.workspaceId, titles);
+			}
+		}
+		return [...byWorkspace.entries()];
+	}, [terminalSessionQueries]);
+	const terminalTitlesByWorkspaceId =
+		useStableByWorkspaceId(terminalTitleEntries);
+
 	const diffStatsEntries = useMemo<[string, V2WorkspaceDiffStats][]>(() => {
 		const entries: [string, V2WorkspaceDiffStats][] = [];
 		for (const query of diffStatsQueries) {
@@ -720,6 +756,8 @@ export function useAccessibleV2Workspaces(
 				lastAgentEventAt:
 					agentActivityByWorkspaceId.get(row.id)?.lastEventAt ?? null,
 				diffStats: diffStatsByWorkspaceId.get(row.id) ?? null,
+				terminalTitles: terminalTitlesByWorkspaceId.get(row.id) ?? [],
+				resources: null,
 				archivedAt: row.archivedAt,
 				archiveReason: row.archiveReason,
 			});
@@ -734,6 +772,7 @@ export function useAccessibleV2Workspaces(
 		prByWorkspaceId,
 		agentActivityByWorkspaceId,
 		diffStatsByWorkspaceId,
+		terminalTitlesByWorkspaceId,
 	]);
 
 	const searchFiltered = useMemo(

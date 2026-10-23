@@ -315,7 +315,10 @@ app.on("before-quit", async (event) => {
 
 		try {
 			const displayName = getAppDisplayName();
-			const { response } = await dialog.showMessageBox({
+			// Without a parent the alert can open off-screen (fullscreen Space) and block every later quit.
+			const parent =
+				BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+			const options: Electron.MessageBoxOptions = {
 				type: "question",
 				buttons: [
 					i18n._(msg({ message: "Quit" })),
@@ -334,7 +337,10 @@ app.on("before-quit", async (event) => {
 						message: "Are you sure you want to quit?",
 					}),
 				),
-			});
+			};
+			const { response } = parent
+				? await dialog.showMessageBox(parent, options)
+				: await dialog.showMessageBox(options);
 
 			quitConfirmationOpen = false;
 			if (response === 1) {

@@ -5,13 +5,24 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
 import { cn } from "@superset/ui/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { memo } from "react";
-import { CgLaptop } from "react-icons/cg";
-import { LuLaptop, LuMonitor } from "react-icons/lu";
-import { WorkspaceNameMarquee } from "renderer/components/WorkspaceNameMarquee";
-import { useFocusVisible } from "renderer/hooks/useFocusVisible";
+import {
+	LuLaptop,
+	LuMonitor,
+	LuPlug,
+	LuSquareTerminal,
+	LuTrash2,
+} from "react-icons/lu";
 import { pullRequestRefFromUrl } from "renderer/lib/github/pullRequestRef";
+import { useDashboardSidebarWorkspacePorts } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/providers/DashboardSidebarPortsProvider";
+import type { UsageSeverity } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/types";
+import {
+	formatCpu,
+	formatMemory,
+} from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/utils/formatters";
+import { getUsageSeverity } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/utils/resourceSeverity";
 import { navigateToV2Workspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";
 import { V2WorkspaceContextMenu } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceContextMenu";
+import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
 import { WorkspaceStateGlyph } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceStateGlyph";
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
 import { workspaceActivityAt } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/sortWorkspaces";
@@ -30,6 +41,41 @@ function formatCount(count: number): string {
 	return `${(count / 1000).toFixed(1).replace(/\.0$/, "")}k`;
 }
 
+const MEMORY_METER_MAX = 4 * 1024 ** 3;
+
+const SEVERITY_BAR_CLASS: Record<UsageSeverity, string> = {
+	normal: "bg-emerald-500/70",
+	elevated: "bg-amber-500",
+	high: "bg-red-500",
+};
+
+function ResourceMeter({
+	label,
+	value,
+	fraction,
+	severity,
+}: {
+	label: string;
+	value: string;
+	fraction: number;
+	severity: UsageSeverity;
+}) {
+	return (
+		<div className="flex items-center gap-2 text-[11px] tabular-nums">
+			<span className="w-7 shrink-0 text-muted-foreground/70">{label}</span>
+			<div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+				<div
+					className={cn("h-full rounded-full", SEVERITY_BAR_CLASS[severity])}
+					style={{ width: `${Math.max(Math.min(fraction, 1) * 100, 2)}%` }}
+				/>
+			</div>
+			<span className="w-14 shrink-0 text-right font-mono text-muted-foreground">
+				{value}
+			</span>
+		</div>
+	);
+}
+
 // Memoized: filter/sort changes re-render the whole list, and at hundreds of
 // rows (each carrying a context menu, marquee, and tooltips) that costs
 // hundreds of ms per menu-checkbox toggle. Workspace object identities are
@@ -39,23 +85,23 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 	isCurrentRoute,
 }: V2WorkspaceRowProps) {
 	const { formatDateTime } = useFormat();
+	const isDone =
+		workspace.archivedAt != null || workspace.pr?.state === "merged";
+	const resourceSeverity = workspace.resources
+		? getUsageSeverity(workspace.resources, workspace.resources, {
+				includeShare: false,
+			})
+		: "normal";
+	const ports = useDashboardSidebarWorkspacePorts(workspace.id)?.ports ?? [];
 
 	const { t } = useLingui();
 	const navigate = useNavigate();
-	const isLocalWorkspace = workspace.type === "local";
 	const DeviceIcon =
 		workspace.hostType === "local-device" ? LuLaptop : LuMonitor;
 	// The local device is the one running this app — it can't be offline from
 	// its own point of view, whatever presence says.
 	const isDeviceOffline =
 		!workspace.hostIsOnline && workspace.hostType !== "local-device";
-	// Drives the name's hover-reveal for keyboard users: the row, not the
-	// name span, is what's actually tabbable.
-	const {
-		isFocusVisible: isFocused,
-		onFocus: handleRowFocus,
-		onBlur: handleRowBlur,
-	} = useFocusVisible();
 
 	const creatorLabel = workspace.isCreatedByCurrentUser
 		? t({ message: "you" })
@@ -130,11 +176,9 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 							actions.open();
 						}
 					}}
-					onFocus={handleRowFocus}
-					onBlur={handleRowBlur}
 					title={rowTitle}
 					className={cn(
-						"flex cursor-pointer items-center gap-3 border-b border-border/40 px-6 py-3 text-sm outline-none transition-colors",
+						"group flex cursor-pointer items-center gap-3 border-b border-border/40 px-6 py-2.5 text-sm outline-none transition-colors",
 						"focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset",
 						isCurrentRoute
 							? "bg-muted hover:bg-muted focus-visible:bg-muted"
@@ -143,125 +187,183 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 				>
 					<WorkspaceStateGlyph workspace={workspace} />
 
-					{isLocalWorkspace ? (
-						<Tooltip delayDuration={300}>
-							<TooltipTrigger asChild>
-								{/* The wrapping span (not the icon itself — react-icons
-								    treats a `title` prop as an SVG <title> child, not an
-								    HTML attribute, so it can't block inheritance) carries
-								    an empty title to stop it from inheriting the row's
-								    title (PR/branch/project); without it, hovering this
-								    icon fires both the native tooltip and this Radix one
-								    at once. */}
-								<span title="">
-									<CgLaptop
-										className="size-3.5 shrink-0 text-muted-foreground"
-										aria-label={t({
-											message: "Local workspace",
-										})}
-									/>
-								</span>
-							</TooltipTrigger>
-							<TooltipContent side="top">
-								<Trans>Local workspace</Trans>
-							</TooltipContent>
-						</Tooltip>
-					) : null}
-
-					<WorkspaceNameMarquee
-						name={workspace.name}
-						forceActive={isFocused}
-						className={cn(
-							"min-w-0 flex-1 font-medium",
-							// Done states recede so live work owns the contrast.
-							workspace.archivedAt != null || workspace.pr?.state === "merged"
-								? "text-muted-foreground"
-								: "text-foreground",
-						)}
+					<V2WorkspaceProjectIcon
+						projectName={workspace.projectName ?? workspace.name}
+						iconUrl={workspace.projectIconUrl}
+						className="size-8 rounded-md text-sm"
 					/>
 
-					{workspace.pr ? (
+					<div className="flex min-w-0 flex-1 flex-col gap-1">
+						<div className="flex min-w-0 items-center gap-2">
+							<span
+								className={cn(
+									"truncate font-medium",
+									isDone ? "text-muted-foreground" : "text-foreground",
+								)}
+							>
+								{workspace.projectName ?? workspace.name}
+							</span>
+							{workspace.projectName ? (
+								<span className="max-w-48 shrink-0 truncate rounded bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground">
+									{workspace.name}
+								</span>
+							) : null}
+							{workspace.pr ? (
+								<button
+									type="button"
+									onClick={(event) => {
+										event.stopPropagation();
+										if (!workspace.pr) return;
+										// Opens the PR pane inside the workspace instead of GitHub.
+										const ref = pullRequestRefFromUrl(workspace.pr.url);
+										if (!ref) {
+											window.open(workspace.pr.url, "_blank");
+											return;
+										}
+										usePullRequestPaneIntent.getState().request({
+											workspaceId: workspace.id,
+											...ref,
+										});
+										void navigateToV2Workspace(workspace.id, navigate);
+									}}
+									aria-label={t({
+										message: `Pull request #${workspace.pr.prNumber}, ${workspace.pr.state}`,
+									})}
+									className="flex shrink-0 items-center gap-1 rounded px-1 text-xs text-muted-foreground hover:bg-accent"
+								>
+									<PRIcon state={workspace.pr.state} className="size-3.5" />#
+									{workspace.pr.prNumber}
+								</button>
+							) : null}
+						</div>
+						<div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+							<span className="whitespace-nowrap" title={timeTitle}>
+								{timeLabel}
+							</span>
+							{workspace.diffStats &&
+							(workspace.diffStats.additions > 0 ||
+								workspace.diffStats.deletions > 0) ? (
+								<>
+									<span aria-hidden>·</span>
+									<span
+										className="flex items-center gap-1 font-mono text-[11px] tabular-nums"
+										title={t({
+											message: plural(workspace.diffStats.fileCount, {
+												one: "# changed file",
+												other: "# changed files",
+											}),
+										})}
+									>
+										<span className="text-emerald-600/80 dark:text-emerald-400/70">
+											+{formatCount(workspace.diffStats.additions)}
+										</span>
+										<span className="text-red-600/80 dark:text-red-400/70">
+											−{formatCount(workspace.diffStats.deletions)}
+										</span>
+									</span>
+								</>
+							) : null}
+							{workspace.hostType === "remote-device" ? (
+								<>
+									<span aria-hidden>·</span>
+									<span
+										className={cn(
+											"flex min-w-0 items-center gap-1",
+											isDeviceOffline && "opacity-60",
+										)}
+										title={workspace.hostName}
+									>
+										<DeviceIcon className="size-3 shrink-0" />
+										<span className="truncate">{workspace.hostName}</span>
+										{isDeviceOffline ? (
+											<span className="sr-only">
+												<Trans>Offline</Trans>
+											</span>
+										) : null}
+									</span>
+								</>
+							) : null}
+						</div>
+					</div>
+
+					<div className="flex w-28 shrink-0 items-center justify-end gap-1.5">
+						{ports.length > 0 ? (
+							<Tooltip delayDuration={300}>
+								<TooltipTrigger asChild>
+									<span className="flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-sky-700 dark:text-sky-300">
+										<LuPlug className="size-3" />
+										{ports.length}
+									</span>
+								</TooltipTrigger>
+								<TooltipContent side="top" className="flex flex-col gap-0.5">
+									{ports.map((port) => (
+										<span key={port.port} className="flex gap-2">
+											<span className="font-mono tabular-nums">
+												:{port.port}
+											</span>
+											<span>{port.label ?? port.processName}</span>
+										</span>
+									))}
+								</TooltipContent>
+							</Tooltip>
+						) : null}
+						{workspace.terminalTitles.length > 0 ? (
+							<Tooltip delayDuration={300}>
+								<TooltipTrigger asChild>
+									<span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+										<LuSquareTerminal className="size-3" />
+										{workspace.terminalTitles.length}
+									</span>
+								</TooltipTrigger>
+								<TooltipContent side="top" className="flex flex-col gap-0.5">
+									{workspace.terminalTitles.map((title, index) => (
+										// biome-ignore lint/suspicious/noArrayIndexKey: titles can repeat and have no id
+										<span key={index}>{title ?? "shell"}</span>
+									))}
+								</TooltipContent>
+							</Tooltip>
+						) : null}
+					</div>
+
+					<div className="w-44 shrink-0 @max-lg:hidden">
+						{workspace.resources ? (
+							<div className="flex flex-col gap-1.5">
+								<ResourceMeter
+									label="CPU"
+									value={formatCpu(workspace.resources.cpu)}
+									fraction={workspace.resources.cpu / 100}
+									severity={resourceSeverity}
+								/>
+								<ResourceMeter
+									label="RAM"
+									value={formatMemory(workspace.resources.memory)}
+									fraction={workspace.resources.memory / MEMORY_METER_MAX}
+									severity={resourceSeverity}
+								/>
+							</div>
+						) : (
+							<span className="block text-right text-xs text-muted-foreground/50">
+								Au repos
+							</span>
+						)}
+					</div>
+
+					{workspace.archivedAt == null ? (
 						<button
 							type="button"
 							onClick={(event) => {
 								event.stopPropagation();
-								if (!workspace.pr) return;
-								// Opens the PR pane inside the workspace instead of GitHub.
-								const ref = pullRequestRefFromUrl(workspace.pr.url);
-								if (!ref) {
-									window.open(workspace.pr.url, "_blank");
-									return;
-								}
-								usePullRequestPaneIntent.getState().request({
-									workspaceId: workspace.id,
-									...ref,
-								});
-								void navigateToV2Workspace(workspace.id, navigate);
+								actions.openDeleteDialog();
 							}}
-							aria-label={t({
-								message: `Pull request #${workspace.pr.prNumber}, ${workspace.pr.state}`,
-							})}
-							className="shrink-0"
+							aria-label={t({ message: "Delete" })}
+							title=""
+							className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
 						>
-							<PRIcon state={workspace.pr.state} className="size-3.5" />
+							<LuTrash2 className="size-3.5" />
 						</button>
-					) : null}
-
-					{workspace.diffStats &&
-					(workspace.diffStats.additions > 0 ||
-						workspace.diffStats.deletions > 0) ? (
-						<span
-							className="flex shrink-0 items-center gap-1.5 font-mono text-[11px] tabular-nums leading-none @max-lg:hidden"
-							title={t({
-								message: plural(workspace.diffStats.fileCount, {
-									one: "# changed file",
-									other: "# changed files",
-								}),
-							})}
-						>
-							<span className="text-emerald-600/80 dark:text-emerald-400/70">
-								+{formatCount(workspace.diffStats.additions)}
-							</span>
-							<span className="text-red-600/80 dark:text-red-400/70">
-								−{formatCount(workspace.diffStats.deletions)}
-							</span>
-						</span>
-					) : null}
-
-					<span
-						className={cn(
-							"flex max-w-36 shrink-0 items-center gap-1.5 text-xs text-muted-foreground",
-							isDeviceOffline && "text-muted-foreground/60",
-						)}
-						title={workspace.hostName}
-					>
-						<DeviceIcon className="size-3 shrink-0" />
-						{/* Narrow panes keep the glyph; sr-only (not hidden) so screen
-						    readers still hear the device name when the text is gone. */}
-						<span className="min-w-0 truncate @max-2xl:sr-only">
-							{workspace.hostName}
-						</span>
-						{isDeviceOffline ? (
-							<>
-								<span
-									aria-hidden
-									className="inline-block size-1.5 shrink-0 rounded-full bg-muted-foreground/40"
-								/>
-								{/* The dot is the only visual offline cue; screen readers
-								    need the word. */}
-								<span className="sr-only">
-									<Trans>Offline</Trans>
-								</span>
-							</>
-						) : null}
-					</span>
-
-					<span
-						className="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted-foreground"
-						title={timeTitle}
-					>
-						{timeLabel}
-					</span>
+					) : (
+						<span className="size-7 shrink-0" />
+					)}
 				</div>
 			)}
 		</V2WorkspaceContextMenu>

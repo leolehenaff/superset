@@ -31,6 +31,7 @@ import {
 	seedEndedTerminalAgentBinding,
 	unclaimResumeCandidateBinding,
 } from "../../../terminal-agents/persistence";
+import { readTerminalAgentSessionStats } from "../../../terminal-agents/session-stats";
 import type { HostServiceContext } from "../../../types";
 import { protectedProcedure, router } from "../../index";
 import { type AgentRunResult, runAgentInWorkspace } from "../agents/agents";
@@ -490,6 +491,17 @@ export const terminalAgentsRouter = router({
 					}
 				: null;
 		}),
+
+	/** Fork leo: context fill and message count of every live session. */
+	sessionStats: protectedProcedure.query(({ ctx }) =>
+		readTerminalAgentSessionStats(
+			ctx.db,
+			ctx.terminalAgentStore
+				.list()
+				.filter((binding) => !binding.chatSessionId && binding.endedAt == null)
+				.map((binding) => binding.terminalId),
+		),
+	),
 
 	/**
 	 * The terminal's agent binding, ended ones included, so a caller can tell
