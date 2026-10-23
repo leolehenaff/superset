@@ -41,76 +41,79 @@ export function WorkspaceSwitcher() {
 	const workspaceName = current.name || current.branch;
 
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button
-					type="button"
-					className="no-drag ml-2 flex h-7 min-w-0 items-center gap-1.5 rounded-md border-l pl-3 pr-2 text-[13px] transition-colors hover:bg-fill-hover"
-				>
-					{projectName && (
-						<>
-							<span className="truncate text-muted-foreground">
-								{projectName}
-							</span>
-							<span className="text-muted-foreground/50">/</span>
-						</>
-					)}
-					<span className="truncate font-medium text-foreground">
-						{workspaceName}
-					</span>
-					{current.branch !== workspaceName && (
-						<span className="flex min-w-0 items-center gap-1 text-muted-foreground">
-							<LuGitBranch className="size-3.5 shrink-0" strokeWidth={1.5} />
-							<span className="truncate">{current.branch}</span>
+		<>
+			<div className="mx-2 h-4 w-px shrink-0 bg-border" />
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<button
+						type="button"
+						className="no-drag flex h-7 min-w-0 items-center gap-1.5 rounded-md px-2 text-[13px] transition-colors hover:bg-fill-hover"
+					>
+						{projectName && (
+							<>
+								<span className="truncate text-muted-foreground">
+									{projectName}
+								</span>
+								<span className="text-muted-foreground/50">/</span>
+							</>
+						)}
+						<span className="truncate font-medium text-foreground">
+							{workspaceName}
 						</span>
-					)}
-					<LuChevronDown
-						className="size-3.5 shrink-0 text-muted-foreground"
-						strokeWidth={1.5}
-					/>
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="start"
-				className="max-h-96 w-80 overflow-y-auto"
-				onCloseAutoFocus={(event) => event.preventDefault()}
-			>
-				{projectName && <DropdownMenuLabel>{projectName}</DropdownMenuLabel>}
-				{siblings.map((workspace) => {
-					const isCurrent = workspace.id === current.id;
-					return (
-						<DropdownMenuItem
-							key={workspace.id}
-							onSelect={() => {
-								if (!isCurrent)
-									void navigateToV2Workspace(workspace.id, navigate);
-							}}
-							className="flex items-center gap-2"
-						>
-							<LuCheck
-								className={cn("size-4 shrink-0", !isCurrent && "invisible")}
-							/>
-							<span className="flex min-w-0 flex-col">
-								<span className="truncate">
-									{workspace.name || workspace.branch}
-								</span>
-								<span className="truncate text-xs text-muted-foreground">
-									{workspace.branch}
-								</span>
+						{current.branch !== workspaceName && (
+							<span className="flex min-w-0 items-center gap-1 text-muted-foreground">
+								<LuGitBranch className="size-3.5 shrink-0" strokeWidth={1.5} />
+								<span className="truncate">{current.branch}</span>
 							</span>
-						</DropdownMenuItem>
-					);
-				})}
-				<DropdownMenuSeparator />
-				<DropdownMenuItem
-					onSelect={() =>
-						navigate({ to: "/v2-workspaces", search: { view: "list" } })
-					}
+						)}
+						<LuChevronDown
+							className="size-3.5 shrink-0 text-muted-foreground"
+							strokeWidth={1.5}
+						/>
+					</button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent
+					align="start"
+					className="max-h-96 w-80 overflow-y-auto"
+					onCloseAutoFocus={(event) => event.preventDefault()}
 				>
-					<LuList className="size-4" />
-					Tous les workspaces
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
+					{projectName && <DropdownMenuLabel>{projectName}</DropdownMenuLabel>}
+					{siblings.map((workspace) => {
+						const isCurrent = workspace.id === current.id;
+						return (
+							<DropdownMenuItem
+								key={workspace.id}
+								onSelect={() => {
+									if (!isCurrent)
+										void navigateToV2Workspace(workspace.id, navigate);
+								}}
+								className="flex items-center gap-2"
+							>
+								<LuCheck
+									className={cn("size-4 shrink-0", !isCurrent && "invisible")}
+								/>
+								<span className="flex min-w-0 flex-col">
+									<span className="truncate">
+										{workspace.name || workspace.branch}
+									</span>
+									<span className="truncate text-xs text-muted-foreground">
+										{workspace.branch}
+									</span>
+								</span>
+							</DropdownMenuItem>
+						);
+					})}
+					<DropdownMenuSeparator />
+					<DropdownMenuItem
+						onSelect={() =>
+							navigate({ to: "/v2-workspaces", search: { view: "list" } })
+						}
+					>
+						<LuList className="size-4" />
+						Tous les workspaces
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</>
 	);
 }
