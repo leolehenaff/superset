@@ -409,6 +409,10 @@ msgstr "{0} eindigend op {1}"
 msgid "{0} files already exist in {where}. Do you want to replace them?"
 msgstr "{0} bestanden bestaan al in {where}. Wil je ze vervangen?"
 
+#. placeholder {0}: formatNumber(hours)
+msgid "{0} GB-hours"
+msgstr "{0} GB-uren"
+
 #. placeholder {0}: displayName(variables.name)
 msgid "{0} installed"
 msgstr "{0} geïnstalleerd"
@@ -487,9 +491,9 @@ msgstr "{0} van {totalCount}"
 msgid "{0} options"
 msgstr "Opties voor {0}"
 
-#. placeholder {0}: i18n._(plan.name)
-msgid "{0} plan"
-msgstr "{0}-plan"
+#. placeholder {0}: formatCurrency(gbHourPackPricePerGbHour(pack), PLAN_PRICE_CURRENCY, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+msgid "{0} per GB-hour"
+msgstr "{0} per GB-uur"
 
 #. placeholder {0}: normalizedProjectIds.length
 msgid "{0} projects"
@@ -701,6 +705,9 @@ msgstr "{actual} tot nu toe · ~{projected} verwacht"
 msgid "{agents} sessions resume when you open their workspace."
 msgstr "{agents}-sessies worden hervat wanneer je hun workspace opent."
 
+msgid "{amount} ({hoursLabel} GB-hours)"
+msgstr "{amount} ({hoursLabel} GB-uren)"
+
 msgid "{approvalCount, plural, one {# needs approval} other {# need approval}}"
 msgstr "{approvalCount, plural, one {# wacht op goedkeuring} other {# wachten op goedkeuring}}"
 
@@ -734,9 +741,6 @@ msgstr "{connectorName}-account"
 
 msgid "{cookieCount} cookies — forget this site"
 msgstr "{cookieCount} cookies — deze site vergeten"
-
-msgid "{count, plural, one {# active port — show details} other {# active ports — show details}}"
-msgstr "{count, plural, one {# actieve poort — details tonen} other {# actieve poorten — details tonen}}"
 
 msgid "{count, plural, one {# Check Failed} other {# Checks Failed}}"
 msgstr "{count, plural, one {# check mislukt} other {# checks mislukt}}"
@@ -825,6 +829,9 @@ msgstr "{count} hosts draaien een oudere hostservice dan deze app"
 msgid "{count}/day"
 msgstr "{count}/dag"
 
+msgid "{credit} of credit goes toward your next invoices."
+msgstr "{credit} tegoed wordt verrekend met je volgende facturen."
+
 msgid "{current} of {total}"
 msgstr "{current} van {total}"
 
@@ -886,6 +893,12 @@ msgstr "{gate} · {statusLabel}"
 msgid "{gate}: {statusLabel}"
 msgstr "{gate}: {statusLabel}"
 
+msgid "{gbHours} cloud GB-hours per seat each month"
+msgstr "{gbHours} cloud-GB-uren per gebruiker per maand"
+
+msgid "{gbHours} on {name}"
+msgstr "{gbHours} bij {name}"
+
 msgid "{hidden, plural, one {# hidden line} other {# hidden lines}}"
 msgstr "{hidden, plural, one {# verborgen regel} other {# verborgen regels}}"
 
@@ -928,9 +941,6 @@ msgstr "{kind} · door {author}"
 msgid "{kindLabel} theme"
 msgstr "{kindLabel} thema"
 
-msgid "{label} in cloud workspaces"
-msgstr "{label} in cloudwerkruimtes"
-
 msgid "{level} · {gate} · {statusLabel}"
 msgstr "{level} · {gate} · {statusLabel}"
 
@@ -967,11 +977,17 @@ msgstr "{minutes}m geleden"
 msgid "{modKey}↵ to create"
 msgstr "{modKey}↵ om aan te maken"
 
-msgid "{monthlyPrice} per user/mo billed monthly, or {yearlyPrice} billed yearly. Cloud workspaces, mobile, priority support."
-msgstr "{monthlyPrice} per gebruiker/mnd bij maandelijkse facturering, of {yearlyPrice} bij jaarlijkse facturering. Cloudwerkruimtes, mobiel, prioritaire support."
+msgid "{monthlyPrice} per user/mo billed monthly, or {yearlyPrice} billed yearly. Mobile, automations, priority support."
+msgstr "{monthlyPrice} per gebruiker/maand bij maandelijkse facturering, of {yearlyPrice} bij jaarlijkse facturering. Mobiel, automatiseringen, prioriteitsondersteuning."
+
+msgid "{monthlyPrice} per user/mo. Mobile, automations, priority support."
+msgstr "{monthlyPrice} per gebruiker/maand. Mobiel, automatiseringen, prioriteitsondersteuning."
 
 msgid "{months}mo ago"
 msgstr "{months}mnd geleden"
+
+msgid "{multiple}x the cloud GB-hours of {basePlan}"
+msgstr "{multiple}x de cloud-GB-uren van {basePlan}"
 
 msgid "{myFailedCount} of your automations failed their last run"
 msgstr "Bij {myFailedCount} van je automatiseringen is de laatste run mislukt"
@@ -1011,6 +1027,12 @@ msgstr "{name} is begonnen"
 
 msgid "{name} stopped"
 msgstr "{name} is gestopt"
+
+msgid "{name}: {monthly} per user/month"
+msgstr "{name}: {monthly} per gebruiker/maand"
+
+msgid "{name}: {monthly} per user/month, or {yearly} billed yearly"
+msgstr "{name}: {monthly} per gebruiker/maand, of {yearly} bij jaarlijkse facturering"
 
 msgid "{noun, select, person {Specify at least one person, or choose {choice}.} sender {Specify at least one sender, or choose {choice}.} other {Specify at least one entry, or choose {choice}.}}"
 msgstr "{noun, select, person {Geef minstens één persoon op, of kies {choice}.} sender {Geef minstens één afzender op, of kies {choice}.} other {Geef minstens één item op, of kies {choice}.}}"
@@ -1061,6 +1083,9 @@ msgstr "{planLabel} · Lid sinds {joined}"
 msgid "{planLabel} plan"
 msgstr "{planLabel}-plan"
 
+msgid "{planName} plan"
+msgstr "{planName}-abonnement"
+
 msgid "{plugin} has no OAuth client configured on this deployment yet."
 msgstr "Voor {plugin} is op deze deployment nog geen OAuth-client geconfigureerd."
 
@@ -1074,6 +1099,18 @@ msgstr "{presetLabel} teruggezet naar standaardwaarden"
 msgid "{previewSize}px · {0} line height"
 msgstr "{previewSize}px · regelhoogte {0}"
 
+msgid "{price} per GB-hour"
+msgstr "{price} per GB-uur"
+
+msgid "{price} per user/month"
+msgstr "{price} per gebruiker/maand"
+
+msgid "{price} per user/month, {gbHours} cloud GB-hours per seat each month"
+msgstr "{price} per gebruiker/maand, {gbHours} cloud-GB-uren per gebruiker per maand"
+
+msgid "{price}/user/mo"
+msgstr "{price}/gebruiker/mnd"
+
 msgid "{provider} logo"
 msgstr "logo van {provider}"
 
@@ -1082,6 +1119,9 @@ msgstr "{pullRequestCount, plural, one {# PR} other {# PR's}}"
 
 msgid "{queued, plural, one {# message waiting in the queue} other {# messages waiting in the queue}}"
 msgstr "{queued, plural, one {# bericht wacht in de wachtrij} other {# berichten wachten in de wachtrij}}"
+
+msgid "{rate} per GB-hour. Used after the monthly pool, and never expire."
+msgstr "{rate} per GB-uur. Gebruikt na de maandelijkse pool, en verlopen nooit."
 
 msgid "{readPercent}% read"
 msgstr "{readPercent}% gelezen"
@@ -1192,6 +1232,9 @@ msgstr "{updatedLabel} teruggezet naar standaardwaarden"
 msgid "{uploading, plural, one {Uploading # file…} other {Uploading # files…}}"
 msgstr "{uploading, plural, one {# bestand uploaden…} other {# bestanden uploaden…}}"
 
+msgid "{used} of {limit} environments"
+msgstr "{used} van {limit} omgevingen"
+
 msgid "{used} used"
 msgstr "{used} gebruikt"
 
@@ -1263,6 +1306,9 @@ msgstr "+{0} −{1} · {2, plural, one {# bestand} other {# bestanden}}"
 
 msgid "+{hidden} more"
 msgstr "+{hidden} meer"
+
+msgid "+{hiddenCount}"
+msgstr "+{hiddenCount}"
 
 msgid "+{hiddenCount} earlier"
 msgstr "+{hiddenCount} eerder"
@@ -1850,6 +1896,9 @@ msgstr "Voeg je eigen terminalagent toe aan dit apparaat."
 
 msgid "Added {added} files to {where}"
 msgstr "{added} bestanden toegevoegd aan {where}"
+
+msgid "Added {bought} GB-hours."
+msgstr "{bought} GB-uren toegevoegd."
 
 msgid "Added 1 file to {where}"
 msgstr "1 bestand toegevoegd aan {where}"
@@ -2665,6 +2714,9 @@ msgstr "at"
 msgid "At least one team we can name, ours included, passes every F4 gate for a full quarter and publishes the numbers."
 msgstr "Minstens één team dat we kunnen noemen, het onze inbegrepen, haalt een heel kwartaal lang elke F4-drempel en publiceert de cijfers."
 
+msgid "At most {AUTO_TOPUP_MONTHLY_LIMIT} top-ups a month, so up to {monthlyMax} a month."
+msgstr "Maximaal {AUTO_TOPUP_MONTHLY_LIMIT} keer per maand, dus tot {monthlyMax} per maand."
+
 msgid "at once"
 msgstr "tegelijk"
 
@@ -2673,6 +2725,9 @@ msgstr "Bestanden bijvoegen"
 
 msgid "Attach image"
 msgstr "Afbeelding toevoegen"
+
+msgid "Attach to chat"
+msgstr "Aan chat toevoegen"
 
 msgid "Attached"
 msgstr "Gekoppeld"
@@ -2784,6 +2839,9 @@ msgstr "Automatisch volgt je systeemtaal. Je kunt dit later wijzigen in Instelli
 
 msgid "Auto Save"
 msgstr "Automatisch opslaan"
+
+msgid "Auto top-up"
+msgstr "Automatisch bijkopen"
 
 msgid "auto-generated"
 msgstr "automatisch gegenereerd"
@@ -2998,6 +3056,9 @@ msgstr "? commits achter op main, rebase nodig"
 msgid "Being built right now."
 msgstr "Wordt nu gebouwd."
 
+msgid "Beta"
+msgstr "Bèta"
+
 msgid "Beyond: F5 is not a near-term claim"
 msgstr "Verder: F5 is geen claim voor de korte termijn"
 
@@ -3016,8 +3077,8 @@ msgstr "Facturering"
 msgid "Billing details"
 msgstr "Factuurgegevens"
 
-msgid "Billing refused to start a cloud workspace: the organization needs a paid plan, or it reached its cloud usage limit. Upgrade or raise the limit in Settings > Billing, or run the automation on a device."
-msgstr "Facturering heeft het starten van een cloudwerkruimte geweigerd: de organisatie heeft een betaald abonnement nodig of heeft haar limiet voor cloudgebruik bereikt. Upgrade of verhoog de limiet in Instellingen > Facturering, of voer de automatisering uit op een apparaat."
+msgid "Billing refused to start a cloud workspace: the organization's plan does not include cloud workspaces, or it reached its cloud usage limit. Cloud workspaces need the Team or Ultra plan. Upgrade or raise the limit in Settings > Billing, or run the automation on a device."
+msgstr "Facturering weigerde een cloudwerkruimte te starten: het abonnement van de organisatie bevat geen cloudwerkruimtes, of de limiet voor cloudgebruik is bereikt. Cloudwerkruimtes vereisen het Team- of Ultra-abonnement. Upgrade of verhoog de limiet in Instellingen > Facturering, of voer de automatisering uit op een apparaat."
 
 msgid "Binary"
 msgstr "Binair"
@@ -3085,6 +3146,9 @@ msgstr "Geleend van hoe zelfrijdende auto's worden beoordeeld, toegepast op hoe 
 
 msgid "Bottom drawer, swipe-friendly on touch devices."
 msgstr "Lade onderaan, swipevriendelijk op touchapparaten."
+
+msgid "Bought GB-hours left: {prepaid}"
+msgstr "Gekochte GB-uren over: {prepaid}"
 
 msgid "Box"
 msgstr "Box"
@@ -3267,6 +3331,9 @@ msgstr "Meegeleverd met de Superset-app op dit apparaat."
 msgid "Bundled with the Superset app on this device. Updates with the app."
 msgstr "Meegeleverd met de Superset-app op dit apparaat. Wordt samen met de app bijgewerkt."
 
+msgid "Business plan"
+msgstr "Business-abonnement"
+
 msgid "Button — sizes"
 msgstr "Knop — formaten"
 
@@ -3287,6 +3354,18 @@ msgstr "Knoppendrukker"
 
 msgid "Buttons, toggles, and keyboard affordances"
 msgstr "Knoppen, toggles en toetsenbordaanwijzingen"
+
+msgid "Buy"
+msgstr "Kopen"
+
+msgid "Buy extra GB-hours"
+msgstr "Extra GB-uren kopen"
+
+msgid "Buy for {total}"
+msgstr "Kopen voor {total}"
+
+msgid "Buy GB-hours"
+msgstr "GB-uren kopen"
 
 #. placeholder {0}: data.author
 msgid "by {0}"
@@ -3353,6 +3432,9 @@ msgstr "Camera is niet beschikbaar"
 
 msgid "Can comment"
 msgstr "Kan reageren"
+
+msgid "Can I buy more cloud GB-hours?"
+msgstr "Kan ik meer cloud-GB-uren kopen?"
 
 msgid "Can I create automations from a script?"
 msgstr "Kan ik automatiseringen vanuit een script maken?"
@@ -3495,14 +3577,14 @@ msgstr "Locatie wijzigen"
 msgid "Change or add labels…"
 msgstr "Labels wijzigen of toevoegen…"
 
-msgid "Change or add tasks…"
-msgstr "Taken wijzigen of toevoegen…"
-
 msgid "Change organization logo"
 msgstr "Logo van organisatie wijzigen"
 
 msgid "Change organization slug"
 msgstr "Slug van organisatie wijzigen"
+
+msgid "Change plan"
+msgstr "Abonnement wijzigen"
 
 msgid "Change preview"
 msgstr "Wijzigingsvoorbeeld"
@@ -3568,6 +3650,9 @@ msgstr "Wijzigen..."
 
 msgid "Channel created"
 msgstr "Kanaal aangemaakt"
+
+msgid "Charge your saved card for more GB-hours when bought GB-hours run low."
+msgstr "Schrijft meer GB-uren af van je opgeslagen kaart wanneer gekochte GB-uren opraken."
 
 msgid "Chat"
 msgstr "Chat"
@@ -4083,15 +4168,17 @@ msgstr "Als je deze terminal sluit, wordt het draaiende proces beëindigd."
 msgid "Cloud"
 msgstr "Cloud"
 
+msgid "Cloud environments"
+msgstr "Cloudomgevingen"
+
+msgid "Cloud GB-hours per seat each month"
+msgstr "Cloud-GB-uren per gebruiker per maand"
+
 msgid "Cloud is coming. Become a design partner"
 msgstr "De cloud komt eraan. Word ontwerppartner"
 
 msgid "Cloud sandboxes"
 msgstr "Cloudsandboxen"
-
-#. js-lingui-explicit-id
-msgid "serverError.cloudWorkspace.cloudSandboxesAreInternalOnly"
-msgstr "Cloudsandboxen zijn niet ingeschakeld voor {account}. Vraag het Superset-team om toegang."
 
 msgid "Cloud usage"
 msgstr "Cloudgebruik"
@@ -4102,17 +4189,21 @@ msgstr "Cloudwerkruimte"
 msgid "Cloud workspaces"
 msgstr "Cloudwerkruimtes"
 
+msgid "Cloud workspaces are metered in GB-hours: the memory of the box times the hours it runs. An 8 GB box uses 8 GB-hours per hour. Each seat adds its plan's GB-hours to one pool your team shares: {allowances}. The pool resets every month, and usage past it is billed per GB-hour at the rate shown on each plan."
+msgstr "Cloudwerkruimtes worden gemeten in GB-uren: het geheugen van de machine maal de uren dat hij draait. Een machine van 8 GB gebruikt 8 GB-uren per uur. Elke plek voegt de GB-uren van zijn abonnement toe aan één pool die je team deelt: {allowances}. De pool wordt elke maand gereset en gebruik daarboven wordt per GB-uur gefactureerd tegen het tarief van elk abonnement."
+
+#. js-lingui-explicit-id
+msgid "serverError.cloudWorkspace.cloudSandboxesAreInternalOnly"
+msgstr "Cloudwerkruimtes zijn niet ingeschakeld voor {account}. Ze horen bij de Team- en Ultra-abonnementen: upgrade in Instellingen, Facturering."
+
 msgid "Cloud workspaces ignore this variable. Agents sign in under Settings › Agents instead."
 msgstr "Cloudworkspaces negeren deze variabele. Agents melden zich in plaats daarvan aan via Instellingen › Agents."
-
-msgid "Cloud workspaces need a paid plan. Upgrade in Settings, Billing to start one."
-msgstr "Cloudwerkruimtes vereisen een betaald abonnement. Upgrade in Instellingen, Facturering om er een te starten."
 
 msgid "Cloud workspaces need a project for now"
 msgstr "Cloudwerkruimtes hebben voorlopig een project nodig"
 
-msgid "Cloud workspaces under their projects, a local and cloud filter, and the redesigned workspace row."
-msgstr "Cloudwerkruimtes onder hun projecten, een filter voor lokaal en cloud, en de vernieuwde werkruimterij."
+msgid "Cloud workspaces need the Team or Ultra plan. Upgrade in Settings, Billing to start one."
+msgstr "Cloudwerkruimtes vereisen het Team- of Ultra-abonnement. Upgrade in Instellingen, Facturering om er een te starten."
 
 msgid "Cloud workspaces will stop running {agentLabel} with it."
 msgstr "Cloudworkspaces stoppen met het uitvoeren van {agentLabel} hiermee."
@@ -4378,6 +4469,9 @@ msgstr "Ingesteld voor {agent}"
 
 msgid "Confirm before quitting"
 msgstr "Bevestigen voor afsluiten"
+
+msgid "Confirm switch"
+msgstr "Wissel bevestigen"
 
 #. placeholder {0}: status.baseBranch
 msgid "Conflicts with {0}"
@@ -4829,9 +4923,6 @@ msgstr "Relatief pad kopiëren"
 msgid "Copy Relative Path"
 msgstr "Relatief pad kopiëren"
 
-msgid "Copy screenshot"
-msgstr "Screenshot kopiëren"
-
 msgid "Copy Selection"
 msgstr "Selectie kopiëren"
 
@@ -4970,6 +5061,9 @@ msgstr "Kon omgevingen niet laden."
 
 msgid "Could not load image"
 msgstr "Afbeelding kon niet worden geladen"
+
+msgid "Could not load plans."
+msgstr "Abonnementen konden niet worden geladen."
 
 msgid "Could not load plugins. Check your connection and try again."
 msgstr "Plugins konden niet worden geladen. Controleer je verbinding en probeer het opnieuw."
@@ -5152,6 +5246,9 @@ msgstr "Kon de workspace niet om een beschrijving vragen"
 msgid "Couldn't attach files"
 msgstr "Kan bestanden niet bijvoegen"
 
+msgid "Couldn't attach the screenshot"
+msgstr "Kan de screenshot niet toevoegen"
+
 msgid "Couldn't branch into a new worktree"
 msgstr "Kon niet afsplitsen naar een nieuwe worktree"
 
@@ -5258,6 +5355,9 @@ msgstr "Kan de subagent niet naar de achtergrond verplaatsen"
 
 msgid "Couldn't name \"{name}\" automatically"
 msgstr "Kon \"{name}\" niet automatisch een naam geven"
+
+msgid "Couldn't open the screenshot"
+msgstr "Kan de screenshot niet openen"
 
 msgid "Couldn't parse this diff: {patchParseError}"
 msgstr "Kan deze diff niet parsen: {patchParseError}"
@@ -5566,9 +5666,6 @@ msgstr "Aangemaakt {0} · Laatst gebruikt {1}"
 msgid "Created {ago}"
 msgstr "Aangemaakt {ago}"
 
-msgid "created {createdAgo}"
-msgstr "aangemaakt {createdAgo}"
-
 msgid "Created {createdAgo}"
 msgstr "Aangemaakt {createdAgo}"
 
@@ -5702,6 +5799,12 @@ msgstr "Aangepast"
 
 msgid "Custom agent…"
 msgstr "Eigen agent…"
+
+msgid "Custom amount"
+msgstr "Eigen aantal"
+
+msgid "Custom amount of GB-hours"
+msgstr "Eigen aantal GB-uren"
 
 msgid "Custom components beyond the shadcn set"
 msgstr "Eigen componenten buiten de shadcn-set"
@@ -6553,6 +6656,9 @@ msgstr "Dropdownmenu"
 msgid "Dropdown, context, and application menus"
 msgstr "Dropdown-, context- en applicatiemenu's"
 
+msgid "Due today"
+msgstr "Vandaag te betalen"
+
 msgid "Duration"
 msgstr "Duur"
 
@@ -6805,6 +6911,12 @@ msgstr "Voer een waarde in."
 msgid "Enter a whole number"
 msgstr "Voer een geheel getal in"
 
+msgid "Enter a whole number from {minHours} to {maxHours} GB-hours."
+msgstr "Voer een heel getal in van {minHours} tot {maxHours} GB-uren."
+
+msgid "Enter this code when OpenAI asks for it:"
+msgstr "Voer deze code in wanneer OpenAI erom vraagt:"
+
 msgid "Enter URL or search..."
 msgstr "Voer URL of zoekterm in..."
 
@@ -6877,6 +6989,9 @@ msgstr "Elke minuut"
 msgid "Every objective is carrying its weight for the next rung. Measured over the trailing 30 days."
 msgstr "Alle doelen dragen bij aan de volgende trede. Gemeten over de laatste 30 dagen."
 
+msgid "Every paid plan includes Superset Mobile, automations, and priority support. Plans with cloud workspaces give your team one shared pool of GB-hours."
+msgstr "Elk betaald abonnement bevat Superset Mobile, automatiseringen en prioriteitsondersteuning. Abonnementen met cloudwerkruimtes geven je team één gedeelde pool GB-uren."
+
 msgid "Every publish is a version"
 msgstr "Elke publicatie is een versie"
 
@@ -6907,14 +7022,17 @@ msgstr "Iedereen blijft op v{sharedVersion} tot je dit wijzigt"
 msgid "Everyone with access to this organization."
 msgstr "Iedereen met toegang tot deze organisatie."
 
+msgid "Everything in {previousPlan}"
+msgstr "Alles uit {previousPlan}"
+
 msgid "Everything in Free"
 msgstr "Alles uit Free"
 
-msgid "Everything in Pro"
-msgstr "Alles uit Pro"
+msgid "Everything in Ultra"
+msgstr "Alles van Ultra"
 
-msgid "Everything in Pro plus SSO & SAML, SCIM provisioning, IP restrictions, audit logs, a custom SLA, dedicated support, and custom contracts. Pricing is tailored to your organization. Get in touch and we'll scope something that fits."
-msgstr "Alles uit Pro plus SSO & SAML, SCIM-provisioning, IP-beperkingen, auditlogs, een SLA op maat, toegewijde support en maatwerkcontracten. De prijs wordt afgestemd op je organisatie. Neem contact op, dan stellen we iets passends samen."
+msgid "Everything in Ultra plus custom cloud GB-hours, SSO & SAML, SCIM provisioning, IP restrictions, audit logs, a custom SLA, dedicated support, and custom contracts. Pricing is tailored to your organization. Get in touch and we'll scope something that fits."
+msgstr "Alles van Ultra plus GB-uren in de cloud op maat, SSO & SAML, SCIM-provisioning, IP-beperkingen, auditlogs, een SLA op maat, toegewijde support en contracten op maat. De prijs is afgestemd op je organisatie. Neem contact op en we stellen iets passends samen."
 
 msgid "Everything is scriptable. Spawn workspaces and agents from the CLI, wire Superset into CI with the SDK, or let your agent drive it over MCP."
 msgstr "Alles is scriptbaar. Start werkruimtes en agents vanaf de CLI, koppel Superset aan CI met de SDK, of laat je agent het via MCP aansturen."
@@ -7035,6 +7153,15 @@ msgstr "Externe editor"
 
 msgid "extra ${used} of ${limit}"
 msgstr "extra ${used} van ${limit}"
+
+msgid "Extra GB-hours"
+msgstr "Extra GB-uren"
+
+msgid "Extra GB-hours, bought as needed"
+msgstr "Extra GB-uren, gekocht wanneer nodig"
+
+msgid "Extra GB-hours: {pack}, never expire"
+msgstr "Extra GB-uren: {pack}, verlopen nooit"
 
 msgid "Extra high"
 msgstr "Zeer hoog"
@@ -7534,6 +7661,9 @@ msgstr "Bijwerken van team mislukt. Probeer het opnieuw."
 msgid "Failed to update URL"
 msgstr "Bijwerken van URL mislukt"
 
+msgid "Failed to update workspace"
+msgstr "Workspace bijwerken mislukt"
+
 msgid "Failed to upload avatar"
 msgstr "Uploaden van avatar mislukt"
 
@@ -7756,9 +7886,6 @@ msgstr "Voltooid"
 msgid "finished · worked for 7s"
 msgstr "klaar · 7s gewerkt"
 
-msgid "First repository by name"
-msgstr "Eerste repository op naam"
-
 msgid "Fix all failing checks"
 msgstr "Alle mislukte checks fixen"
 
@@ -7888,6 +8015,9 @@ msgstr "Voor individuen die beginnen"
 msgid "For organizations with advanced needs"
 msgstr "Voor organisaties met geavanceerde eisen"
 
+msgid "For people who keep agents running all day"
+msgstr "Voor wie agents de hele dag laat draaien"
+
 msgid "For press inquiries and interview requests, email us."
 msgstr "Voor persvragen en interviewverzoeken kun je ons mailen."
 
@@ -7896,6 +8026,12 @@ msgstr "Voor vragen over facturering, <0>neem contact op</0>."
 
 msgid "For teams that need more power"
 msgstr "Voor teams die meer nodig hebben"
+
+msgid "For teams that run agents every day"
+msgstr "Voor teams die elke dag agents draaien"
+
+msgid "For teams that run more agents in the cloud"
+msgstr "Voor teams die meer agents in de cloud draaien"
 
 msgid "Force merge"
 msgstr "Geforceerd mergen"
@@ -8041,8 +8177,14 @@ msgstr "Drempels"
 msgid "Gates open"
 msgstr "Open drempels"
 
+msgid "GB-hours"
+msgstr "GB-uren"
+
 msgid "GB-hours over the plan: {overage}"
 msgstr "GB-uren boven het abonnement: {overage}"
+
+msgid "GB-hours past the pool"
+msgstr "GB-uren boven de pool"
 
 msgid "GB-hours used: {used}"
 msgstr "Gebruikte GB-uren: {used}"
@@ -8082,6 +8224,9 @@ msgstr "Genereren..."
 
 msgid "Generating…"
 msgstr "Genereren…"
+
+msgid "Get {plan}"
+msgstr "{plan} nemen"
 
 msgid "Get an API key"
 msgstr "API-sleutel ophalen"
@@ -8402,9 +8547,6 @@ msgstr "Uit de zijbalk verbergen"
 msgid "Hide log"
 msgstr "Log verbergen"
 
-msgid "Hide PR review comments"
-msgstr "PR-reviewopmerkingen verbergen"
-
 msgid "Hide Preview"
 msgstr "Preview verbergen"
 
@@ -8420,17 +8562,11 @@ msgstr "Opgeloste verbergen ({resolvedCount})"
 msgid "Hide resolved comments"
 msgstr "Opgeloste reacties verbergen"
 
-msgid "Hide review comments"
-msgstr "Reviewopmerkingen verbergen"
-
 msgid "Hide sessions"
 msgstr "Sessies verbergen"
 
 msgid "Hide text"
 msgstr "Tekst verbergen"
-
-msgid "Hide unchanged regions"
-msgstr "Ongewijzigde stukken verbergen"
 
 msgid "High"
 msgstr "Hoog"
@@ -8519,9 +8655,6 @@ msgstr "Host niet beschikbaar"
 msgid "Host unavailable: {hostName}"
 msgstr "Host niet beschikbaar: {hostName}"
 
-msgid "Hosted in the cloud"
-msgstr "Gehost in de cloud"
-
 msgid "Hosts"
 msgstr "Hosts"
 
@@ -8537,6 +8670,9 @@ msgstr "Elk uur"
 msgid "Hover Card"
 msgstr "Hover Card"
 
+msgid "How {label} signs in when Superset runs it for you."
+msgstr "Hoe {label} zich aanmeldt wanneer Superset het voor je uitvoert."
+
 msgid "How 2026 plays out"
 msgstr "Hoe 2026 verloopt"
 
@@ -8549,11 +8685,11 @@ msgstr "Hoe kunnen we helpen?"
 msgid "How do I get started?"
 msgstr "Hoe ga ik van start?"
 
+msgid "How do the paid plans work?"
+msgstr "Hoe werken de betaalde abonnementen?"
+
 msgid "How does pricing work?"
 msgstr "Hoe werkt de prijsstelling?"
-
-msgid "How does Pro pricing work?"
-msgstr "Hoe werkt de prijsstelling van Pro?"
 
 msgid "How does the parallel agent system work?"
 msgstr "Hoe werkt het systeem met parallelle agents?"
@@ -9295,6 +9431,12 @@ msgstr "zojuist"
 msgid "Kbd"
 msgstr "Kbd"
 
+msgid "Keep {planLabel}"
+msgstr "{planLabel} behouden"
+
+msgid "Keep {planName}"
+msgstr "{planName} behouden"
+
 msgid "Keep docs fresh"
 msgstr "Docs actueel houden"
 
@@ -9429,6 +9571,12 @@ msgstr "Laatste dag van elke maand om {time}"
 
 msgid "Last run"
 msgstr "Laatste run"
+
+msgid "Last run (result)"
+msgstr "Laatste run (resultaat)"
+
+msgid "Last run (time)"
+msgstr "Laatste run (tijd)"
 
 msgid "Last seen"
 msgstr "Laatst gezien"
@@ -10057,6 +10205,9 @@ msgstr "Beheer taken vanuit Slack-gesprekken."
 msgid "Manage Terminal Scripts"
 msgstr "Terminalscripts beheren"
 
+msgid "Manage usage"
+msgstr "Gebruik beheren"
+
 msgid "Manage your account settings"
 msgstr "Beheer je accountinstellingen"
 
@@ -10666,9 +10817,6 @@ msgstr "nieuwe uitdagers"
 msgid "New Chat"
 msgstr "Nieuwe chat"
 
-msgid "New cloud workspace"
-msgstr "Nieuwe cloudwerkruimte"
-
 msgid "New environment"
 msgstr "Nieuwe omgeving"
 
@@ -10710,9 +10858,6 @@ msgstr "Nieuwe sessie"
 
 msgid "New shell"
 msgstr "Nieuwe shell"
-
-msgid "New sidebar"
-msgstr "Nieuwe zijbalk"
 
 msgid "New stars"
 msgstr "Nieuwe sterren"
@@ -10779,6 +10924,9 @@ msgstr "Volgende (Enter)"
 
 msgid "Next branch"
 msgstr "Volgende branch"
+
+msgid "Next charge: {nextTotal} on {nextDate}, plus any usage past the pool."
+msgstr "Volgende afschrijving: {nextTotal} op {nextDate}, plus gebruik boven de pool."
 
 msgid "Next comment"
 msgstr "Volgende opmerking"
@@ -11360,9 +11508,6 @@ msgstr "Geen taken gevonden."
 msgid "No tasks in this project yet."
 msgstr "Dit project heeft nog geen taken."
 
-msgid "No tasks or pull requests yet"
-msgstr "Nog geen taken of pull requests"
-
 msgid "No tasks yet"
 msgstr "Nog geen taken"
 
@@ -11645,6 +11790,9 @@ msgstr "van alle tokens"
 msgid "Off"
 msgstr "Uit"
 
+msgid "Off. Buys more GB-hours when they run low."
+msgstr "Uit. Koopt meer GB-uren wanneer ze opraken."
+
 #. placeholder {0}: BRAND.INTRO_NAME
 msgid "Official documentation for {0}, the app for running 100+ coding agents in parallel."
 msgstr "Officiële documentatie van {0}, de app voor meer dan 100 parallelle programmeeragenten."
@@ -11736,6 +11884,9 @@ msgstr "Eén plugin, elke coding-agent: Claude Code, Codex, Cursor, OpenCode en 
 
 msgid "One plugin. Every coding agent."
 msgstr "Eén plugin. Elke coding-agent."
+
+msgid "One shared GB-hour pool for the team"
+msgstr "Eén gedeelde GB-urenpool voor het team"
 
 msgid "One step left"
 msgstr "Nog één stap"
@@ -11924,14 +12075,20 @@ msgstr "Wijzigingen openen"
 msgid "Open Changes"
 msgstr "Wijzigingen openen"
 
+msgid "Open ChatGPT admin settings"
+msgstr "ChatGPT-beheerdersinstellingen openen"
+
+msgid "Open ChatGPT settings"
+msgstr "ChatGPT-instellingen openen"
+
 msgid "Open Command Palette"
 msgstr "Opdrachtenpalet openen"
 
 msgid "Open comment on GitHub"
 msgstr "Opmerking openen op GitHub"
 
-msgid "Open details"
-msgstr "Details openen"
+msgid "Open device sign-in"
+msgstr "Apparaataanmelding openen"
 
 msgid "Open DevTools"
 msgstr "DevTools openen"
@@ -11968,6 +12125,9 @@ msgstr "Bestand openen"
 
 msgid "Open File in New Tab"
 msgstr "Bestand openen in nieuw tabblad"
+
+msgid "Open files, diffs and browsers in tabs on the right, and keep the center for terminals and chats."
+msgstr "Open bestanden, diffs en browsers in tabbladen aan de rechterkant en houd het midden vrij voor terminals en chats."
 
 msgid "Open from folder"
 msgstr "Openen vanuit map"
@@ -12128,6 +12288,9 @@ msgstr "Navigatie openen"
 msgid "Open on GitHub"
 msgstr "Openen op GitHub"
 
+msgid "Open OpenAI's device sign-in page."
+msgstr "Open de apparaataanmeldingspagina van OpenAI."
+
 msgid "Open Page in Default Browser"
 msgstr "Pagina openen in standaardbrowser"
 
@@ -12163,9 +12326,6 @@ msgstr "Pull request openen"
 #. placeholder {0}: pullRequest.number
 msgid "Open pull request #{0}"
 msgstr "Pull request #{0} openen"
-
-msgid "Open pull request #{number}"
-msgstr "Pull request #{number} openen"
 
 msgid "Open pull request options"
 msgstr "Pull request-opties openen"
@@ -12265,6 +12425,9 @@ msgstr "Werkruimte openen"
 
 msgid "Open your app."
 msgstr "Open je app."
+
+msgid "OpenAI did not complete the sign-in. Start again."
+msgstr "OpenAI heeft de aanmelding niet voltooid. Begin opnieuw."
 
 msgid "OpenAI rejected this API key."
 msgstr "OpenAI heeft deze API-sleutel geweigerd."
@@ -12532,6 +12695,9 @@ msgstr "paginering"
 msgid "Pagination"
 msgstr "Paginering"
 
+msgid "Paid plans are priced per user per month and billed for each active seat on your team. {planPrices}."
+msgstr "Betaalde abonnementen kosten per gebruiker per maand en worden gefactureerd voor elke actieve plek in je team. {planPrices}."
+
 msgid "Paid work trial"
 msgstr "Betaalde proefweek"
 
@@ -12645,6 +12811,9 @@ msgctxt "project state"
 msgid "Paused"
 msgstr "Gepauzeerd"
 
+msgid "Pay {total}"
+msgstr "{total} betalen"
+
 msgid "Pay now"
 msgstr "Nu betalen"
 
@@ -12718,6 +12887,9 @@ msgstr "Persoon"
 msgid "Personal"
 msgstr "Persoonlijk"
 
+msgid "Personal plan"
+msgstr "Persoonlijk abonnement"
+
 msgid "Phantom Forklift"
 msgstr "Fantoomheftruck"
 
@@ -12771,9 +12943,6 @@ msgstr "Kies een werkruimte waarvan de agent op je invoer wacht, klaar is sinds 
 
 msgid "Pick an icon and a color, or upload a custom image. Defaults to the linked GitHub owner's avatar."
 msgstr "Kies een icoon en een kleur, of upload een eigen afbeelding. Standaard is de avatar van de gekoppelde GitHub-eigenaar."
-
-msgid "Pick how {label} signs in inside a sandbox. The credential is handed to the agent process when it launches and is not stored in the sandbox."
-msgstr "Kies hoe {label} inlogt binnen een sandbox. De inloggegevens gaan bij het starten naar het agentproces en worden niet in de sandbox opgeslagen."
 
 msgid "Pick one in the Superset app. It's saved to your account."
 msgstr "Kies er een in de Superset-app. Hij wordt in je account opgeslagen."
@@ -12956,10 +13125,6 @@ msgstr "PR #{0} ({1})"
 #. placeholder {0}: created.number
 msgid "PR #{0} created"
 msgstr "PR #{0} aangemaakt"
-
-#. placeholder {0}: i18n._(LABEL[state])
-msgid "PR #{number} — {0}"
-msgstr "PR #{number} — {0}"
 
 msgid "PR Closed"
 msgstr "PR gesloten"
@@ -13152,9 +13317,6 @@ msgstr "Pro en Enterprise. Microsoft Teams-triggers vereisen Enterprise. Als je 
 
 msgid "Pro Features"
 msgstr "Pro-functies"
-
-msgid "Pro is {monthlyPrice} per user/month billed monthly, or {yearlyPrice} per user/month billed yearly (a 25% discount). You're billed per active seat on your team."
-msgstr "Pro kost {monthlyPrice} per gebruiker/maand bij maandelijkse facturering, of {yearlyPrice} per gebruiker/maand bij jaarlijkse facturering (25% korting). Je betaalt per actieve seat in je team."
 
 msgid "Process"
 msgstr "Proces"
@@ -14528,6 +14690,9 @@ msgstr "Uitgebreide invoer ({hotkeyText})"
 msgid "right pane"
 msgstr "rechterpaneel"
 
+msgid "Right pane area"
+msgstr "Rechterpaneelgebied"
+
 msgid "Right-click here"
 msgstr "Klik hier met rechts"
 
@@ -14704,12 +14869,6 @@ msgstr "bun test uitvoeren…"
 msgid "Running now"
 msgstr "Wordt nu uitgevoerd"
 
-msgid "Running on a paired device"
-msgstr "Draait op een gekoppeld apparaat"
-
-msgid "Running on this device"
-msgstr "Draait op dit apparaat"
-
 msgid "Running terminal processes continue, but older output may no longer be available after restarting the app."
 msgstr "Draaiende terminalprocessen gaan door, maar oudere uitvoer is na het herstarten van de app mogelijk niet meer beschikbaar."
 
@@ -14758,9 +14917,6 @@ msgstr "Opslaan"
 msgid "Save & create workspace"
 msgstr "Opslaan en werkruimte aanmaken"
 
-msgid "Save 25%"
-msgstr "Bespaar 25%"
-
 msgid "Save All"
 msgstr "Alles opslaan"
 
@@ -14793,6 +14949,9 @@ msgstr "het agentcommando opslaan"
 
 msgid "Save to get URL"
 msgstr "Opslaan voor URL"
+
+msgid "Save up to {maxDiscount}"
+msgstr "Bespaar tot {maxDiscount}"
 
 msgid "Saved"
 msgstr "Opgeslagen"
@@ -15081,6 +15240,12 @@ msgstr "Zoeken..."
 
 msgid "Searching…"
 msgstr "Zoeken…"
+
+#. placeholder {0}: format(new Date(periodEnd), "MMMM d, yyyy")
+#. placeholder {0}: formatDate(periodEnd)
+#. placeholder {0}: formatLocaleDate(new Date(seatPeriodEnd), { month: "long", day: "numeric", year: "numeric" })
+msgid "Seats removed mid-cycle stay active until {0}."
+msgstr "Plekken die halverwege de periode zijn verwijderd, blijven actief tot {0}."
 
 msgid "Secondary"
 msgstr "Secundair"
@@ -15577,9 +15742,6 @@ msgstr "Gedeeld met iedereen"
 msgid "Shared with me"
 msgstr "Gedeeld met mij"
 
-msgid "Shares the project's checkout — files, git index and branch — with its other local workspaces"
-msgstr "Deelt de checkout van het project — bestanden, git-index en branch — met de andere lokale werkruimtes"
-
 msgid "Sheet"
 msgstr "Sheet"
 
@@ -15714,9 +15876,6 @@ msgstr "Open items tonen"
 
 msgid "Show original"
 msgstr "Origineel tonen"
-
-msgid "Show PR review comments"
-msgstr "PR-reviewopmerkingen tonen"
 
 msgid "Show Preview"
 msgstr "Preview tonen"
@@ -15878,6 +16037,12 @@ msgstr "Inloggen mislukt ({reason}). Probeer het opnieuw."
 msgid "Signed in as <0>{userName}</0>"
 msgstr "Ingelogd als <0>{userName}</0>"
 
+msgid "Signed in to ChatGPT"
+msgstr "Aangemeld bij ChatGPT"
+
+msgid "Signed in to ChatGPT as {connectedAs}"
+msgstr "Aangemeld bij ChatGPT als {connectedAs}"
+
 msgid "Signed out"
 msgstr "Uitgelogd"
 
@@ -15895,6 +16060,9 @@ msgstr "Eenvoudige prijzen voor elk team"
 
 msgid "Simple pricing for every team. Free for individuals, {yearlyPrice}/user/month for teams, custom for enterprise. Run 100+ parallel coding agents with {companyName}."
 msgstr "Eenvoudige prijzen voor elk team. Gratis voor individuen, {yearlyPrice}/gebruiker/maand voor teams, op maat voor enterprise. Draai 100+ parallelle coding agents met {companyName}."
+
+msgid "Simple pricing for every team. Free for individuals, per-user plans for teams, custom for enterprise. Run 100+ parallel coding agents with {companyName}."
+msgstr "Eenvoudige prijzen voor elk team. Gratis voor individuen, abonnementen per gebruiker voor teams, op maat voor bedrijven. Draai meer dan 100 programmeeragents parallel met {companyName}."
 
 msgid "Simulate update: downloading"
 msgstr "Update simuleren: downloaden"
@@ -16750,9 +16918,6 @@ msgstr "Superset Mobile draait agents op de computers die je koppelt."
 msgid "Superset Mobile terminal on iPhone"
 msgstr "Terminal van Superset Mobile op iPhone"
 
-msgid "Superset Mobile, cloud workspaces, automations, and priority support."
-msgstr "Superset Mobile, cloud-workspaces, automatiseringen en prioritaire support."
-
 msgid "Superset needs Full Disk Access to read another browser's data. Grant it in System Settings, then check again."
 msgstr "Superset heeft Volledige Schijftoegang nodig om de gegevens van een andere browser te lezen. Geef die in Systeeminstellingen en controleer opnieuw."
 
@@ -16841,11 +17006,17 @@ msgstr "Van organisatie wisselen"
 msgid "Switch organization or sign in again to restart the host service."
 msgstr "Wissel van organisatie of log opnieuw in om de hostservice te herstarten."
 
+msgid "Switch plan"
+msgstr "Abonnement wisselen"
+
 msgid "Switch sign-in"
 msgstr "Login wisselen"
 
 msgid "Switch sign-in…"
 msgstr "Login wisselen…"
+
+msgid "Switch to {planName}"
+msgstr "Overstappen naar {planName}"
 
 msgid "Switch to Active Workspace"
 msgstr "Overschakelen naar actieve werkruimte"
@@ -16906,6 +17077,11 @@ msgstr "Naar werkruimte 8"
 
 msgid "Switch to Workspace 9"
 msgstr "Naar werkruimte 9"
+
+#. placeholder {0}: format(new Date(switchAt), "MMMM d, yyyy")
+#. placeholder {0}: formatDate(scheduledAt)
+msgid "Switches to {nextPlanName} on {0}."
+msgstr "Gaat op {0} over naar {nextPlanName}."
 
 msgid "Symbol, light"
 msgstr "Symbool, licht"
@@ -16981,6 +17157,9 @@ msgstr "Besturing overnemen"
 
 msgid "Take me home"
 msgstr "Naar de homepage"
+
+msgid "Take screenshot"
+msgstr "Screenshot maken"
 
 msgid "Taken"
 msgstr "Bezet"
@@ -17298,9 +17477,6 @@ msgstr "De app is gratis te downloaden. Vereist iOS 26 of nieuwer en Superset Pr
 msgid "The app is on {appVersion} but attached to a host service started by something else, likely an older CLI or another Superset build. Restarting replaces it with this app's copy."
 msgstr "De app is op {appVersion}, maar gekoppeld aan een hostservice die door iets anders is gestart, waarschijnlijk een oudere CLI of een andere Superset-build. Opnieuw starten vervangt die door de kopie van deze app."
 
-msgid "The associated device isn't reachable right now"
-msgstr "Het bijbehorende apparaat is nu niet bereikbaar"
-
 msgid "The automation's owner can't use cloud workspaces in this organization anymore. Ask them to check their access, or run the automation on a device."
 msgstr "De eigenaar van de automatisering kan in deze organisatie geen cloudwerkruimtes meer gebruiken. Vraag diegene de toegang te controleren, of voer de automatisering uit op een apparaat."
 
@@ -17310,11 +17486,14 @@ msgstr "De beste agent verandert.<0/>Jouw workflow niet."
 msgid "The button now stands out. I checked it in your pane."
 msgstr "De knop valt nu op. Ik heb het gecontroleerd in je paneel."
 
+msgid "The change starts now. You pay only the difference for the rest of this period."
+msgstr "De wijziging gaat nu in. Je betaalt alleen het verschil voor de rest van deze periode."
+
 msgid "The cloud workspace should have started but didn't answer in time. The next run tries again."
 msgstr "De cloudwerkruimte had gestart moeten zijn, maar reageerde niet op tijd. De volgende run probeert het opnieuw."
 
-msgid "The config repository must be one of the environment's repositories"
-msgstr "De configuratierepository moet een van de repositories van de omgeving zijn"
+msgid "The code expired. Start again."
+msgstr "De code is verlopen. Begin opnieuw."
 
 msgid "The connection timed out"
 msgstr "De verbinding is verlopen"
@@ -17498,6 +17677,9 @@ msgstr "De pagina die je zoekt bestaat niet."
 msgid "The pane uses your real logins. Agents ask you before they take a consequential action."
 msgstr "Het paneel gebruikt je echte logins. Agents vragen het je voordat ze een ingrijpende actie uitvoeren."
 
+msgid "The primary repository must be one of the environment's repositories"
+msgstr "De primaire repository moet een van de repository's van de omgeving zijn"
+
 msgid "The project's checkout as it is: files and branch are shared"
 msgstr "De checkout van het project zoals die is: bestanden en branch worden gedeeld"
 
@@ -17616,6 +17798,9 @@ msgstr "Thema's"
 
 msgid "Themes and agents"
 msgstr "Thema's en agents"
+
+msgid "Then {overage} per GB-hour past the pool"
+msgstr "Daarna {overage} per GB-uur boven de pool"
 
 msgid "These commands run automatically when a workspace is created. <0>Read our docs<1/></0>"
 msgstr "Deze commando's draaien automatisch wanneer een werkruimte wordt aangemaakt. <0>Lees onze docs<1/></0>"
@@ -18021,6 +18206,9 @@ msgstr "Thread niet gevonden"
 msgid "Three steps · touches packages/ui and apps/desktop"
 msgstr "Drie stappen · raakt packages/ui en apps/desktop"
 
+msgid "Threshold"
+msgstr "Drempel"
+
 msgid "Ticket to production under one day, median"
 msgstr "Ticket tot productie onder één dag, mediaan"
 
@@ -18201,6 +18389,9 @@ msgstr "Topmodellen"
 msgid "Top tier. Nothing left to clear."
 msgstr "Hoogste niveau. Er valt niets meer te halen."
 
+msgid "Top-up amount"
+msgstr "Bijkoopaantal"
+
 msgid "Topic"
 msgstr "Onderwerp"
 
@@ -18338,6 +18529,9 @@ msgstr "Zet “Externe toegang tot dit apparaat via de relay toestaan” aan"
 
 msgid "Turn on Design and click the part of the page you want to change."
 msgstr "Zet Design aan en klik op het deel van de pagina dat je wilt wijzigen."
+
+msgid "Turn on device code sign-in for Codex."
+msgstr "Zet aanmelden met apparaatcode aan voor Codex."
 
 msgid "Turn Slack conversations into tasks, run agents from your workspace, and keep teammates in the loop where work starts."
 msgstr "Zet Slack-gesprekken om in taken, laat agents draaien vanuit je werkruimte en houd teamgenoten op de hoogte waar het werk begint."
@@ -18724,12 +18918,14 @@ msgstr "Werk een dependency bij en fix wat er stukgaat…"
 msgid "Upgrade on {0}"
 msgstr "Upgraden op {0}"
 
-#. placeholder {0}: i18n._(plan.name)
-msgid "Upgrade to {0}"
-msgstr "Upgraden naar {0}"
+msgid "Upgrade to {planName}"
+msgstr "Upgraden naar {planName}"
 
 msgid "Upgrade to Pro"
 msgstr "Upgraden naar Pro"
+
+msgid "Upgrade your plan"
+msgstr "Upgrade je abonnement"
 
 msgid "Upload files"
 msgstr "Bestanden uploaden"
@@ -19060,6 +19256,9 @@ msgstr "wachten op {0} en {1}…"
 msgid "Waiting for activity data"
 msgstr "Wachten op activiteitsgegevens"
 
+msgid "Waiting for approval. Keep this dialog open."
+msgstr "Wachten op goedkeuring. Houd dit venster open."
+
 msgid "Waiting for Checks"
 msgstr "Wachten op checks"
 
@@ -19231,6 +19430,9 @@ msgstr "Welkom bij Superset"
 msgid "Welcome to the new Superset"
 msgstr "Welkom bij het nieuwe Superset"
 
+msgid "What are cloud GB-hours?"
+msgstr "Wat zijn cloud-GB-uren?"
+
 msgid "What are the benefits?"
 msgstr "Wat zijn de voordelen?"
 
@@ -19323,6 +19525,12 @@ msgstr "Wat volgt"
 
 msgid "When a trigger fires, the Mac you picked opens a new workspace and the agent starts on your prompt. Event runs include the event, so the agent knows what to look at. Reply to the run to keep going."
 msgstr "Als een trigger afgaat, opent de gekozen Mac een nieuwe werkruimte en begint de agent aan je prompt. Runs vanuit een gebeurtenis bevatten die gebeurtenis, dus de agent weet waar hij naar moet kijken. Antwoord in de run om verder te gaan."
+
+msgid "When bought GB-hours fall below"
+msgstr "Wanneer gekochte GB-uren dalen onder"
+
+msgid "When fewer than {topupThreshold} GB-hours remain, add {topupPrice} ({topupGbHours} GB-hours)."
+msgstr "Wanneer er minder dan {topupThreshold} GB-uren over zijn, {topupPrice} bijkopen ({topupGbHours} GB-uren)."
 
 msgid "When off, nothing else can reach the files and tools on this device. You can still connect out to remote sandboxes from here. <0>Learn more<1/></0>"
 msgstr "Als dit uitstaat, kan niets anders bij de bestanden en tools op dit apparaat. Je kunt vanaf hier nog steeds verbinden met externe sandboxes. <0>Meer informatie<1/></0>"
@@ -19491,9 +19699,6 @@ msgstr "Werkruimte aangemaakt vanuit PR"
 msgid "Workspace details"
 msgstr "Werkruimtedetails"
 
-msgid "Workspace ID"
-msgstr "Werkruimte-ID"
-
 msgid "Workspace ID copied"
 msgstr "Werkruimte-ID gekopieerd"
 
@@ -19571,9 +19776,6 @@ msgstr "Worktree-locatie bijgewerkt"
 
 msgid "Worktree missing"
 msgstr "Worktree ontbreekt"
-
-msgid "Worktree on this device"
-msgstr "Worktree op dit apparaat"
 
 msgid "Worktree opened"
 msgstr "Worktree geopend"
@@ -19657,6 +19859,9 @@ msgstr "Ja. Solliciteer op de vacature die het best past en vertel ons wat je zo
 msgid "Yes. Free covers individuals with 1 user, local workspaces, the desktop app, and the CLI. No credit card required."
 msgstr "Ja. Free is voor individuen met 1 gebruiker, lokale werkruimtes, de desktop-app en de CLI. Geen creditcard nodig."
 
+msgid "Yes. On plans with cloud workspaces, owners can buy any amount of extra GB-hours at {packPrice} per GB-hour in Settings, Billing. Bought GB-hours are used after the monthly pool and never expire, and auto top-up can buy more when they run low."
+msgstr "Ja. Bij abonnementen met cloudwerkruimtes kunnen eigenaren in Instellingen, Facturering elk gewenst aantal extra GB-uren kopen voor {packPrice} per GB-uur. Gekochte GB-uren worden na de maandelijkse pool gebruikt en verlopen nooit, en automatisch bijkopen kan meer kopen wanneer ze opraken."
+
 msgid "Yes. Superset has completed a SOC 2 Type II audit with an independent auditor, covering our security controls in operation over time. Request the report and review our security documentation at trust.superset.sh."
 msgstr "Ja. Superset heeft een SOC 2 Type II-audit door een onafhankelijke auditor afgerond, over de werking van onze securitycontroles in de tijd. Vraag het rapport aan en bekijk onze securitydocumentatie op trust.superset.sh."
 
@@ -19666,8 +19871,8 @@ msgstr "Ja. Superset is de werkruimte waarin je agents draaien, geen modelprovid
 msgid "Yes. Use superset automations in the CLI to create, run, and pause them."
 msgstr "Ja. Gebruik superset automations in de CLI om ze te maken, te starten en te pauzeren."
 
-msgid "Yes. You can upgrade, downgrade, or cancel at any time from the billing settings inside the app. Changes take effect at the end of your current billing period."
-msgstr "Ja. Je kunt op elk moment upgraden, downgraden of opzeggen via de facturatie-instellingen in de app. Wijzigingen gaan in aan het eind van je huidige factuurperiode."
+msgid "Yes. You can upgrade, downgrade, or cancel at any time from the billing settings inside the app. Upgrades start right away, and you pay only the difference for the rest of the period. Downgrades and cancellations take effect at the end of your current billing period."
+msgstr "Ja. Je kunt op elk moment upgraden, downgraden of opzeggen via de factureringsinstellingen in de app. Upgrades gaan direct in en je betaalt alleen het verschil voor de rest van de periode. Downgrades en opzeggingen gaan in aan het einde van je huidige factureringsperiode."
 
 msgid "Yes. You don't need US work authorization to apply. But you should be willing to relocate to San Francisco."
 msgstr "Ja. Je hebt geen Amerikaanse werkvergunning nodig om te solliciteren. Maar je moet wel bereid zijn om naar San Francisco te verhuizen."
@@ -19857,14 +20062,23 @@ msgid "Your organization has reached its cloud usage limit. Raise the limit or u
 msgstr "Je organisatie heeft haar limiet voor cloudgebruik bereikt. Verhoog de limiet of upgrade in Instellingen, Facturering om deze werkruimte te starten."
 
 #. placeholder {0}: params?.limit
-msgid "Your organization has reached its limit of {0} environments. Archive one, or upgrade in Settings, Billing to add more."
-msgstr "Je organisatie heeft haar limiet van {0} omgevingen bereikt. Archiveer er een of upgrade in Instellingen, Facturering om er meer toe te voegen."
+msgid "Your organization has reached its environment limit ({0}). Archive an environment, or upgrade in Settings, Billing to add more."
+msgstr "Je organisatie heeft haar limiet voor omgevingen ({0}) bereikt. Archiveer een omgeving of upgrade in Instellingen, Facturering om er meer toe te voegen."
 
 msgid "Your organization reached its cloud usage limit. This workspace stops in a few minutes unless the limit is raised."
 msgstr "Je organisatie heeft haar limiet voor cloudgebruik bereikt. Deze werkruimte stopt over een paar minuten, tenzij de limiet wordt verhoogd."
 
 msgid "Your own accounts. Your organization's integrations let Superset reach its tools; connecting yours makes the work Superset does for you show up as you."
 msgstr "Je eigen accounts. De integraties van je organisatie geven Superset toegang tot haar tools; als je die van jou koppelt, verschijnt het werk dat Superset voor je doet onder jouw naam."
+
+msgid "Your plan does not include cloud environments."
+msgstr "Je abonnement bevat geen cloudomgevingen."
+
+msgid "Your plan does not include cloud environments. Upgrade in Settings, Billing to create one."
+msgstr "Je abonnement bevat geen cloudomgevingen. Upgrade in Instellingen, Facturering om er een te maken."
+
+msgid "Your plan switches to {planName} on {startDate}. Nothing is charged today."
+msgstr "Je abonnement gaat op {startDate} over naar {planName}. Vandaag wordt niets afgeschreven."
 
 msgid "Your rank"
 msgstr "Je positie"
@@ -19885,8 +20099,8 @@ msgstr "Je Slack-account is gekoppeld aan Superset. Je kunt dit tabblad sluiten 
 msgid "Your stats, settled in mortal combat"
 msgstr "Jouw statistieken beslissen in een gevecht op leven en dood"
 
-msgid "Your subscription has been activated. You can now access all Pro features."
-msgstr "Je abonnement is geactiveerd. Je hebt nu toegang tot alle Pro-functies."
+msgid "Your subscription is active. Your new plan's features are ready to use."
+msgstr "Je abonnement is actief. De functies van je nieuwe abonnement zijn klaar voor gebruik."
 
 msgid "Your subscription will be adjusted accordingly."
 msgstr "Je abonnement wordt hierop aangepast."
@@ -19915,6 +20129,9 @@ msgstr "Je v1-projecten en -workspaces worden overgezet naar het nieuwe Superset
 
 msgid "Your version: {currentVersion}"
 msgstr "Jouw versie: {currentVersion}"
+
+msgid "Your workspace admin turns on device code sign-in for Codex."
+msgstr "De beheerder van je workspace zet aanmelden met apparaatcode voor Codex aan."
 
 msgid "Zap"
 msgstr "Bliksem"

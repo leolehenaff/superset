@@ -15,7 +15,6 @@ import { useRef } from "react";
 import {
 	LuBot,
 	LuClock,
-	LuCloud,
 	LuGauge,
 	LuPlus,
 	LuPuzzle,
@@ -46,7 +45,6 @@ import { NavigationControls } from "renderer/routes/_authenticated/_dashboard/co
 import { OfflineBadge } from "renderer/routes/_authenticated/_dashboard/components/OfflineBadge";
 import { PortsDropdown } from "renderer/routes/_authenticated/_dashboard/components/PortsDropdown";
 import { SidebarToggle } from "renderer/routes/_authenticated/_dashboard/components/SidebarToggle";
-import { ProjectGlyph } from "renderer/routes/_authenticated/_dashboard/components/TaskProjectIcon";
 import {
 	WINDOW_CHROME_BAND_CLASS,
 	WINDOW_CONTROLS_ROW_HEIGHT,
@@ -66,7 +64,6 @@ import {
 	useOpenTemplateGalleryModal,
 } from "renderer/stores/add-repository-modal";
 import { COLLAPSED_WORKSPACE_SIDEBAR_WIDTH } from "renderer/stores/workspace-sidebar-state";
-import { useIsNewDashboardSidebar } from "../../hooks/useNewDashboardSidebarEnabled";
 
 interface DashboardSidebarHeaderProps {
 	isCollapsed?: boolean;
@@ -143,15 +140,6 @@ export function DashboardSidebarHeader({
 	const matchRoute = useMatchRoute();
 	const { gateFeature, hasAccess } = usePaywall();
 	const isAgentsOpen = !!matchRoute({ to: "/agents" });
-	const isCloudWorkspacesOpen = !!matchRoute({
-		to: "/cloud-workspaces",
-		fuzzy: true,
-	});
-	const isProjectsOpen = !!matchRoute({ to: "/projects", fuzzy: true });
-	const isCloudEnabled =
-		useFeatureFlagEnabled(FEATURE_FLAGS.CLOUD_WORKSPACES) === true;
-	const isNewSidebar = useIsNewDashboardSidebar();
-	const showsCloudAndProjectsLinks = isCloudEnabled && !isNewSidebar;
 	const v2WorkspaceMatch = matchRoute({
 		to: "/v2-workspace/$workspaceId",
 		fuzzy: true,
@@ -178,14 +166,6 @@ export function DashboardSidebarHeader({
 
 	const handleAgentsClick = () => {
 		navigate({ to: "/agents" });
-	};
-
-	const handleCloudWorkspacesClick = () => {
-		navigate({ to: "/cloud-workspaces" });
-	};
-
-	const handleProjectsClick = () => {
-		navigate({ to: "/projects" });
 	};
 
 	// Automations are Pro, but an org that already has some (a downgrade) can
@@ -319,58 +299,6 @@ export function DashboardSidebarHeader({
 						</TooltipTrigger>
 						<TooltipContent side="right">Agents</TooltipContent>
 					</Tooltip>
-
-					{showsCloudAndProjectsLinks && (
-						<Tooltip delayDuration={300}>
-							<TooltipTrigger asChild>
-								<button
-									type="button"
-									onClick={handleCloudWorkspacesClick}
-									aria-label={t({
-										message: "Cloud workspaces",
-									})}
-									aria-current={isCloudWorkspacesOpen ? "page" : undefined}
-									className={cn(
-										"flex size-7 items-center justify-center rounded-md transition-colors",
-										isCloudWorkspacesOpen
-											? "bg-fill-selected text-muted-foreground"
-											: "text-muted-foreground hover:bg-fill-hover",
-									)}
-								>
-									<LuCloud className="size-3.5" strokeWidth={1.5} />
-								</button>
-							</TooltipTrigger>
-							<TooltipContent side="right">
-								<Trans>Cloud workspaces</Trans>
-							</TooltipContent>
-						</Tooltip>
-					)}
-
-					{showsCloudAndProjectsLinks && (
-						<Tooltip delayDuration={300}>
-							<TooltipTrigger asChild>
-								<button
-									type="button"
-									onClick={handleProjectsClick}
-									aria-label={t({
-										message: "Projects",
-									})}
-									aria-current={isProjectsOpen ? "page" : undefined}
-									className={cn(
-										"flex size-7 items-center justify-center rounded-md transition-colors",
-										isProjectsOpen
-											? "bg-fill-selected text-muted-foreground"
-											: "text-muted-foreground hover:bg-fill-hover",
-									)}
-								>
-									<ProjectGlyph className="size-3.5" />
-								</button>
-							</TooltipTrigger>
-							<TooltipContent side="right">
-								<Trans>Projects</Trans>
-							</TooltipContent>
-						</Tooltip>
-					)}
 
 					<Tooltip delayDuration={300}>
 						<TooltipTrigger asChild>
@@ -605,47 +533,6 @@ export function DashboardSidebarHeader({
 				/>
 				<span className="flex-1 text-left">Agents</span>
 			</button>
-
-			{showsCloudAndProjectsLinks && (
-				<button
-					type="button"
-					onClick={handleCloudWorkspacesClick}
-					aria-current={isCloudWorkspacesOpen ? "page" : undefined}
-					className={cn(
-						"flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium transition-colors",
-						isCloudWorkspacesOpen
-							? "bg-fill-selected text-foreground"
-							: "text-muted-foreground hover:bg-fill-hover hover:text-foreground",
-					)}
-				>
-					<LuCloud
-						className="size-4 shrink-0 text-muted-foreground"
-						strokeWidth={1.5}
-					/>
-					<span className="flex-1 text-left">
-						<Trans>Cloud workspaces</Trans>
-					</span>
-				</button>
-			)}
-
-			{showsCloudAndProjectsLinks && (
-				<button
-					type="button"
-					onClick={handleProjectsClick}
-					aria-current={isProjectsOpen ? "page" : undefined}
-					className={cn(
-						"flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium transition-colors",
-						isProjectsOpen
-							? "bg-fill-selected text-foreground"
-							: "text-muted-foreground hover:bg-fill-hover hover:text-foreground",
-					)}
-				>
-					<ProjectGlyph className="size-4 shrink-0 text-muted-foreground" />
-					<span className="flex-1 text-left">
-						<Trans>Projects</Trans>
-					</span>
-				</button>
-			)}
 
 			<div className="relative">
 				<button
