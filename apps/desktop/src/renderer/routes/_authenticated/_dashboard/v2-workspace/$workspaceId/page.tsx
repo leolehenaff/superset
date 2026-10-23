@@ -1,10 +1,8 @@
 import { acpHarnessForPreset } from "@superset/chat/core";
 import { Workspace } from "@superset/panes";
-import { FEATURE_FLAGS } from "@superset/shared/constants";
 import { cn } from "@superset/ui/utils";
 import { useWorkspaceClient, workspaceTrpc } from "@superset/workspace-client";
 import { createFileRoute } from "@tanstack/react-router";
-import { useFeatureFlagEnabled } from "posthog-js/react";
 import {
 	useCallback,
 	useEffect,
@@ -225,8 +223,7 @@ function V2WorkspaceContent() {
 	const isChatTabActive = useIsChatTabActive(store);
 	const rightPaneAreaFlag = useRightPaneAreaEnabled();
 	const isRightPaneAreaEnabled = rightPaneAreaFlag === true;
-	const isMobilePaneEnabled =
-		useFeatureFlagEnabled(FEATURE_FLAGS.MOBILE_PANE) === true;
+	const isMobilePaneEnabled = true;
 	const { store: rightStore, isLayoutReady: isRightLayoutReady } =
 		useV2WorkspacePaneLayout({ slot: "rightPaneLayout" });
 	useClearActivePaneAttention({ store: rightStore });

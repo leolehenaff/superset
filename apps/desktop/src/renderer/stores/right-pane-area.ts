@@ -1,5 +1,3 @@
-import { FEATURE_FLAGS } from "@superset/shared/constants";
-import { useFeatureFlagEnabled } from "posthog-js/react";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 
@@ -37,8 +35,5 @@ export const useRightPaneAreaStore = create<RightPaneAreaState>()(
  * must not act on a flag that hasn't answered yet.
  */
 export function useRightPaneAreaEnabled(): boolean | undefined {
-	const flag = useFeatureFlagEnabled(FEATURE_FLAGS.RIGHT_PANE_AREA);
-	const chosen = useRightPaneAreaStore((state) => state.enabled);
-	if (flag !== true) return flag;
-	return chosen ?? true;
+	return useRightPaneAreaStore((state) => state.enabled) ?? true;
 }

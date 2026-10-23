@@ -1,9 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { FEATURE_FLAGS } from "@superset/shared/constants";
 import { Button } from "@superset/ui/button";
 import { Label } from "@superset/ui/label";
 import { Switch } from "@superset/ui/switch";
-import { useFeatureFlagEnabled } from "posthog-js/react";
 import { HighlightText } from "renderer/routes/_authenticated/settings/components/HighlightText";
 import {
 	useInlineWorkspacePortsStore,
@@ -49,8 +47,7 @@ export function ExperimentalSettingsList({
 		SETTING_ITEM_ID.EXPERIMENTAL_WORKSPACE_AGENTS,
 		visibleItems,
 	);
-	const rightPaneAreaFlag =
-		useFeatureFlagEnabled(FEATURE_FLAGS.RIGHT_PANE_AREA) === true;
+	const rightPaneAreaFlag = true;
 	const showRightPaneArea =
 		rightPaneAreaFlag &&
 		isItemVisible(SETTING_ITEM_ID.EXPERIMENTAL_RIGHT_PANE_AREA, visibleItems);
