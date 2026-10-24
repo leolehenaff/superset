@@ -26,6 +26,8 @@ import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
 import type { AgentSession } from "renderer/routes/_authenticated/_dashboard/agents/hooks/useAgentSessions";
 import { navigateToV2Workspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";
 import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
+import { closeTerminalPanes } from "renderer/routes/_authenticated/components/GlobalPaneLayoutRequests/hooks/usePaneLayoutRequests";
+import { useCollections } from "renderer/routes/_authenticated/providers/CollectionsProvider";
 import { getRelativeTime } from "renderer/screens/main/components/WorkspacesListView/utils";
 
 function formatTokens(tokens: number): string {
@@ -132,6 +134,7 @@ export const AgentSessionCard = memo(function AgentSessionCard({
 	};
 
 	const queryClient = useQueryClient();
+	const collections = useCollections();
 	const close = async () => {
 		if (!session.hostUrl) return;
 		try {
@@ -141,6 +144,7 @@ export const AgentSessionCard = memo(function AgentSessionCard({
 				terminalId: session.terminalId,
 				workspaceId: session.workspaceId,
 			});
+			closeTerminalPanes(collections, session.workspaceId, session.terminalId);
 			await queryClient.invalidateQueries({
 				queryKey: ["v2-workspaces", "terminal-agents"],
 			});

@@ -84,6 +84,35 @@ function runPaneLayoutOp(
 	return { ...outcome, layout: describePaneLayout(outcome.state) };
 }
 
+/** Closes every pane showing `terminalId`, whether or not the workspace is mounted. */
+export function closeTerminalPanes(
+	collections: Pick<AppCollections, "v2WorkspaceLocalState">,
+	workspaceId: string,
+	terminalId: string,
+): void {
+	const tabs =
+		getV2PaneLayoutStore(workspaceId)?.getState().tabs ??
+		(
+			collections.v2WorkspaceLocalState.get(workspaceId)?.paneLayout as
+				| WorkspaceState<PaneViewerData>
+				| undefined
+		)?.tabs ??
+		[];
+	for (const tab of tabs) {
+		for (const pane of Object.values(tab.panes)) {
+			if (
+				pane.kind === "terminal" &&
+				(pane.data as { terminalId?: string }).terminalId === terminalId
+			) {
+				runPaneLayoutOp(collections, workspaceId, {
+					type: "close",
+					paneId: pane.id,
+				});
+			}
+		}
+	}
+}
+
 /** Applies pane layout ops sent by the CLI and replies with the result. */
 export function usePaneLayoutRequests() {
 	const collections = useCollections();

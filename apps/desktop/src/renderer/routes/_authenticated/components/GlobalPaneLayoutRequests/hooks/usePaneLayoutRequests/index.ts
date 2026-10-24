@@ -1,1 +1,4 @@
-export { usePaneLayoutRequests } from "./usePaneLayoutRequests";
+export {
+	closeTerminalPanes,
+	usePaneLayoutRequests,
+} from "./usePaneLayoutRequests";
