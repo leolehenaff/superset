@@ -1,4 +1,5 @@
 import { AGENT_IDENTITY_LABELS } from "@superset/shared/agent-catalog";
+import { agentStatusFromEvent } from "@superset/shared/agent-status";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { deriveTerminalAgentStatus } from "renderer/hooks/host-service/useTerminalAgentStatuses";
@@ -36,6 +37,8 @@ export interface AgentSession {
 	agentId: string;
 	agentLabel: string;
 	status: PaneStatus;
+	/** Last turn ended with a Stop, so clearing the seen mark puts it back in review. */
+	canMarkUnread: boolean;
 	lastEventAt: number;
 	subagentCount: number;
 }
@@ -192,6 +195,8 @@ export function useAgentSessions(): {
 						lastSeenAt: terminalSeenAt[binding.terminalId],
 						hasLiveSubagents: (binding.subagents?.length ?? 0) > 0,
 					}),
+					canMarkUnread:
+						agentStatusFromEvent(binding.lastEventType) === "review",
 					lastEventAt: binding.lastEventAt,
 					subagentCount: binding.subagents?.length ?? 0,
 				});

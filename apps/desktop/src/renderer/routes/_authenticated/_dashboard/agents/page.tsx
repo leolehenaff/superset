@@ -1,9 +1,20 @@
+import {
+	DndContext,
+	type DragEndEvent,
+	DragOverlay,
+	type DragStartEvent,
+	MouseSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
 import { Button } from "@superset/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { LuPlus } from "react-icons/lu";
+import { useV2NotificationStore } from "renderer/stores/v2-notifications";
 import type { PaneStatus } from "shared/tabs-types";
 import { AgentSessionsColumn } from "./components/AgentSessionsColumn";
+import { AgentSessionCard } from "./components/AgentSessionsColumn/components/AgentSessionCard";
 import { NewAgentDialog } from "./components/NewAgentDialog";
 import { SessionQuotaBars } from "./components/SessionQuotaBars";
 import { type AgentSession, useAgentSessions } from "./hooks/useAgentSessions";
@@ -33,6 +44,25 @@ function columnOf(status: PaneStatus): Column {
 function AgentsPage() {
 	const { sessions, isReady } = useAgentSessions();
 	const [isNewAgentOpen, setIsNewAgentOpen] = useState(false);
+	const [dragged, setDragged] = useState<AgentSession | null>(null);
+	const pruneTerminalSeen = useV2NotificationStore(
+		(state) => state.pruneTerminalSeen,
+	);
+	// Distance keeps a plain click opening the workspace.
+	const sensors = useSensors(
+		useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+	);
+
+	const onDragStart = ({ active }: DragStartEvent) => {
+		setDragged(
+			sessions.find((session) => session.terminalId === active.id) ?? null,
+		);
+	};
+
+	const onDragEnd = ({ active, over }: DragEndEvent) => {
+		setDragged(null);
+		if (over?.id === "review") pruneTerminalSeen(String(active.id));
+	};
 
 	const byStatus = useMemo(() => {
 		const map = new Map<Column, AgentSession[]>(
@@ -73,18 +103,28 @@ function AgentsPage() {
 					</Button>
 				</div>
 			) : (
-				<div className="flex-1 overflow-x-auto overflow-y-hidden">
-					<div className="grid h-full min-w-[1000px] grid-cols-4 gap-4 px-6 pb-6">
-						{COLUMN_ORDER.map((column) => (
-							<AgentSessionsColumn
-								key={column}
-								status={column}
-								label={COLUMN_LABELS[column]}
-								sessions={byStatus.get(column) ?? []}
-							/>
-						))}
+				<DndContext
+					sensors={sensors}
+					onDragStart={onDragStart}
+					onDragEnd={onDragEnd}
+					onDragCancel={() => setDragged(null)}
+				>
+					<div className="flex-1 overflow-x-auto overflow-y-hidden">
+						<div className="grid h-full min-w-[1000px] grid-cols-4 gap-4 px-6 pb-6">
+							{COLUMN_ORDER.map((column) => (
+								<AgentSessionsColumn
+									key={column}
+									status={column}
+									label={COLUMN_LABELS[column]}
+									sessions={byStatus.get(column) ?? []}
+								/>
+							))}
+						</div>
 					</div>
-				</div>
+					<DragOverlay>
+						{dragged ? <AgentSessionCard session={dragged} isOverlay /> : null}
+					</DragOverlay>
+				</DndContext>
 			)}
 		</div>
 	);

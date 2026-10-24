@@ -1,3 +1,5 @@
+import { useDroppable } from "@dnd-kit/core";
+import { cn } from "@superset/ui/utils";
 import { LuCircleX } from "react-icons/lu";
 import type { AgentSession } from "renderer/routes/_authenticated/_dashboard/agents/hooks/useAgentSessions";
 import { BoardColumnIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/BoardColumnIcon";
@@ -29,8 +31,19 @@ export function AgentSessionsColumn({
 	label,
 	sessions,
 }: AgentSessionsColumnProps) {
+	const { setNodeRef, isOver } = useDroppable({
+		id: status,
+		disabled: status !== "review",
+	});
+
 	return (
-		<div className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border/40 bg-muted/20">
+		<div
+			ref={setNodeRef}
+			className={cn(
+				"flex min-h-0 min-w-0 flex-col rounded-xl border border-border/40 bg-muted/20 transition-colors",
+				isOver && "border-foreground/30 bg-accent/30",
+			)}
+		>
 			<div className="flex items-center gap-2 px-3.5 pt-3 pb-2.5">
 				<ColumnIcon status={status} />
 				<span className="truncate text-[13px] font-medium">{label}</span>

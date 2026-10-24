@@ -1,3 +1,4 @@
+import { useDraggable } from "@dnd-kit/core";
 import { Trans } from "@lingui/react/macro";
 import {
 	ContextMenu,
@@ -6,6 +7,7 @@ import {
 	ContextMenuTrigger,
 } from "@superset/ui/context-menu";
 import { toast } from "@superset/ui/sonner";
+import { cn } from "@superset/ui/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { memo, useEffect, useState } from "react";
@@ -97,11 +99,17 @@ function ContextBar({ used, size }: { used: number; size: number }) {
 
 interface AgentSessionCardProps {
 	session: AgentSession;
+	isOverlay?: boolean;
 }
 
 export const AgentSessionCard = memo(function AgentSessionCard({
 	session,
+	isOverlay = false,
 }: AgentSessionCardProps) {
+	const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
+		id: session.terminalId,
+		disabled: isOverlay || session.status !== "idle" || !session.canMarkUnread,
+	});
 	const navigate = useNavigate();
 	const isDark = useIsDarkTheme();
 	const agentIcon = getPresetIcon(session.agentId, isDark);
@@ -140,9 +148,16 @@ export const AgentSessionCard = memo(function AgentSessionCard({
 		<ContextMenu>
 			<ContextMenuTrigger asChild>
 				<button
+					ref={setNodeRef}
+					{...attributes}
+					{...listeners}
 					type="button"
 					onClick={open}
-					className="w-full cursor-pointer rounded-lg border border-border/60 bg-card p-3 text-left shadow-sm transition-all hover:-translate-y-px hover:border-foreground/20 hover:shadow-md"
+					className={cn(
+						"w-full cursor-pointer rounded-lg border border-border/60 bg-card p-3 text-left shadow-sm transition-all hover:-translate-y-px hover:border-foreground/20 hover:shadow-md",
+						isDragging && "opacity-40",
+						isOverlay && "cursor-grabbing shadow-lg",
+					)}
 				>
 					<div className="mb-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
 						<V2WorkspaceProjectIcon
