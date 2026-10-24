@@ -34,6 +34,13 @@ function formatTokens(tokens: number): string {
 		: `${Math.round(tokens / 1_000)}k`;
 }
 
+/** Stable hue per project, so cards of one project share a stripe colour. */
+function projectStripeColor(projectId: string): string {
+	let hash = 0;
+	for (const char of projectId) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+	return `hsl(${Math.abs(hash) % 360} 65% 55%)`;
+}
+
 const EFFORT_LABELS: Record<string, string> = { medium: "med" };
 
 /** `claude-opus-5-5-20260101` → `Opus 5.5`; other ids stay as they are. */
@@ -153,8 +160,15 @@ export const AgentSessionCard = memo(function AgentSessionCard({
 					{...listeners}
 					type="button"
 					onClick={open}
+					style={
+						session.projectId
+							? {
+									borderLeftColor: projectStripeColor(session.projectId),
+								}
+							: undefined
+					}
 					className={cn(
-						"w-full cursor-pointer rounded-lg border border-border/60 bg-card p-3 text-left shadow-sm transition-all hover:-translate-y-px hover:border-foreground/20 hover:shadow-md",
+						"w-full cursor-pointer rounded-lg border border-l-4 border-border/60 bg-card p-3 text-left shadow-sm transition-all hover:-translate-y-px hover:border-foreground/20 hover:shadow-md",
 						isDragging && "opacity-40",
 						isOverlay && "cursor-grabbing shadow-lg",
 					)}

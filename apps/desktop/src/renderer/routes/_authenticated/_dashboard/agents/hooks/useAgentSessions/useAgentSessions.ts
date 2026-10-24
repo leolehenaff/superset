@@ -28,6 +28,7 @@ export interface AgentSession {
 	model: string | null;
 	effort: string | null;
 	turnStartedAt: number | null;
+	projectId: string | null;
 	projectName: string | null;
 	projectIconUrl: string | null;
 	hostName: string;
@@ -179,6 +180,7 @@ export function useAgentSessions(): {
 					model: stat?.model ?? null,
 					effort: stat?.effort ?? null,
 					turnStartedAt: stat?.turnStartedAt ?? null,
+					projectId: workspace.projectId,
 					projectName: workspace.projectName,
 					projectIconUrl: workspace.projectIconUrl,
 					hostName: workspace.hostName,
