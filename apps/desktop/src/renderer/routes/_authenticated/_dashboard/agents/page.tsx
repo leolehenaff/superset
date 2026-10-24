@@ -71,6 +71,14 @@ function AgentsPage() {
 		for (const session of sessions) {
 			map.get(columnOf(session.status))?.push(session);
 		}
+		// Oldest turn first, so a working card stays put for its whole turn.
+		map
+			.get("working")
+			?.sort(
+				(a, b) =>
+					(a.turnStartedAt ?? a.lastEventAt) -
+					(b.turnStartedAt ?? b.lastEventAt),
+			);
 		return map;
 	}, [sessions]);
 
