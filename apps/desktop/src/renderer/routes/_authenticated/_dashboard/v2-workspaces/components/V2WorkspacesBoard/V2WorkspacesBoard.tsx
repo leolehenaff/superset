@@ -22,6 +22,7 @@ export function V2WorkspacesBoard({
 	const showArchived = useV2WorkspacesFilterStore(
 		(state) => state.showArchived,
 	);
+	const sortMode = useV2WorkspacesFilterStore((state) => state.sortMode);
 
 	const byColumn = useMemo(() => {
 		const map = new Map<BoardColumnKey, AccessibleV2Workspace[]>(
@@ -32,10 +33,10 @@ export function V2WorkspacesBoard({
 			map.get(deriveBoardColumn(workspace))?.push(workspace);
 		}
 		for (const column of map.values()) {
-			column.sort(compareWorkspaces);
+			column.sort((a, b) => compareWorkspaces(a, b, sortMode));
 		}
 		return map;
-	}, [workspaces, showArchived]);
+	}, [workspaces, showArchived, sortMode]);
 
 	const isEmpty = workspaces.length === 0;
 	if (isEmpty && !isReady) {

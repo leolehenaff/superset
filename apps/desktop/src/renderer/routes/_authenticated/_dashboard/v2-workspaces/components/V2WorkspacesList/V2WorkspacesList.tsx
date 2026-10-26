@@ -21,6 +21,7 @@ import { BoardColumnIcon } from "renderer/routes/_authenticated/_dashboard/v2-wo
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
 import {
 	useV2WorkspacesFilterStore,
+	type V2WorkspacesSortMode,
 	WHERE_FILTER_ANYWHERE,
 } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
 import {
@@ -60,6 +61,7 @@ const LIST_SECTION_ORDER: BoardColumnKey[] = [
 function groupByStatus(
 	workspaces: AccessibleV2Workspace[],
 	showArchived: boolean,
+	sortMode: V2WorkspacesSortMode,
 ): StatusSection[] {
 	const byColumn = new Map<BoardColumnKey, AccessibleV2Workspace[]>(
 		BOARD_COLUMN_ORDER.map((column) => [column, []]),
@@ -72,7 +74,7 @@ function groupByStatus(
 	for (const column of LIST_SECTION_ORDER) {
 		const rows = byColumn.get(column) ?? [];
 		if (rows.length === 0) continue;
-		rows.sort(compareWorkspaces);
+		rows.sort((a, b) => compareWorkspaces(a, b, sortMode));
 		sections.push({ column, workspaces: rows });
 	}
 	return sections;
@@ -102,9 +104,11 @@ export function V2WorkspacesList({
 		(state) => state.showArchived,
 	);
 
+	const sortMode = useV2WorkspacesFilterStore((state) => state.sortMode);
+
 	const sections = useMemo(
-		() => groupByStatus(workspaces, showArchived),
-		[workspaces, showArchived],
+		() => groupByStatus(workspaces, showArchived, sortMode),
+		[workspaces, showArchived, sortMode],
 	);
 
 	const hasActiveFilters =
