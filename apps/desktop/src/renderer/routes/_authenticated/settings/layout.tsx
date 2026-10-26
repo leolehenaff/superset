@@ -118,6 +118,9 @@ function SettingsLayout() {
 		useFeatureFlagEnabled(FEATURE_FLAGS.MOBILE_LAUNCH) === true;
 	const cloudWorkspacesEnabled =
 		useFeatureFlagEnabled(FEATURE_FLAGS.CLOUD_WORKSPACES) === true;
+	const rightPaneAreaFlag =
+		useFeatureFlagEnabled(FEATURE_FLAGS.RIGHT_PANE_AREA) === true;
+	const acpChatFlag = useFeatureFlagEnabled(FEATURE_FLAGS.ACP_CHAT) === true;
 	const searchQuery = useSettingsSearchQuery();
 	const setSearchQuery = useSetSettingsSearchQuery();
 	const originRoute = useSettingsOriginRoute();
@@ -138,6 +141,8 @@ function SettingsLayout() {
 						isV2CloudEnabled,
 						cloudWorkspacesEnabled,
 						mobileEnabled,
+						rightPaneAreaFlag,
+						acpChatFlag,
 					)
 				: {},
 		[
@@ -146,6 +151,8 @@ function SettingsLayout() {
 			isV2CloudEnabled,
 			cloudWorkspacesEnabled,
 			mobileEnabled,
+			rightPaneAreaFlag,
+			acpChatFlag,
 		],
 	);
 	const totalMatches = Object.values(matchCounts).reduce(

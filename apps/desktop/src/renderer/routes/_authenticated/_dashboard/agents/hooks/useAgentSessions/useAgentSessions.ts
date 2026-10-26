@@ -8,7 +8,7 @@ import { useRelayUrl } from "renderer/hooks/useRelayUrl";
 import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
 import { derivePullRequestQueryTargets } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/hooks/useDashboardSidebarData/derivePullRequestQueryTargets";
 import { useAccessibleV2Workspaces } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
-import { DEVICE_FILTER_ALL_DEVICES } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
+import { WHERE_FILTER_ANYWHERE } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
 import { useLocalHostService } from "renderer/routes/_authenticated/providers/LocalHostServiceProvider";
 import { useV2NotificationStore } from "renderer/stores/v2-notifications";
 import type { PaneStatus } from "shared/tabs-types";
@@ -55,7 +55,7 @@ export function useAgentSessions(): {
 	isReady: boolean;
 } {
 	const { all: workspaces, isReady } = useAccessibleV2Workspaces({
-		deviceFilter: DEVICE_FILTER_ALL_DEVICES,
+		whereFilter: WHERE_FILTER_ANYWHERE,
 	});
 	const { machineId, activeHostUrl } = useLocalHostService();
 	const relayUrl = useRelayUrl();
