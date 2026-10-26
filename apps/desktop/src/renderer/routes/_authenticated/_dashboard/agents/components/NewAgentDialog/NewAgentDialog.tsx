@@ -36,6 +36,7 @@ import { useLocalHostService } from "renderer/routes/_authenticated/providers/Lo
 import { useWorkspaceCreates } from "renderer/stores/workspace-creates";
 
 const NO_PROJECT = "__none__";
+const QUICK_PROJECT_NAMES = ["master flech", "backoffice"];
 
 interface NewAgentDialogProps {
 	open: boolean;
@@ -92,7 +93,7 @@ export function NewAgentDialog({ open, onOpenChange }: NewAgentDialogProps) {
 		null;
 
 	const launch = useMutation({
-		mutationFn: async () => {
+		mutationFn: async (selectedProjectId: string) => {
 			if (!machineId || !activeHostUrl || !selectedAgentId) {
 				throw new Error("Aucun agent configuré sur cette machine");
 			}
@@ -149,6 +150,9 @@ export function NewAgentDialog({ open, onOpenChange }: NewAgentDialogProps) {
 	const inProject = selectedProjectId !== NO_PROJECT;
 	const selectedProject = localProjects.find(
 		(project) => project.id === selectedProjectId,
+	);
+	const quickProjects = QUICK_PROJECT_NAMES.flatMap((name) =>
+		localProjects.filter((project) => project.name.toLowerCase() === name),
 	);
 	const pickProject = (id: string) => {
 		setProjectId(id);
@@ -240,6 +244,34 @@ export function NewAgentDialog({ open, onOpenChange }: NewAgentDialogProps) {
 								</Command>
 							</PopoverContent>
 						</Popover>
+						{quickProjects.length > 0 && (
+							<div className="flex flex-wrap gap-2">
+								{quickProjects.map((project) => (
+									<Button
+										key={project.id}
+										type="button"
+										size="sm"
+										variant={
+											project.id === selectedProjectId ? "secondary" : "outline"
+										}
+										className="h-7 gap-1.5 px-2 font-normal"
+										disabled={launch.isPending || !selectedAgentId}
+										onClick={() => {
+											setProjectId(project.id);
+											launch.mutate(project.id);
+										}}
+									>
+										<ProjectThumbnail
+											projectName={project.name}
+											iconUrl={project.iconUrl}
+											color={project.color}
+											className="size-3.5"
+										/>
+										{project.name}
+									</Button>
+								))}
+							</div>
+						)}
 					</div>
 
 					<div className="flex items-center justify-between gap-4">
@@ -276,7 +308,7 @@ export function NewAgentDialog({ open, onOpenChange }: NewAgentDialogProps) {
 						Annuler
 					</Button>
 					<Button
-						onClick={() => launch.mutate()}
+						onClick={() => launch.mutate(selectedProjectId)}
 						disabled={launch.isPending || !selectedAgentId}
 					>
 						{launch.isPending ? "Lancement…" : "Lancer"}
