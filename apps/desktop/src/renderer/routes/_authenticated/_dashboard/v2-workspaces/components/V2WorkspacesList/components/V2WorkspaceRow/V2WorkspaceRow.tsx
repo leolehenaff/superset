@@ -5,7 +5,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
 import { cn } from "@superset/ui/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { memo, type ReactNode, useEffect, useState } from "react";
-import { CgLaptop } from "react-icons/cg";
 import {
 	LuArchive,
 	LuArchiveRestore,
@@ -17,8 +16,6 @@ import {
 	LuSquareTerminal,
 	LuTrash2,
 } from "react-icons/lu";
-import { WorkspaceNameMarquee } from "renderer/components/WorkspaceNameMarquee";
-import { useFocusVisible } from "renderer/hooks/useFocusVisible";
 import { pullRequestRefFromUrl } from "renderer/lib/github/pullRequestRef";
 import { useDashboardSidebarWorkspacePorts } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/providers/DashboardSidebarPortsProvider";
 import type { UsageSeverity } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/types";
@@ -34,7 +31,6 @@ import {
 } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceContextMenu";
 import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
 import { WorkspaceChecksDot } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceChecksDot";
-import { WorkspaceOwnerAvatar } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceOwnerAvatar";
 import { WorkspaceStateGlyph } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceStateGlyph";
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
 import { workspaceActivityAt } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/sortWorkspaces";
@@ -141,9 +137,12 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 
 	const { t } = useLingui();
 	const navigate = useNavigate();
-	const isLocalWorkspace = workspace.type === "local";
 	const isCloud = workspace.hostType === "cloud";
 	const isArchived = workspace.archivedAt != null;
+	const isDone =
+		isArchived ||
+		workspace.pr?.state === "merged" ||
+		workspace.sandboxStatus === "failed";
 	const resourceSeverity = workspace.resources
 		? getUsageSeverity(workspace.resources, workspace.resources, {
 				includeShare: false,
@@ -154,13 +153,6 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 	// its own point of view, whatever presence says.
 	const isDeviceOffline =
 		!workspace.hostIsOnline && workspace.hostType === "remote-device";
-	// Drives the name's hover-reveal for keyboard users: the row, not the
-	// name span, is what's actually tabbable.
-	const {
-		isFocusVisible: isFocused,
-		onFocus: handleRowFocus,
-		onBlur: handleRowBlur,
-	} = useFocusVisible();
 
 	// The selected look appears on click, not once the route has changed: a
 	// slow route transition otherwise reads as a click that did nothing.
@@ -297,11 +289,9 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 							actions.open();
 						}
 					}}
-					onFocus={handleRowFocus}
-					onBlur={handleRowBlur}
 					title={rowTitle || undefined}
 					className={cn(
-						"group flex items-center gap-3 border-b border-border/40 px-6 py-3 text-sm outline-none transition-colors",
+						"group flex items-center gap-3 border-b border-border/40 px-6 py-2.5 text-sm outline-none transition-colors",
 						"focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-inset",
 						isArchived ? "cursor-default" : "cursor-pointer",
 						isCurrentRoute || isOpening
@@ -311,118 +301,119 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 				>
 					<WorkspaceStateGlyph workspace={workspace} />
 
-					{isLocalWorkspace ? (
-						<Tooltip delayDuration={300}>
-							<TooltipTrigger asChild>
-								{/* The wrapping span (not the icon itself — react-icons
-								    treats a `title` prop as an SVG <title> child, not an
-								    HTML attribute, so it can't block inheritance) carries
-								    an empty title to stop it from inheriting the row's
-								    title (PR/branch); without it, hovering this icon fires
-								    both the native tooltip and this Radix one at once. */}
-								<span title="">
-									<CgLaptop
-										className="size-3.5 shrink-0 text-muted-foreground"
-										aria-label={t({
-											message: "Local workspace",
-										})}
-									/>
-								</span>
-							</TooltipTrigger>
-							<TooltipContent side="top">
-								<Trans>Local workspace</Trans>
-							</TooltipContent>
-						</Tooltip>
-					) : null}
-
-					<WorkspaceNameMarquee
-						name={workspace.name}
-						forceActive={isFocused}
-						className={cn(
-							"min-w-0 flex-1 font-medium",
-							// Done and dead states recede so live work owns the contrast.
-							isArchived ||
-								workspace.pr?.state === "merged" ||
-								workspace.sandboxStatus === "failed"
-								? "text-muted-foreground"
-								: "text-foreground",
-						)}
+					<V2WorkspaceProjectIcon
+						projectName={workspace.projectName ?? workspace.name}
+						iconUrl={workspace.projectIconUrl}
+						className="size-8 rounded-md text-sm"
 					/>
 
-					<span
-						className="flex w-32 shrink-0 items-center gap-1.5 text-xs text-muted-foreground @max-3xl:hidden"
-						title={workspace.projectName ?? t({ message: "Session" })}
-					>
-						<V2WorkspaceProjectIcon
-							projectName={workspace.projectName ?? t({ message: "Session" })}
-							iconUrl={workspace.projectIconUrl}
-							size="sm"
-							className="size-4 rounded-sm text-[9px]"
-						/>
-						<span className="min-w-0 truncate">
-							{workspace.projectName ?? <Trans>Session</Trans>}
-						</span>
-					</span>
-
-					<span className="flex w-4 shrink-0 items-center justify-center">
-						<WorkspaceOwnerAvatar workspace={workspace} />
-					</span>
-
-					{workspace.pr ? (
-						<button
-							type="button"
-							onClick={(event) => {
-								event.stopPropagation();
-								if (!workspace.pr) return;
-								// Opens the PR pane inside the workspace instead of GitHub;
-								// an archived workspace has no pane to open, so GitHub it is.
-								const ref = isArchived
-									? null
-									: pullRequestRefFromUrl(workspace.pr.url);
-								if (!ref) {
-									window.open(workspace.pr.url, "_blank");
-									return;
-								}
-								usePullRequestPaneIntent.getState().request({
-									workspaceId: workspace.id,
-									...ref,
-								});
-								void navigateToV2Workspace(workspace.id, navigate);
-							}}
-							aria-label={t({
-								message: `Pull request #${workspace.pr.prNumber}, ${workspace.pr.state}`,
-							})}
-							className="flex shrink-0 items-center gap-1 rounded text-[11px] tabular-nums text-muted-foreground hover:text-foreground"
-						>
-							<PRIcon state={workspace.pr.state} className="size-3.5" />
-							<span className="@max-2xl:hidden">#{workspace.pr.prNumber}</span>
-							<WorkspaceChecksDot
-								status={workspace.pr.checksStatus}
-								checks={workspace.pr.checks}
-							/>
-						</button>
-					) : null}
-
-					{workspace.diffStats &&
-					(workspace.diffStats.additions > 0 ||
-						workspace.diffStats.deletions > 0) ? (
-						<span
-							className="flex shrink-0 items-center gap-1.5 font-mono text-[11px] tabular-nums leading-none @max-lg:hidden"
-							title={t({
-								message: plural(workspace.diffStats.fileCount, {
-									one: "# changed file",
-									other: "# changed files",
-								}),
-							})}
-						>
-							<span className="text-emerald-600/80 dark:text-emerald-400/70">
-								+{formatCount(workspace.diffStats.additions)}
+					<div className="flex min-w-0 flex-1 flex-col gap-1">
+						<div className="flex min-w-0 items-center gap-2">
+							<span
+								className={cn(
+									"truncate font-medium",
+									isDone ? "text-muted-foreground" : "text-foreground",
+								)}
+							>
+								{workspace.projectName ?? workspace.name}
 							</span>
-							<span className="text-red-600/80 dark:text-red-400/70">
-								−{formatCount(workspace.diffStats.deletions)}
+							{workspace.projectName ? (
+								<span className="max-w-48 shrink-0 truncate rounded bg-muted px-1.5 py-px font-mono text-[11px] text-muted-foreground">
+									{workspace.name}
+								</span>
+							) : null}
+							{workspace.pr ? (
+								<button
+									type="button"
+									onClick={(event) => {
+										event.stopPropagation();
+										if (!workspace.pr) return;
+										// Opens the PR pane inside the workspace instead of GitHub;
+										// an archived workspace has no pane to open, so GitHub it is.
+										const ref = isArchived
+											? null
+											: pullRequestRefFromUrl(workspace.pr.url);
+										if (!ref) {
+											window.open(workspace.pr.url, "_blank");
+											return;
+										}
+										usePullRequestPaneIntent.getState().request({
+											workspaceId: workspace.id,
+											...ref,
+										});
+										void navigateToV2Workspace(workspace.id, navigate);
+									}}
+									aria-label={t({
+										message: `Pull request #${workspace.pr.prNumber}, ${workspace.pr.state}`,
+									})}
+									className="flex shrink-0 items-center gap-1 rounded px-1 text-xs text-muted-foreground hover:bg-accent"
+								>
+									<PRIcon state={workspace.pr.state} className="size-3.5" />#
+									{workspace.pr.prNumber}
+									<WorkspaceChecksDot
+										status={workspace.pr.checksStatus}
+										checks={workspace.pr.checks}
+									/>
+								</button>
+							) : null}
+						</div>
+						<div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+							<span className="whitespace-nowrap" title={timeTitle}>
+								{timeLabel}
 							</span>
-						</span>
-					) : null}
+							{workspace.diffStats &&
+							(workspace.diffStats.additions > 0 ||
+								workspace.diffStats.deletions > 0) ? (
+								<>
+									<span aria-hidden>·</span>
+									<span
+										className="flex items-center gap-1 font-mono text-[11px] tabular-nums"
+										title={t({
+											message: plural(workspace.diffStats.fileCount, {
+												one: "# changed file",
+												other: "# changed files",
+											}),
+										})}
+									>
+										<span className="text-emerald-600/80 dark:text-emerald-400/70">
+											+{formatCount(workspace.diffStats.additions)}
+										</span>
+										<span className="text-red-600/80 dark:text-red-400/70">
+											−{formatCount(workspace.diffStats.deletions)}
+										</span>
+									</span>
+								</>
+							) : null}
+							{workspace.hostType !== "local-device" ? (
+								<>
+									<span aria-hidden>·</span>
+									<span
+										className={cn(
+											"flex min-w-0 items-center gap-1",
+											isDeviceOffline && "opacity-60",
+										)}
+										title={whereLabel}
+									>
+										{isCloud ? (
+											<CloudGlyph className="size-3 shrink-0" />
+										) : isDeviceOffline ? (
+											<LuMonitorOff className="size-3 shrink-0" />
+										) : (
+											<LuMonitor className="size-3 shrink-0" />
+										)}
+										<span className="truncate">
+											{isCloud ? "Cloud" : workspace.hostName}
+										</span>
+										{isDeviceOffline ? (
+											<span className="sr-only">
+												<Trans>Offline</Trans>
+											</span>
+										) : null}
+									</span>
+								</>
+							) : null}
+						</div>
+					</div>
 
 					<div className="flex w-28 shrink-0 items-center justify-end gap-1.5">
 						{ports.length > 0 ? (
@@ -486,41 +477,8 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 						)}
 					</div>
 
-					{/* Where + age; hover swaps in the row's actions in place, so
-					    the slot keeps one width either way. */}
-					<span className="grid w-[4.5rem] shrink-0 items-center justify-items-end [&>*]:col-start-1 [&>*]:row-start-1">
-						<span
-							className={cn(
-								"flex items-center gap-1.5 text-xs text-muted-foreground",
-								"group-hover:invisible group-focus-within:invisible",
-								isDeviceOffline && "text-muted-foreground/60",
-							)}
-						>
-							{workspace.hostType !== "local-device" ? (
-								<span
-									title={whereLabel}
-									className="flex shrink-0 items-center text-muted-foreground/70"
-								>
-									{isCloud ? (
-										<CloudGlyph className="size-3" />
-									) : isDeviceOffline ? (
-										<LuMonitorOff className="size-3" strokeWidth={2} />
-									) : (
-										<LuMonitor className="size-3" strokeWidth={2} />
-									)}
-									<span className="sr-only">{whereLabel}</span>
-								</span>
-							) : null}
-							<span
-								className="whitespace-nowrap tabular-nums"
-								title={timeTitle}
-							>
-								{timeLabel}
-							</span>
-						</span>
-						<span className="hidden items-center gap-1 group-hover:flex group-focus-within:flex">
-							{renderHoverActions(actions)}
-						</span>
+					<span className="flex w-14 shrink-0 items-center justify-end gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
+						{renderHoverActions(actions)}
 					</span>
 				</div>
 			)}
