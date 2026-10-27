@@ -3,6 +3,7 @@ import type {
 	AgentLifecyclePayload,
 	TerminalLifecyclePayload,
 } from "@superset/workspace-client";
+import type { QueryClient } from "@tanstack/react-query";
 import { playRingtone } from "renderer/lib/ringtones/play";
 import { electronTrpcClient } from "renderer/lib/trpc-client";
 import type { PaneViewerData } from "renderer/routes/_authenticated/_dashboard/v2-workspace/$workspaceId/types";
@@ -136,12 +137,30 @@ export function markV2AgentLifecycleTargetSeen({
 	markSeenIfTargetVisible({ payload, layouts, target });
 }
 
+// Bindings stay cached until the next poll. Without its seen mark, a cached
+// Stop reads as unseen and counts as "review" again.
+const TERMINAL_AGENT_BINDING_QUERY_KEYS = [
+	["v2-workspaces", "terminal-agents"],
+	["terminal-agent-bindings"],
+];
+
 export function handleV2TerminalLifecycleEvent({
 	payload,
+	queryClient,
 }: {
 	payload: TerminalLifecyclePayload;
+	queryClient: QueryClient;
 }): void {
 	if (payload.eventType !== "exit") return;
+	for (const queryKey of TERMINAL_AGENT_BINDING_QUERY_KEYS) {
+		queryClient.setQueriesData<{ terminalId: string }[]>(
+			{ queryKey },
+			(bindings) =>
+				bindings?.filter(
+					(binding) => binding.terminalId !== payload.terminalId,
+				),
+		);
+	}
 	useV2NotificationStore.getState().pruneTerminalSeen(payload.terminalId);
 }
 

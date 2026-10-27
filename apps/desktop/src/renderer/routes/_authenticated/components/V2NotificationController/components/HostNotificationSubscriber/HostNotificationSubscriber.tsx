@@ -3,6 +3,7 @@ import type {
 	AgentLifecyclePayload,
 	TerminalLifecyclePayload,
 } from "@superset/workspace-client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useEffectEvent, useMemo } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { getHostEventBus } from "renderer/lib/host-event-bus";
@@ -27,6 +28,7 @@ export function HostNotificationSubscriber({
 	hostUrl: string;
 	workspaces: HostNotificationWorkspaceState[];
 }): null {
+	const queryClient = useQueryClient();
 	const { data: volume = 100 } =
 		electronTrpc.settings.getNotificationVolume.useQuery();
 	const { data: muted = false } =
@@ -60,7 +62,7 @@ export function HostNotificationSubscriber({
 		(workspaceId: string, payload: TerminalLifecyclePayload) => {
 			const workspace = workspacesById.get(workspaceId);
 			if (!workspace) return;
-			handleV2TerminalLifecycleEvent({ payload });
+			handleV2TerminalLifecycleEvent({ payload, queryClient });
 		},
 	);
 
