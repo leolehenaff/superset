@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { useIsV2CloudEnabled } from "renderer/hooks/useIsV2CloudEnabled";
 import { electronTrpc } from "renderer/lib/electron-trpc";
+import { useHostWorkspaces } from "renderer/routes/_authenticated/providers/HostWorkspacesProvider";
 
 export const Route = createFileRoute("/_authenticated/_dashboard/workspace/")({
 	component: WorkspaceIndexPage,
@@ -19,6 +20,8 @@ function LoadingSpinner() {
 function WorkspaceIndexPage() {
 	const navigate = useNavigate();
 	const isV2CloudEnabled = useIsV2CloudEnabled();
+	const { workspaces: hostWorkspaces, isReady: hostWorkspacesReady } =
+		useHostWorkspaces();
 	const { data: workspaces, isLoading } =
 		electronTrpc.workspaces.getAllGrouped.useQuery(undefined, {
 			enabled: !isV2CloudEnabled,
@@ -37,10 +40,31 @@ function WorkspaceIndexPage() {
 	// immediately redirects away from (SUPER-1814). Isolated in its own effect
 	// keyed only on isV2CloudEnabled so v1 query churn can't re-trigger it.
 	useEffect(() => {
-		if (isV2CloudEnabled) {
-			navigate({ to: "/agents", replace: true });
+		if (!isV2CloudEnabled) return;
+		const lastViewedId = localStorage.getItem("lastViewedWorkspaceId");
+		const lastViewed = hostWorkspaces.find(
+			(workspace) => workspace.id === lastViewedId,
+		);
+		if (!lastViewed && !hostWorkspacesReady) return;
+		const target =
+			lastViewed ??
+			hostWorkspaces.reduce<(typeof hostWorkspaces)[number] | undefined>(
+				(latest, workspace) =>
+					(workspace.lastActivityAt ?? 0) > (latest?.lastActivityAt ?? -1)
+						? workspace
+						: latest,
+				undefined,
+			);
+		if (target) {
+			navigate({
+				to: "/v2-workspace/$workspaceId",
+				params: { workspaceId: target.id },
+				replace: true,
+			});
+		} else {
+			navigate({ to: "/new-workspace", replace: true });
 		}
-	}, [isV2CloudEnabled, navigate]);
+	}, [isV2CloudEnabled, hostWorkspaces, hostWorkspacesReady, navigate]);
 
 	useEffect(() => {
 		if (isV2CloudEnabled) return;

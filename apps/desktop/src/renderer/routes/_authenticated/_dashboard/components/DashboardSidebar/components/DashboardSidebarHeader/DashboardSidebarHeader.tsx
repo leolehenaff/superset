@@ -12,14 +12,7 @@ import { cn } from "@superset/ui/utils";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { useFeatureFlagEnabled } from "posthog-js/react";
 import { useRef } from "react";
-import {
-	LuBot,
-	LuClock,
-	LuGauge,
-	LuPlus,
-	LuPuzzle,
-	LuSearch,
-} from "react-icons/lu";
+import { LuClock, LuGauge, LuPlus, LuPuzzle, LuSearch } from "react-icons/lu";
 import {
 	VscFolderOpened,
 	VscGithubAlt,
@@ -139,7 +132,6 @@ export function DashboardSidebarHeader({
 	const zoomFactor = useZoomFactor();
 	const matchRoute = useMatchRoute();
 	const { gateFeature, hasAccess } = usePaywall();
-	const isAgentsOpen = !!matchRoute({ to: "/agents" });
 	const v2WorkspaceMatch = matchRoute({
 		to: "/v2-workspace/$workspaceId",
 		fuzzy: true,
@@ -163,10 +155,6 @@ export function DashboardSidebarHeader({
 		env.NODE_ENV === "development";
 	const cloudUtils = cloudTrpc.useUtils();
 	const { myFailedCount } = useFailedAutomations();
-
-	const handleAgentsClick = () => {
-		navigate({ to: "/agents" });
-	};
 
 	// Automations are Pro, but an org that already has some (a downgrade) can
 	// still reach the list to pause, edit, or delete them; the page gates the
@@ -279,25 +267,6 @@ export function DashboardSidebarHeader({
 										message: "Search",
 									})}
 						</TooltipContent>
-					</Tooltip>
-
-					<Tooltip delayDuration={300}>
-						<TooltipTrigger asChild>
-							<button
-								type="button"
-								onClick={handleAgentsClick}
-								aria-current={isAgentsOpen ? "page" : undefined}
-								className={cn(
-									"flex size-7 items-center justify-center rounded-md transition-colors",
-									isAgentsOpen
-										? "bg-fill-selected text-muted-foreground"
-										: "text-muted-foreground hover:bg-fill-hover",
-								)}
-							>
-								<LuBot className="size-3.5" strokeWidth={1.5} />
-							</button>
-						</TooltipTrigger>
-						<TooltipContent side="right">Agents</TooltipContent>
 					</Tooltip>
 
 					<Tooltip delayDuration={300}>
@@ -514,24 +483,6 @@ export function DashboardSidebarHeader({
 				{searchShortcutText !== "Unassigned" && (
 					<SidebarKbdHint label={searchShortcutText} />
 				)}
-			</button>
-
-			<button
-				type="button"
-				onClick={handleAgentsClick}
-				aria-current={isAgentsOpen ? "page" : undefined}
-				className={cn(
-					"flex h-7 w-full items-center gap-2 rounded-md px-2 text-[13px] font-medium transition-colors",
-					isAgentsOpen
-						? "bg-fill-selected text-foreground"
-						: "text-muted-foreground hover:bg-fill-hover hover:text-foreground",
-				)}
-			>
-				<LuBot
-					className="size-4 shrink-0 text-muted-foreground"
-					strokeWidth={1.5}
-				/>
-				<span className="flex-1 text-left">Agents</span>
 			</button>
 
 			<div className="relative">

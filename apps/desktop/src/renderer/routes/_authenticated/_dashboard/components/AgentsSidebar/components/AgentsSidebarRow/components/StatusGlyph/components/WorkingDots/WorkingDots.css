@@ -1,0 +1,13 @@
+@keyframes working-dots-chase {
+	0% {
+		opacity: 1;
+	}
+	60%,
+	100% {
+		opacity: 0.15;
+	}
+}
+
+.working-dots__dot {
+	animation: working-dots-chase 1.2s linear infinite;
+}

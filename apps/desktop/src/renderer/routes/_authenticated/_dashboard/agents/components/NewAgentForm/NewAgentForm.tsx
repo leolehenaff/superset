@@ -8,13 +8,6 @@ import {
 	CommandList,
 	CommandSeparator,
 } from "@superset/ui/command";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@superset/ui/dialog";
 import { Label } from "@superset/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@superset/ui/popover";
 import { toast } from "@superset/ui/sonner";
@@ -38,13 +31,12 @@ import { useWorkspaceCreates } from "renderer/stores/workspace-creates";
 const NO_PROJECT = "__none__";
 const QUICK_PROJECT_NAMES = ["master flech", "backoffice"];
 
-interface NewAgentDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
+interface NewAgentFormProps {
+	onDone: () => void;
 }
 
 /** Starts a bare agent terminal: in a project (worktree or main checkout) or in a project-less session. */
-export function NewAgentDialog({ open, onOpenChange }: NewAgentDialogProps) {
+export function NewAgentForm({ onDone }: NewAgentFormProps) {
 	const navigate = useNavigate();
 	const { machineId, activeHostUrl } = useLocalHostService();
 	const { projects } = useHostProjects();
@@ -134,7 +126,7 @@ export function NewAgentDialog({ open, onOpenChange }: NewAgentDialogProps) {
 			return { workspaceId, terminalId: run.sessionId };
 		},
 		onSuccess: ({ workspaceId, terminalId }) => {
-			onOpenChange(false);
+			onDone();
 			localStorage.setItem("lastViewedWorkspaceId", workspaceId);
 			void navigateToV2Workspace(workspaceId, navigate, {
 				search: { terminalId, focusRequestId: crypto.randomUUID() },
@@ -160,161 +152,148 @@ export function NewAgentDialog({ open, onOpenChange }: NewAgentDialogProps) {
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle>Nouvel agent</DialogTitle>
-				</DialogHeader>
-
-				<div className="flex flex-col gap-4">
-					<div className="flex flex-col gap-2">
-						<Label>Projet</Label>
-						<Popover
-							open={projectPickerOpen}
-							onOpenChange={setProjectPickerOpen}
+		<>
+			<div className="flex flex-col gap-4">
+				<div className="flex flex-col gap-2">
+					<Label>Projet</Label>
+					<Popover open={projectPickerOpen} onOpenChange={setProjectPickerOpen}>
+						<PopoverTrigger asChild>
+							<Button
+								variant="outline"
+								className="w-full justify-between font-normal"
+							>
+								<span className="flex min-w-0 items-center gap-2">
+									{selectedProject ? (
+										<>
+											<ProjectThumbnail
+												projectName={selectedProject.name}
+												iconUrl={selectedProject.iconUrl}
+												color={selectedProject.color}
+												className="size-4"
+											/>
+											<span className="truncate">{selectedProject.name}</span>
+										</>
+									) : (
+										"Aucun projet"
+									)}
+								</span>
+								<ChevronDownIcon className="size-4 shrink-0 opacity-50" />
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent
+							align="start"
+							className="w-(--radix-popover-trigger-width) p-0"
 						>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									className="w-full justify-between font-normal"
-								>
-									<span className="flex min-w-0 items-center gap-2">
-										{selectedProject ? (
-											<>
+							<Command>
+								<CommandInput placeholder="Rechercher un projet…" />
+								<CommandList>
+									<CommandEmpty>Aucun projet trouvé.</CommandEmpty>
+									<CommandGroup>
+										{localProjects.map((project) => (
+											<CommandItem
+												key={project.id}
+												value={project.id}
+												keywords={[project.name]}
+												onSelect={() => pickProject(project.id)}
+											>
 												<ProjectThumbnail
-													projectName={selectedProject.name}
-													iconUrl={selectedProject.iconUrl}
-													color={selectedProject.color}
+													projectName={project.name}
+													iconUrl={project.iconUrl}
+													color={project.color}
 													className="size-4"
 												/>
-												<span className="truncate">{selectedProject.name}</span>
-											</>
-										) : (
-											"Aucun projet"
-										)}
-									</span>
-									<ChevronDownIcon className="size-4 shrink-0 opacity-50" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent
-								align="start"
-								className="w-(--radix-popover-trigger-width) p-0"
-							>
-								<Command>
-									<CommandInput placeholder="Rechercher un projet…" />
-									<CommandList>
-										<CommandEmpty>Aucun projet trouvé.</CommandEmpty>
-										<CommandGroup>
-											{localProjects.map((project) => (
-												<CommandItem
-													key={project.id}
-													value={project.id}
-													keywords={[project.name]}
-													onSelect={() => pickProject(project.id)}
-												>
-													<ProjectThumbnail
-														projectName={project.name}
-														iconUrl={project.iconUrl}
-														color={project.color}
-														className="size-4"
-													/>
-													<span className="flex-1 truncate">
-														{project.name}
-													</span>
-													{project.id === selectedProjectId && (
-														<HiCheck className="size-3.5 shrink-0" />
-													)}
-												</CommandItem>
-											))}
-										</CommandGroup>
-										<CommandSeparator />
-										<CommandGroup>
-											<CommandItem
-												value={NO_PROJECT}
-												keywords={["aucun projet", "session"]}
-												onSelect={() => pickProject(NO_PROJECT)}
-											>
-												<span className="flex-1">Aucun projet</span>
-												{!inProject && (
+												<span className="flex-1 truncate">{project.name}</span>
+												{project.id === selectedProjectId && (
 													<HiCheck className="size-3.5 shrink-0" />
 												)}
 											</CommandItem>
-										</CommandGroup>
-									</CommandList>
-								</Command>
-							</PopoverContent>
-						</Popover>
-						{quickProjects.length > 0 && (
-							<div className="flex flex-wrap gap-2">
-								{quickProjects.map((project) => (
-									<Button
-										key={project.id}
-										type="button"
-										size="sm"
-										variant={
-											project.id === selectedProjectId ? "secondary" : "outline"
-										}
-										className="h-7 gap-1.5 px-2 font-normal"
-										disabled={launch.isPending || !selectedAgentId}
-										onClick={() => {
-											setProjectId(project.id);
-											launch.mutate(project.id);
-										}}
-									>
-										<ProjectThumbnail
-											projectName={project.name}
-											iconUrl={project.iconUrl}
-											color={project.color}
-											className="size-3.5"
-										/>
-										{project.name}
-									</Button>
-								))}
-							</div>
-						)}
-					</div>
-
-					<div className="flex items-center justify-between gap-4">
-						<Label htmlFor="new-agent-worktree">
-							Nouveau worktree
-							<span className="block text-xs font-normal text-muted-foreground">
-								{worktree && inProject
-									? "Branche isolée, créée pour cet agent"
-									: "Directement dans le dépôt principal"}
-							</span>
-						</Label>
-						<Switch
-							id="new-agent-worktree"
-							checked={worktree && inProject}
-							disabled={!inProject}
-							onCheckedChange={setWorktree}
-						/>
-					</div>
-
-					<div className="flex flex-col gap-2">
-						<Label>Agent</Label>
-						<AgentSelect
-							agents={agents}
-							value={selectedAgentId ?? undefined}
-							placeholder="Choisir un agent"
-							onValueChange={setAgentId}
-							triggerClassName="w-full"
-						/>
-					</div>
+										))}
+									</CommandGroup>
+									<CommandSeparator />
+									<CommandGroup>
+										<CommandItem
+											value={NO_PROJECT}
+											keywords={["aucun projet", "session"]}
+											onSelect={() => pickProject(NO_PROJECT)}
+										>
+											<span className="flex-1">Aucun projet</span>
+											{!inProject && <HiCheck className="size-3.5 shrink-0" />}
+										</CommandItem>
+									</CommandGroup>
+								</CommandList>
+							</Command>
+						</PopoverContent>
+					</Popover>
+					{quickProjects.length > 0 && (
+						<div className="flex flex-wrap gap-2">
+							{quickProjects.map((project) => (
+								<Button
+									key={project.id}
+									type="button"
+									size="sm"
+									variant={
+										project.id === selectedProjectId ? "secondary" : "outline"
+									}
+									className="h-7 gap-1.5 px-2 font-normal"
+									disabled={launch.isPending || !selectedAgentId}
+									onClick={() => {
+										setProjectId(project.id);
+										launch.mutate(project.id);
+									}}
+								>
+									<ProjectThumbnail
+										projectName={project.name}
+										iconUrl={project.iconUrl}
+										color={project.color}
+										className="size-3.5"
+									/>
+									{project.name}
+								</Button>
+							))}
+						</div>
+					)}
 				</div>
 
-				<DialogFooter>
-					<Button variant="ghost" onClick={() => onOpenChange(false)}>
-						Annuler
-					</Button>
-					<Button
-						onClick={() => launch.mutate(selectedProjectId)}
-						disabled={launch.isPending || !selectedAgentId}
-					>
-						{launch.isPending ? "Lancement…" : "Lancer"}
-					</Button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
+				<div className="flex items-center justify-between gap-4">
+					<Label htmlFor="new-agent-worktree">
+						Nouveau worktree
+						<span className="block text-xs font-normal text-muted-foreground">
+							{worktree && inProject
+								? "Branche isolée, créée pour cet agent"
+								: "Directement dans le dépôt principal"}
+						</span>
+					</Label>
+					<Switch
+						id="new-agent-worktree"
+						checked={worktree && inProject}
+						disabled={!inProject}
+						onCheckedChange={setWorktree}
+					/>
+				</div>
+
+				<div className="flex flex-col gap-2">
+					<Label>Agent</Label>
+					<AgentSelect
+						agents={agents}
+						value={selectedAgentId ?? undefined}
+						placeholder="Choisir un agent"
+						onValueChange={setAgentId}
+						triggerClassName="w-full"
+					/>
+				</div>
+			</div>
+
+			<div className="flex justify-end gap-2">
+				<Button variant="ghost" onClick={onDone}>
+					Annuler
+				</Button>
+				<Button
+					onClick={() => launch.mutate(selectedProjectId)}
+					disabled={launch.isPending || !selectedAgentId}
+				>
+					{launch.isPending ? "Lancement…" : "Lancer"}
+				</Button>
+			</div>
+		</>
 	);
 }

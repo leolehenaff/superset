@@ -9,7 +9,6 @@ import { cn } from "@superset/ui/utils";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { useFeatureFlagEnabled } from "posthog-js/react";
 import {
-	LuBot,
 	LuClock,
 	LuEllipsis,
 	LuFolderGit2,
@@ -25,7 +24,6 @@ import { env } from "renderer/env.renderer";
 import { useOpenNewWorkspace } from "renderer/hooks/useOpenNewWorkspace";
 import { useZoomFactor } from "renderer/hooks/useZoomFactor";
 import { electronTrpc } from "renderer/lib/electron-trpc";
-import { useAgentSessions } from "renderer/routes/_authenticated/_dashboard/agents/hooks/useAgentSessions";
 import { useFailedAutomations } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
 import {
 	getUsageLastSection,
@@ -42,7 +40,6 @@ const TAB_CLASS =
 	"no-drag relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors";
 const BADGE_TONE_CLASS = {
 	red: "bg-red-500/15 text-red-600 dark:text-red-400",
-	green: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
 } as const;
 const ICON_BUTTON_CLASS =
 	"no-drag flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-fill-hover hover:text-foreground";
@@ -53,13 +50,6 @@ export function AppTabsBar() {
 	const openNewWorkspace = useOpenNewWorkspace();
 	const openCommandPalette = useFrameStackStore((s) => s.setOpen);
 	const { myFailedCount } = useFailedAutomations();
-	const { sessions } = useAgentSessions();
-	const permissionCount = sessions.filter(
-		(session) => session.status === "permission",
-	).length;
-	const reviewCount = sessions.filter(
-		(session) => session.status === "review" || session.status === "failed",
-	).length;
 	const isPluginsEnabled =
 		(useFeatureFlagEnabled(FEATURE_FLAGS.PLUGINS) ?? false) ||
 		env.NODE_ENV === "development";
@@ -68,17 +58,6 @@ export function AppTabsBar() {
 	const zoomFactor = useZoomFactor();
 
 	const tabs = [
-		{
-			key: "agents",
-			label: "Agents",
-			icon: LuBot,
-			isActive: !!matchRoute({ to: "/agents" }),
-			badges: [
-				{ count: permissionCount, title: "Attend ta réponse", tone: "red" },
-				{ count: reviewCount, title: "À relire", tone: "green" },
-			],
-			open: () => navigate({ to: "/agents" }),
-		},
 		{
 			key: "workspaces",
 			label: "Workspaces",

@@ -216,6 +216,14 @@ export const PERSISTED_KEY_REGISTRY: ReadonlyArray<
 		["lastViewedWorkspaceId"],
 	],
 	[
+		"src/renderer/routes/_authenticated/_dashboard/agents/utils/openAgentSession/openAgentSession.ts",
+		["lastViewedWorkspaceId"],
+	],
+	[
+		"src/renderer/routes/_authenticated/_dashboard/agents/components/NewAgentForm/NewAgentForm.tsx",
+		["lastViewedWorkspaceId"],
+	],
+	[
 		"src/renderer/routes/_authenticated/_dashboard/automations/$automationId/components/PreviousRunsList/PreviousRunsList.tsx",
 		["lastViewedWorkspaceId"],
 	],

@@ -27,7 +27,7 @@ function barColor(usedPercent: number): string {
 	return "bg-emerald-500";
 }
 
-export function SessionQuotaBars() {
+export function SessionQuotaBars({ stacked = false }: { stacked?: boolean }) {
 	const navigate = useNavigate();
 	const { activeHostUrl } = useLocalHostService();
 	const { data: accounts = [] } = useHostUsageQuota(activeHostUrl ?? null);
@@ -44,10 +44,19 @@ export function SessionQuotaBars() {
 		<button
 			type="button"
 			onClick={() => navigate({ to: "/settings/usage" })}
-			className="flex items-center gap-5 rounded-md px-2 py-1 transition-colors hover:bg-fill-hover"
+			className={cn(
+				"flex rounded-md px-2 py-1 transition-colors hover:bg-fill-hover",
+				stacked ? "w-full flex-col gap-2 py-1.5" : "items-center gap-5",
+			)}
 		>
 			{bars.map(({ agent, label, window }) => (
-				<div key={agent} className="flex w-44 flex-col gap-1 text-left">
+				<div
+					key={agent}
+					className={cn(
+						"flex flex-col gap-1 text-left",
+						stacked ? "w-full" : "w-44",
+					)}
+				>
 					<div className="flex items-baseline justify-between text-xs">
 						<span className="font-medium">{label} · 5h</span>
 						<span className="tabular-nums text-muted-foreground">

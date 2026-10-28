@@ -30,6 +30,7 @@ import { useV2NotificationStore } from "renderer/stores/v2-notifications";
 import { useWorkspaceSidebarStore } from "renderer/stores/workspace-sidebar-state";
 import { ContentBoundary } from "../components/ContentBoundary";
 import { AddRepositoryModals } from "./components/AddRepositoryModals";
+import { AgentsSidebar } from "./components/AgentsSidebar";
 import { AppTabsBar } from "./components/AppTabsBar";
 import { CrossVersionMismatchState } from "./components/CrossVersionMismatchState";
 import { RemotePortForwarder } from "./components/RemotePortForwarder";
@@ -177,7 +178,13 @@ function DashboardLayout() {
 	// border, which stops below the strip, is the only divider.
 	const railContinuesHeaderRow = !showsAppTopBar && isWorkspaceSidebarCollapsed;
 
-	const sidebarPanel = isV2CloudEnabled ? null : (
+	const sidebarPanel = isV2CloudEnabled ? (
+		onV2WorkspaceRoute && !isWorkspaceSidebarCollapsed ? (
+			<WorkspaceSidebarPanel>
+				<AgentsSidebar activeWorkspaceId={currentV2WorkspaceId} />
+			</WorkspaceSidebarPanel>
+		) : null
+	) : (
 		<WorkspaceSidebarPanel
 			className={railContinuesHeaderRow ? "border-r-0" : undefined}
 		>
