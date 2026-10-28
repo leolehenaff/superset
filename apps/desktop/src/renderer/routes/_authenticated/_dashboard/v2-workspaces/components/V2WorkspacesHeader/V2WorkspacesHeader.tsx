@@ -16,7 +16,6 @@ import {
 import { cn } from "@superset/ui/utils";
 import {
 	LuArchive,
-	LuArrowDownUp,
 	LuChevronDown,
 	LuFolder,
 	LuGlobe,
@@ -39,15 +38,13 @@ import type {
 import {
 	PROJECT_FILTER_SESSIONS,
 	useV2WorkspacesFilterStore,
-	V2_WORKSPACES_SORT_LABELS,
-	V2_WORKSPACES_SORT_MODES,
-	type V2WorkspacesSortMode,
 	WHERE_FILTER_ANYWHERE,
 	WHERE_FILTER_CLOUD,
 	WHERE_FILTER_THIS_DEVICE,
 } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
 import { CloudGlyph } from "renderer/routes/_authenticated/components/CloudGlyph";
 import { V2WorkspaceProjectIcon } from "../V2WorkspaceProjectIcon";
+import { V2WorkspacesSortMenu } from "../V2WorkspacesSortMenu";
 import { DeviceOptionLabel } from "./components/DeviceOptionLabel";
 
 interface V2WorkspacesHeaderProps {
@@ -101,8 +98,6 @@ export function V2WorkspacesHeader({
 		(state) => state.setShowArchived,
 	);
 	const viewMode = useV2WorkspacesFilterStore((state) => state.viewMode);
-	const sortMode = useV2WorkspacesFilterStore((state) => state.sortMode);
-	const setSortMode = useV2WorkspacesFilterStore((state) => state.setSortMode);
 	const setViewMode = useV2WorkspacesFilterStore((state) => state.setViewMode);
 	const openNewWorkspace = useOpenNewWorkspace();
 
@@ -462,31 +457,7 @@ export function V2WorkspacesHeader({
 						</DropdownMenuContent>
 					</DropdownMenu>
 
-					<DropdownMenu modal={false}>
-						<DropdownMenuTrigger asChild>
-							<ToolbarMenuButton isActive={sortMode !== "activity"}>
-								<LuArrowDownUp className="size-3.5" />
-								<span className="@max-2xl:hidden">
-									{V2_WORKSPACES_SORT_LABELS[sortMode]}
-								</span>
-								<LuChevronDown className="size-3 opacity-60" />
-							</ToolbarMenuButton>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="min-w-[10rem]">
-							<DropdownMenuRadioGroup
-								value={sortMode}
-								onValueChange={(next) =>
-									setSortMode(next as V2WorkspacesSortMode)
-								}
-							>
-								{V2_WORKSPACES_SORT_MODES.map((mode) => (
-									<DropdownMenuRadioItem key={mode} value={mode}>
-										{V2_WORKSPACES_SORT_LABELS[mode]}
-									</DropdownMenuRadioItem>
-								))}
-							</DropdownMenuRadioGroup>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<V2WorkspacesSortMenu labelClassName="@max-2xl:hidden" />
 
 					<div className="h-4 w-px shrink-0 bg-border" />
 

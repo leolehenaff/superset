@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useDeferredValue, useEffect, useMemo, useRef } from "react";
-import { useResourceSnapshot } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/hooks/useResourceSnapshot";
+import { useEffect, useRef } from "react";
 import { V2WorkspacesBoard } from "./components/V2WorkspacesBoard";
 import { V2WorkspacesHeader } from "./components/V2WorkspacesHeader";
 import { V2WorkspacesList } from "./components/V2WorkspacesList";
-import { useAccessibleV2Workspaces } from "./hooks/useAccessibleV2Workspaces";
+import { useFilteredV2Workspaces } from "./hooks/useFilteredV2Workspaces";
 import {
 	useV2WorkspacesFilterStore,
 	type V2WorkspacesViewMode,
@@ -133,13 +132,8 @@ function V2WorkspacesPage() {
 		showArchived,
 	]);
 
-	// Deferred so per-keystroke filtering leaves the input's critical path:
-	// the sync render reuses the previous results and the recompute follows
-	// at background priority.
-	const deferredSearchQuery = useDeferredValue(searchQuery);
-
 	const {
-		all,
+		workspaces,
 		isReady,
 		hostOptions,
 		projectOptions,
@@ -147,40 +141,7 @@ function V2WorkspacesPage() {
 		hostsById,
 		projectsById,
 		cloudEnabled,
-	} = useAccessibleV2Workspaces({
-		searchQuery: deferredSearchQuery,
-		whereFilter,
-		projectFilters,
-		creatorFilters,
-		includeArchived: showArchived,
-	});
-
-	// Re-rendering hundreds of rows takes hundreds of ms; deferring keeps
-	// filter menus and checkboxes painting instantly while the list catches
-	// up at background priority. isReady must lag with the rows — both
-	// deferred values flip in the same background render, whereas a sync
-	// isReady=true against still-empty deferred rows would flash the empty
-	// state while the first rows are being rendered.
-	const { snapshot } = useResourceSnapshot("v2");
-	const withResources = useMemo(() => {
-		const byId = new Map(
-			(snapshot?.workspaces ?? []).map((metrics) => [
-				metrics.workspaceId,
-				metrics,
-			]),
-		);
-		return all.map((workspace) => {
-			const metrics = byId.get(workspace.id);
-			return metrics
-				? {
-						...workspace,
-						resources: { cpu: metrics.cpu, memory: metrics.memory },
-					}
-				: workspace;
-		});
-	}, [all, snapshot]);
-	const deferredWorkspaces = useDeferredValue(withResources);
-	const deferredIsReady = useDeferredValue(isReady);
+	} = useFilteredV2Workspaces();
 
 	return (
 		<div className="flex h-full w-full flex-1 flex-col overflow-hidden">
@@ -193,15 +154,9 @@ function V2WorkspacesPage() {
 				cloudEnabled={cloudEnabled}
 			/>
 			{viewMode === "board" ? (
-				<V2WorkspacesBoard
-					workspaces={deferredWorkspaces}
-					isReady={deferredIsReady}
-				/>
+				<V2WorkspacesBoard workspaces={workspaces} isReady={isReady} />
 			) : (
-				<V2WorkspacesList
-					workspaces={deferredWorkspaces}
-					isReady={deferredIsReady}
-				/>
+				<V2WorkspacesList workspaces={workspaces} isReady={isReady} />
 			)}
 		</div>
 	);

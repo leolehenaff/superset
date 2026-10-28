@@ -7,6 +7,8 @@ export const MIN_WORKSPACE_SIDEBAR_WIDTH = 225;
 export const MAX_WORKSPACE_SIDEBAR_WIDTH = 400;
 export const WORKSPACE_SIDEBAR_STORAGE_KEY = "workspace-sidebar-store";
 
+export type WorkspaceSidebarMode = "agents" | "workspaces";
+
 // Threshold for snapping to collapsed state
 const COLLAPSE_THRESHOLD = 120;
 
@@ -15,7 +17,9 @@ interface WorkspaceSidebarState {
 	lastExpandedWidth: number;
 	// Use string[] instead of Set<string> for JSON serialization with Zustand persist
 	collapsedProjectIds: string[];
+	mode: WorkspaceSidebarMode;
 
+	setMode: (mode: WorkspaceSidebarMode) => void;
 	setWidth: (width: number) => void;
 	toggleProjectCollapsed: (projectId: string) => void;
 	isProjectCollapsed: (projectId: string) => boolean;
@@ -30,6 +34,9 @@ export const useWorkspaceSidebarStore = create<WorkspaceSidebarState>()(
 				width: DEFAULT_WORKSPACE_SIDEBAR_WIDTH,
 				lastExpandedWidth: DEFAULT_WORKSPACE_SIDEBAR_WIDTH,
 				collapsedProjectIds: [],
+				mode: "agents",
+
+				setMode: (mode) => set({ mode }),
 
 				setWidth: (width) => {
 					if (width < COLLAPSE_THRESHOLD) {
@@ -97,6 +104,7 @@ export const useWorkspaceSidebarStore = create<WorkspaceSidebarState>()(
 					width: state.width,
 					lastExpandedWidth: state.lastExpandedWidth,
 					collapsedProjectIds: state.collapsedProjectIds,
+					mode: state.mode,
 				}),
 			},
 		),

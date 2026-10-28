@@ -18,12 +18,6 @@ import {
 } from "react-icons/lu";
 import { pullRequestRefFromUrl } from "renderer/lib/github/pullRequestRef";
 import { useDashboardSidebarWorkspacePorts } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/providers/DashboardSidebarPortsProvider";
-import type { UsageSeverity } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/types";
-import {
-	formatCpu,
-	formatMemory,
-} from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/utils/formatters";
-import { getUsageSeverity } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/utils/resourceSeverity";
 import { navigateToV2Workspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";
 import {
 	type V2WorkspaceActions,
@@ -31,6 +25,7 @@ import {
 } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceContextMenu";
 import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
 import { WorkspaceChecksDot } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceChecksDot";
+import { WorkspaceResourceMeters } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceResourceMeters";
 import { WorkspaceStateGlyph } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceStateGlyph";
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
 import { workspaceActivityAt } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/sortWorkspaces";
@@ -48,41 +43,6 @@ interface V2WorkspaceRowProps {
 function formatCount(count: number): string {
 	if (count < 10_000) return String(count);
 	return `${(count / 1000).toFixed(1).replace(/\.0$/, "")}k`;
-}
-
-const MEMORY_METER_MAX = 4 * 1024 ** 3;
-
-const SEVERITY_BAR_CLASS: Record<UsageSeverity, string> = {
-	normal: "bg-emerald-500/70",
-	elevated: "bg-amber-500",
-	high: "bg-red-500",
-};
-
-function ResourceMeter({
-	label,
-	value,
-	fraction,
-	severity,
-}: {
-	label: string;
-	value: string;
-	fraction: number;
-	severity: UsageSeverity;
-}) {
-	return (
-		<div className="flex items-center gap-2 text-[11px] tabular-nums">
-			<span className="w-7 shrink-0 text-muted-foreground/70">{label}</span>
-			<div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-				<div
-					className={cn("h-full rounded-full", SEVERITY_BAR_CLASS[severity])}
-					style={{ width: `${Math.max(Math.min(fraction, 1) * 100, 2)}%` }}
-				/>
-			</div>
-			<span className="w-14 shrink-0 text-right font-mono text-muted-foreground">
-				{value}
-			</span>
-		</div>
-	);
 }
 
 const HOVER_ACTION_CLASS =
@@ -143,11 +103,6 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 		isArchived ||
 		workspace.pr?.state === "merged" ||
 		workspace.sandboxStatus === "failed";
-	const resourceSeverity = workspace.resources
-		? getUsageSeverity(workspace.resources, workspace.resources, {
-				includeShare: false,
-			})
-		: "normal";
 	const ports = useDashboardSidebarWorkspacePorts(workspace.id)?.ports ?? [];
 	// The local device is the one running this app — it can't be offline from
 	// its own point of view, whatever presence says.
@@ -456,20 +411,7 @@ export const V2WorkspaceRow = memo(function V2WorkspaceRow({
 
 					<div className="w-44 shrink-0 @max-lg:hidden">
 						{workspace.resources ? (
-							<div className="flex flex-col gap-1.5">
-								<ResourceMeter
-									label="CPU"
-									value={formatCpu(workspace.resources.cpu)}
-									fraction={workspace.resources.cpu / 100}
-									severity={resourceSeverity}
-								/>
-								<ResourceMeter
-									label="RAM"
-									value={formatMemory(workspace.resources.memory)}
-									fraction={workspace.resources.memory / MEMORY_METER_MAX}
-									severity={resourceSeverity}
-								/>
-							</div>
+							<WorkspaceResourceMeters resources={workspace.resources} />
 						) : (
 							<span className="block text-right text-xs text-muted-foreground/50">
 								Au repos

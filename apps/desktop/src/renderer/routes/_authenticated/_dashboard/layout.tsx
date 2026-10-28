@@ -37,6 +37,7 @@ import { RemotePortForwarder } from "./components/RemotePortForwarder";
 import { RestoreCloudWorkspaceMount } from "./components/RestoreCloudWorkspaceMount";
 import { SaveAsEnvironmentMount } from "./components/SaveAsEnvironmentMount";
 import { TopBar } from "./components/TopBar";
+import { WorkspacesSidebar } from "./components/WorkspacesSidebar";
 import { useShowsAppTopBar } from "./hooks/useShowsAppTopBar";
 
 export const Route = createFileRoute("/_authenticated/_dashboard")({
@@ -127,6 +128,7 @@ function DashboardLayout() {
 	const isWorkspaceSidebarCollapsed = useWorkspaceSidebarStore((s) =>
 		s.isCollapsed(),
 	);
+	const workspaceSidebarMode = useWorkspaceSidebarStore((s) => s.mode);
 
 	// Global hotkeys for dashboard
 	useHotkey("OPEN_SETTINGS", () => navigate({ to: "/settings/account" }));
@@ -181,7 +183,11 @@ function DashboardLayout() {
 	const sidebarPanel = isV2CloudEnabled ? (
 		onV2WorkspaceRoute && !isWorkspaceSidebarCollapsed ? (
 			<WorkspaceSidebarPanel>
-				<AgentsSidebar activeWorkspaceId={currentV2WorkspaceId} />
+				{workspaceSidebarMode === "workspaces" ? (
+					<WorkspacesSidebar activeWorkspaceId={currentV2WorkspaceId} />
+				) : (
+					<AgentsSidebar activeWorkspaceId={currentV2WorkspaceId} />
+				)}
 			</WorkspaceSidebarPanel>
 		) : null
 	) : (

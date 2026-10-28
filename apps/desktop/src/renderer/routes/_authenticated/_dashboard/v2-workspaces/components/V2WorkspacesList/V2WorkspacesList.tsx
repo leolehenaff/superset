@@ -21,63 +21,19 @@ import { BoardColumnIcon } from "renderer/routes/_authenticated/_dashboard/v2-wo
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
 import {
 	useV2WorkspacesFilterStore,
-	type V2WorkspacesSortMode,
 	WHERE_FILTER_ANYWHERE,
 } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
+import { BOARD_COLUMN_LABELS } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/deriveBoardColumn";
 import {
-	BOARD_COLUMN_LABELS,
-	BOARD_COLUMN_ORDER,
-	type BoardColumnKey,
-	deriveBoardColumn,
-} from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/deriveBoardColumn";
-import { compareWorkspaces } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/sortWorkspaces";
+	groupByStatus,
+	type StatusSection,
+} from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/groupByStatus";
 import { useV2ProjectLocalMetaStore } from "renderer/stores/v2-project-local-meta";
 import { V2WorkspaceRow } from "./components/V2WorkspaceRow";
 
 interface V2WorkspacesListProps {
 	workspaces: AccessibleV2Workspace[];
 	isReady: boolean;
-}
-
-interface StatusSection {
-	column: BoardColumnKey;
-	workspaces: AccessibleV2Workspace[];
-}
-
-/** Board order reads left-to-right along the workflow; a vertical list must
- * lead with what needs the user, so it walks the same buckets urgency-first. */
-const LIST_SECTION_ORDER: BoardColumnKey[] = [
-	"attention",
-	"working",
-	"finished",
-	"review",
-	"idle",
-	"merged",
-	"deleted",
-];
-
-/** Same buckets as the board — the two views must agree on what
- * "needs attention" means. */
-function groupByStatus(
-	workspaces: AccessibleV2Workspace[],
-	showArchived: boolean,
-	sortMode: V2WorkspacesSortMode,
-): StatusSection[] {
-	const byColumn = new Map<BoardColumnKey, AccessibleV2Workspace[]>(
-		BOARD_COLUMN_ORDER.map((column) => [column, []]),
-	);
-	for (const workspace of workspaces) {
-		if (workspace.archivedAt != null && !showArchived) continue;
-		byColumn.get(deriveBoardColumn(workspace))?.push(workspace);
-	}
-	const sections: StatusSection[] = [];
-	for (const column of LIST_SECTION_ORDER) {
-		const rows = byColumn.get(column) ?? [];
-		if (rows.length === 0) continue;
-		rows.sort((a, b) => compareWorkspaces(a, b, sortMode));
-		sections.push({ column, workspaces: rows });
-	}
-	return sections;
 }
 
 export function V2WorkspacesList({

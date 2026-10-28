@@ -23,6 +23,7 @@ import {
 	groupSessionsByColumn,
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/agentColumns";
 import { useV2NotificationStore } from "renderer/stores/v2-notifications";
+import { SidebarModeSwitch } from "../SidebarModeSwitch";
 import { AgentsSidebarRow } from "./components/AgentsSidebarRow";
 import { AgentsSidebarSection } from "./components/AgentsSidebarSection";
 import { useActiveTerminalId } from "./hooks/useActiveTerminalId";
@@ -47,7 +48,6 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 	const sensors = useSensors(
 		useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
 	);
-	const workingCount = byColumn.get("working")?.length ?? 0;
 
 	const onDragStart = ({ active }: DragStartEvent) => {
 		setDragged(
@@ -62,20 +62,8 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 
 	return (
 		<aside className="flex h-full w-full flex-col bg-muted/30">
-			<header className="flex h-12 shrink-0 items-center gap-2.5 border-b border-border/60 pr-2 pl-3">
-				<div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-foreground/[0.06]">
-					<LuBot className="size-4 text-muted-foreground" strokeWidth={1.5} />
-				</div>
-				<div className="flex min-w-0 flex-1 flex-col">
-					<span className="text-[13px] font-semibold tracking-tight">
-						Agents
-					</span>
-					<span className="text-[11px] text-muted-foreground tabular-nums">
-						{sessions.length === 0
-							? "Aucune session"
-							: `${sessions.length} session${sessions.length > 1 ? "s" : ""}${workingCount > 0 ? ` · ${workingCount} en cours` : ""}`}
-					</span>
-				</div>
+			<header className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 pr-2 pl-3">
+				<SidebarModeSwitch />
 				<Popover open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen}>
 					<PopoverTrigger asChild>
 						<button
@@ -83,6 +71,7 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 							title="Nouvel agent"
 							className={cn(
 								ICON_BUTTON_CLASS,
+								"shrink-0",
 								isNewAgentOpen && "bg-fill-selected text-foreground",
 							)}
 						>

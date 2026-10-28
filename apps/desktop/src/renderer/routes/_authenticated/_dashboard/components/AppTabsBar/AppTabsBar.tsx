@@ -11,7 +11,6 @@ import { useFeatureFlagEnabled } from "posthog-js/react";
 import {
 	LuClock,
 	LuEllipsis,
-	LuFolderGit2,
 	LuGauge,
 	LuPlus,
 	LuPuzzle,
@@ -58,16 +57,6 @@ export function AppTabsBar() {
 	const zoomFactor = useZoomFactor();
 
 	const tabs = [
-		{
-			key: "workspaces",
-			label: "Workspaces",
-			icon: LuFolderGit2,
-			isActive:
-				!!matchRoute({ to: "/v2-workspaces" }) ||
-				!!matchRoute({ to: "/v2-workspace/$workspaceId", fuzzy: true }),
-			badges: [],
-			open: () => navigate({ to: "/v2-workspaces", search: { view: "list" } }),
-		},
 		{
 			key: "automations",
 			label: "Automatisations",
