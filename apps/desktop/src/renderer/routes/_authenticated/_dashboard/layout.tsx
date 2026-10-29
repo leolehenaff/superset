@@ -32,6 +32,7 @@ import { ContentBoundary } from "../components/ContentBoundary";
 import { AddRepositoryModals } from "./components/AddRepositoryModals";
 import { AgentsSidebar } from "./components/AgentsSidebar";
 import { AppTabsBar } from "./components/AppTabsBar";
+import { AutomationsSidebar } from "./components/AutomationsSidebar";
 import { CrossVersionMismatchState } from "./components/CrossVersionMismatchState";
 import { RemotePortForwarder } from "./components/RemotePortForwarder";
 import { RestoreCloudWorkspaceMount } from "./components/RestoreCloudWorkspaceMount";
@@ -181,10 +182,12 @@ function DashboardLayout() {
 	const railContinuesHeaderRow = !showsAppTopBar && isWorkspaceSidebarCollapsed;
 
 	const sidebarPanel = isV2CloudEnabled ? (
-		onV2WorkspaceRoute && !isWorkspaceSidebarCollapsed ? (
+		!isWorkspaceSidebarCollapsed ? (
 			<WorkspaceSidebarPanel className="border-r-0">
 				{workspaceSidebarMode === "workspaces" ? (
 					<WorkspacesSidebar activeWorkspaceId={currentV2WorkspaceId} />
+				) : workspaceSidebarMode === "automations" ? (
+					<AutomationsSidebar />
 				) : (
 					<AgentsSidebar activeWorkspaceId={currentV2WorkspaceId} />
 				)}

@@ -9,7 +9,6 @@ import { cn } from "@superset/ui/utils";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import { useFeatureFlagEnabled } from "posthog-js/react";
 import {
-	LuClock,
 	LuEllipsis,
 	LuGauge,
 	LuPlus,
@@ -23,7 +22,6 @@ import { env } from "renderer/env.renderer";
 import { useOpenNewWorkspace } from "renderer/hooks/useOpenNewWorkspace";
 import { useZoomFactor } from "renderer/hooks/useZoomFactor";
 import { electronTrpc } from "renderer/lib/electron-trpc";
-import { useFailedAutomations } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
 import {
 	getUsageLastSection,
 	usageSectionPath,
@@ -47,7 +45,6 @@ export function AppTabsBar() {
 	const matchRoute = useMatchRoute();
 	const openNewWorkspace = useOpenNewWorkspace();
 	const openCommandPalette = useFrameStackStore((s) => s.setOpen);
-	const { myFailedCount } = useFailedAutomations();
 	const isPluginsEnabled =
 		(useFeatureFlagEnabled(FEATURE_FLAGS.PLUGINS) ?? false) ||
 		env.NODE_ENV === "development";
@@ -56,14 +53,6 @@ export function AppTabsBar() {
 	const zoomFactor = useZoomFactor();
 
 	const tabs = [
-		{
-			key: "automations",
-			label: "Automatisations",
-			icon: LuClock,
-			isActive: !!matchRoute({ to: "/automations", fuzzy: true }),
-			badges: [{ count: myFailedCount, title: "En échec", tone: "red" }],
-			open: () => navigate({ to: "/automations" }),
-		},
 		{
 			key: "usage",
 			label: "Usage",

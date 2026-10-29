@@ -7,7 +7,7 @@ export const MIN_WORKSPACE_SIDEBAR_WIDTH = 225;
 export const MAX_WORKSPACE_SIDEBAR_WIDTH = 400;
 export const WORKSPACE_SIDEBAR_STORAGE_KEY = "workspace-sidebar-store";
 
-export type WorkspaceSidebarMode = "agents" | "workspaces";
+export type WorkspaceSidebarMode = "agents" | "workspaces" | "automations";
 
 // Threshold for snapping to collapsed state
 const COLLAPSE_THRESHOLD = 120;

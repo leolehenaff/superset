@@ -1,79 +1,16 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { i18n } from "@superset/i18n";
-import { errorMessage } from "@superset/i18n/errors";
 import { COMPANY } from "@superset/shared/constants";
-import { describeSchedule } from "@superset/shared/rrule";
-import type { RouterOutputs } from "@superset/trpc";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@superset/ui/alert-dialog";
 import { Button } from "@superset/ui/button";
-import {
-	Empty,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "@superset/ui/empty";
-import { Input } from "@superset/ui/input";
 import { Skeleton } from "@superset/ui/skeleton";
-import { toast } from "@superset/ui/sonner";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@superset/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@superset/ui/tabs";
-import { cn } from "@superset/ui/utils";
-import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
-import {
-	LuArrowUpRight,
-	LuRotateCw,
-	LuSearch,
-	LuSearchX,
-	LuTerminal,
-	LuTriangleAlert,
-	LuX,
-} from "react-icons/lu";
-import { GATED_FEATURES, usePaywall } from "renderer/components/Paywall";
-import { useRecentProjects } from "renderer/hooks/host-projects/useRecentProjects";
-import { useCreateAgentSession } from "renderer/hooks/useCreateAgentSession";
-import { useNow } from "renderer/hooks/useNow";
-import { useV2AgentChoices } from "renderer/hooks/useV2AgentChoices";
-import { apiTrpcClient } from "renderer/lib/api-trpc-client";
-import { authClient } from "renderer/lib/auth-client";
+import { useState } from "react";
+import { LuTerminal, LuX } from "react-icons/lu";
 import { cloudTrpc } from "renderer/lib/cloud-trpc";
-import { DATA_TABLE_HEAD_CELL } from "renderer/routes/_authenticated/_dashboard/components/DataTableHeader";
 import { FeatureHeader } from "renderer/routes/_authenticated/_dashboard/components/FeatureHeader";
 import { PageHeader } from "renderer/routes/_authenticated/_dashboard/components/PageHeader";
-import {
-	SortableHeader,
-	type SortDirection,
-} from "renderer/routes/_authenticated/_dashboard/components/SortableHeader";
-import { useFailedAutomations } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
-import { AGENT_STORAGE_KEY } from "renderer/routes/_authenticated/components/DashboardNewWorkspaceModal/components/DashboardNewWorkspaceForm/PromptGroup/types";
-import { useIsOrganizationOwner } from "renderer/routes/_authenticated/hooks/useIsOrganizationOwner";
-import { useLocalHostService } from "renderer/routes/_authenticated/providers/LocalHostServiceProvider";
-import { AutomationRow } from "./components/AutomationRow";
 import { AutomationStatCards } from "./components/AutomationStatCards";
 import { AutomationsEmptyState } from "./components/AutomationsEmptyState";
-import { HostOfflineRunDialog } from "./components/HostOfflineRunDialog";
-import type { AutomationTemplate } from "./templates";
-import { matchAgentChoice, portableAgentValue } from "./utils/agentIdentity";
-import { dispatchErrorCode, runErrorHelp } from "./utils/runErrorHelp";
-import { RUN_STATUS_META } from "./utils/runStatus";
+import { useCreateAutomation } from "./hooks/useCreateAutomation";
 
 export const Route = createFileRoute("/_authenticated/_dashboard/automations/")(
 	{
@@ -81,446 +18,30 @@ export const Route = createFileRoute("/_authenticated/_dashboard/automations/")(
 	},
 );
 
-type Scope = "mine" | "team";
-
-type AutomationListItem = RouterOutputs["automation"]["list"][number];
-
-type AutomationSortField = "name" | "owner" | "schedule" | "status" | "lastRun";
-
-type LastRunSortMode = "time" | "result";
-
-const LAST_RUN_SORT_CYCLE: {
-	mode: LastRunSortMode;
-	direction: SortDirection;
-}[] = [
-	{ mode: "time", direction: "desc" },
-	{ mode: "time", direction: "asc" },
-	{ mode: "result", direction: "asc" },
-	{ mode: "result", direction: "desc" },
-];
-
-// Seeds the "Create with AI" agent session. The skill is provisioned as
-// superset:automate; mentioning it by name loads it (it isn't in the chat
-// slash-command allowlist).
-const AUTOMATION_AGENT_PROMPT =
-	"Help me create a Superset automation. Use the superset:automate skill if it's available, otherwise the `superset` CLI (start with `superset automations --help`). Ask me what the automation should do and what should fire it — a schedule, or an event like a Slack message, GitHub pull request, or Linear issue. Confirm that, the target project, and the agent, then create the automation and trigger a first run so we can review the result together.";
-
-const DEFAULT_TIMEZONE =
-	Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-
 function AutomationsPage() {
 	const { t } = useLingui();
-	const { data: session } = authClient.useSession();
-	const currentUserId = session?.user?.id;
-	const isOrgOwner = useIsOrganizationOwner();
-
-	const [scope, setScope] = useState<Scope>("mine");
-	const [search, setSearch] = useState("");
+	const navigate = useNavigate();
 	const [cliHintDismissed, setCliHintDismissed] = useState(false);
-	const [pendingDelete, setPendingDelete] = useState<AutomationListItem | null>(
-		null,
-	);
-	const [hostOfflineRun, setHostOfflineRun] = useState<{
-		hostId: string | null;
-	} | null>(null);
-	const [retryingIds, setRetryingIds] = useState<Set<string>>(new Set());
-
-	const addRetrying = useCallback((ids: string[]) => {
-		setRetryingIds((prev) => {
-			const next = new Set(prev);
-			for (const id of ids) next.add(id);
-			return next;
-		});
-	}, []);
-	const removeRetrying = useCallback((ids: string[]) => {
-		setRetryingIds((prev) => {
-			const next = new Set(prev);
-			for (const id of ids) next.delete(id);
-			return next;
-		});
-	}, []);
-
-	const runNowMutation = useMutation({
-		mutationFn: ({
-			id,
-		}: {
-			id: string;
-			name: string;
-			targetHostId: string | null;
-		}) => apiTrpcClient.automation.runNow.mutate({ id }),
-		onMutate: ({ id }) => addRetrying([id]),
-		onSettled: (_data, _error, { id }) => removeRetrying([id]),
-		onSuccess: (_, { name }) =>
-			toast.success(
-				t({
-					message: `Running "${name}" now`,
-				}),
-			),
-		onError: (error, { targetHostId }) => {
-			const code = dispatchErrorCode(error);
-			if (code === "host_offline") {
-				setHostOfflineRun({ hostId: targetHostId });
-				return;
-			}
-			const help = runErrorHelp(code);
-			if (help) {
-				toast.error(i18n._(help));
-				return;
-			}
-			toast.error(
-				(error instanceof Error ? error.message : null) ??
-					t({
-						message: "Failed to trigger run",
-					}),
-			);
-		},
-	});
-
-	const utils = cloudTrpc.useUtils();
-
-	const setEnabledMutation = useMutation({
-		mutationFn: ({
-			id,
-			enabled,
-		}: {
-			id: string;
-			enabled: boolean;
-			name: string;
-		}) => apiTrpcClient.automation.setEnabled.mutate({ id, enabled }),
-		onSuccess: (_, { id, enabled, name }) => {
-			void utils.automation.list.invalidate();
-			void utils.automation.get.invalidate({ id });
-			toast.success(
-				enabled
-					? t({
-							message: `"${name}" resumed`,
-						})
-					: t({
-							message: `"${name}" paused`,
-						}),
-			);
-		},
-		onError: (error) =>
-			toast.error(
-				errorMessage(
-					error,
-					t({
-						message: "Failed to update automation",
-					}),
-				),
-			),
-	});
-
-	const deleteMutation = useMutation({
-		mutationFn: ({ id }: { id: string; name: string }) =>
-			apiTrpcClient.automation.delete.mutate({ id }),
-		onSuccess: (_, { name }) => {
-			void utils.automation.list.invalidate();
-			setPendingDelete(null);
-			toast.success(
-				t({
-					message: `"${name}" deleted`,
-				}),
-			);
-		},
-		onError: (error) =>
-			toast.error(
-				errorMessage(
-					error,
-					t({
-						message: "Failed to delete automation",
-					}),
-				),
-			),
-	});
-
 	const {
-		data: automations = [],
-		isPending: automationsPending,
-		isError: automationsFailed,
-		error: automationsError,
-		refetch: refetchAutomations,
-	} = cloudTrpc.automation.list.useQuery(undefined, {
-		refetchInterval: 60_000,
-	});
+		createFromTemplate,
+		createManually,
+		createWithAgent,
+		isCreatingManually,
+		isCreatingWithAgent,
+		showProBadge,
+	} = useCreateAutomation();
 
-	const { data: memberRows = [] } = cloudTrpc.organization.listMembers.useQuery(
-		undefined,
-		{},
-	);
-	const { lastRunById } = useFailedAutomations();
-	const now = useNow(30_000);
-
-	const recentProjects = useRecentProjects();
-
-	const usersById = useMemo(
-		() => new Map(memberRows.map((member) => [member.user.id, member.user])),
-		[memberRows],
-	);
-	const projectsById = useMemo(
-		() =>
-			new Map(recentProjects.filter((p) => p != null).map((p) => [p.id, p])),
-		[recentProjects],
-	);
-
-	const mineCount = useMemo(
-		() =>
-			currentUserId
-				? automations.filter((a) => a.ownerUserId === currentUserId).length
-				: 0,
-		[automations, currentUserId],
-	);
-	const teamCount = automations.length - mineCount;
-
-	const tabVisible = useMemo(() => {
-		if (!currentUserId) return automations;
-		return scope === "mine"
-			? automations.filter((a) => a.ownerUserId === currentUserId)
-			: automations.filter((a) => a.ownerUserId !== currentUserId);
-	}, [automations, scope, currentUserId]);
-
-	const visible = useMemo(() => {
-		const query = search.trim().toLowerCase();
-		if (!query) return tabVisible;
-		return tabVisible.filter((a) => a.name.toLowerCase().includes(query));
-	}, [tabVisible, search]);
-
+	const { data: automations = [], isPending: automationsPending } =
+		cloudTrpc.automation.list.useQuery(undefined, {
+			refetchInterval: 60_000,
+		});
 	// Org-wide on purpose: the cards describe the org's automation health and
-	// link into the org-wide All runs views, so the Mine/Team tabs only
-	// filter the table.
+	// link into the org-wide All runs views.
 	const { data: orgRunStats } = cloudTrpc.automation.orgRunStats.useQuery(
 		undefined,
 		{ staleTime: 30_000 },
 	);
-
-	const [sortField, setSortField] = useState<AutomationSortField | null>(null);
-	const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-
-	const [lastRunSortMode, setLastRunSortMode] =
-		useState<LastRunSortMode>("time");
-
-	const handleSort = (field: AutomationSortField) => {
-		if (field === "lastRun") {
-			const current = LAST_RUN_SORT_CYCLE.findIndex(
-				(step) =>
-					sortField === "lastRun" &&
-					step.mode === lastRunSortMode &&
-					step.direction === sortDirection,
-			);
-			const next =
-				LAST_RUN_SORT_CYCLE[(current + 1) % LAST_RUN_SORT_CYCLE.length];
-			setSortField("lastRun");
-			setLastRunSortMode(next.mode);
-			setSortDirection(next.direction);
-			return;
-		}
-		if (sortField === field) {
-			setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
-		} else {
-			setSortField(field);
-			setSortDirection("asc");
-		}
-	};
-
-	const handleScopeChange = (value: string) => {
-		if (!value) return;
-		const next = value as Scope;
-		setScope(next);
-		// The Owner column only exists on the team tab; drop the sort with it.
-		if (next !== "team" && sortField === "owner") setSortField(null);
-	};
-
-	const sortedVisible = useMemo(() => {
-		if (!sortField) return visible;
-		if (sortField === "lastRun") {
-			// Never-run automations stay at the bottom in both directions.
-			return [...visible].sort((a, b) => {
-				const aRun = lastRunById.get(a.id);
-				const bRun = lastRunById.get(b.id);
-				if (!aRun || !bRun) return aRun === bRun ? 0 : aRun ? -1 : 1;
-				if (lastRunSortMode === "time") {
-					return sortDirection === "asc"
-						? aRun.at - bRun.at
-						: bRun.at - aRun.at;
-				}
-				const cmp =
-					RUN_STATUS_META[aRun.status].sortRank -
-					RUN_STATUS_META[bRun.status].sortRank;
-				if (cmp !== 0) return sortDirection === "asc" ? cmp : -cmp;
-				return bRun.at - aRun.at;
-			});
-		}
-		const sortValue = (automation: AutomationListItem): string => {
-			switch (sortField) {
-				case "name":
-					return automation.name;
-				case "owner": {
-					const owner = usersById.get(automation.ownerUserId);
-					return owner?.name ?? owner?.email ?? "";
-				}
-				case "schedule":
-					return automation.rrule
-						? describeSchedule(automation.rrule)
-						: automation.triggerCount > 0
-							? "Event triggered"
-							: "No triggers";
-				case "status":
-					return automation.enabled ? "active" : "paused";
-			}
-		};
-		return [...visible].sort((a, b) => {
-			const cmp = sortValue(a).localeCompare(sortValue(b));
-			return sortDirection === "asc" ? cmp : -cmp;
-		});
-	}, [
-		visible,
-		sortField,
-		sortDirection,
-		usersById,
-		lastRunById,
-		lastRunSortMode,
-	]);
-
-	const navigate = useNavigate();
-	const { machineId, activeHostUrl } = useLocalHostService();
-	const { agents: agentChoices } = useV2AgentChoices(activeHostUrl);
-	const { createSession, isPending: creatingWithAgent } =
-		useCreateAgentSession();
-	// Automations are Pro. Creating, running, and resuming go through the
-	// paywall; the server refuses the same three, so this is the friendly
-	// front of one gate. Pausing, editing, and deleting stay open so a
-	// downgraded org keeps control of what it has.
-	const { gateFeature, hasAccess, isReady: planReady } = usePaywall();
-	const showProBadge = planReady && !hasAccess(GATED_FEATURES.AUTOMATIONS);
-
-	// Cursor-style creation: no dialog. "New automation" writes an untitled
-	// automation with no triggers and opens its detail page, which is the
-	// editor; a template pre-fills name/prompt/schedule the same way.
-	const createMutation = useMutation({
-		mutationFn: (template: AutomationTemplate | null) => {
-			const stored = window.localStorage.getItem(AGENT_STORAGE_KEY);
-			// Template preference first (iconId is a legacy fallback, as in the
-			// old dialog), then the last-used agent, then the first host agent.
-			const choice =
-				(template?.agentType
-					? (matchAgentChoice(agentChoices, template.agentType) ??
-						agentChoices.find((option) => option.iconId === template.agentType))
-					: null) ??
-				(stored ? matchAgentChoice(agentChoices, stored) : null) ??
-				agentChoices[0];
-			if (!choice) throw new Error("No agent available yet");
-			return apiTrpcClient.automation.create.mutate({
-				name: template
-					? i18n._(template.name)
-					: t({
-							message: "Untitled",
-						}),
-				prompt: template?.prompt ?? "",
-				// Preset slug when unambiguous — instance UUIDs die when the host's
-				// agent-config table is re-seeded, orphaning the automation.
-				agent: portableAgentValue(agentChoices, choice),
-				targetHostId: machineId ?? null,
-				v2ProjectId: recentProjects.find((p) => p != null)?.id ?? null,
-				...(template?.rrule
-					? { rrule: template.rrule, timezone: DEFAULT_TIMEZONE }
-					: { triggers: [] }),
-			});
-		},
-		onSuccess: (result) => {
-			void utils.automation.list.invalidate();
-			void navigate({
-				to: "/automations/$automationId",
-				params: { automationId: result.id },
-			});
-		},
-		onError: (error) => {
-			// Raw Postgres errors are multi-line SQL dumps — keep the first line.
-			const message =
-				error instanceof Error ? error.message.split("\n")[0]?.trim() : null;
-			toast.error(
-				message ||
-					t({
-						message: "Failed to create automation",
-					}),
-			);
-		},
-	});
-
-	const handleSelectTemplate = (template: AutomationTemplate) => {
-		if (createMutation.isPending) return;
-		gateFeature(GATED_FEATURES.AUTOMATIONS, () =>
-			createMutation.mutate(template),
-		);
-	};
-
-	const handleCreateManually = () => {
-		if (createMutation.isPending) return;
-		gateFeature(GATED_FEATURES.AUTOMATIONS, () => createMutation.mutate(null));
-	};
-
-	const handleCreateWithAgent = () => {
-		if (creatingWithAgent) return;
-		gateFeature(
-			GATED_FEATURES.AUTOMATIONS,
-			() => void createSession(AUTOMATION_AGENT_PROMPT),
-		);
-	};
-
-	const scheduleWidth = scope === "team" ? "w-[16%]" : "w-[18%]";
-	const lastRunWidth = "w-[14%]";
-	const statusWidth = scope === "team" ? "w-[12%]" : "w-[13%]";
-	const columnCount = scope === "team" ? 6 : 5;
-	const showAutomationLoading = automationsPending && tabVisible.length === 0;
-	// A failed read has no rows either, but it is not an empty org — it must not
-	// strip the page chrome or claim the org has no automations.
-	const showAutomationError = automationsFailed && automations.length === 0;
-	// True first run: nothing in the org — stats/tabs/search are noise.
-	const orgEmpty =
-		!automationsPending && !showAutomationError && automations.length === 0;
-	const tabEmpty =
-		!automationsPending && !showAutomationError && tabVisible.length === 0;
-	const showMineEmptyState = tabEmpty && scope === "mine";
-	const showTeamEmptyState = tabEmpty && scope === "team";
-
-	const renderAutomationRow = (automation: AutomationListItem) => (
-		<AutomationRow
-			key={automation.id}
-			automation={automation}
-			owner={usersById.get(automation.ownerUserId)}
-			showOwner={scope === "team"}
-			project={
-				automation.v2ProjectId === null
-					? undefined
-					: projectsById.get(automation.v2ProjectId)
-			}
-			isSession={automation.v2ProjectId === null}
-			lastRun={lastRunById.get(automation.id) ?? null}
-			now={now}
-			isOwner={automation.ownerUserId === currentUserId}
-			canDelete={automation.ownerUserId === currentUserId || isOrgOwner}
-			isRetrying={retryingIds.has(automation.id)}
-			onRunNow={(a) =>
-				gateFeature(GATED_FEATURES.AUTOMATIONS, () =>
-					runNowMutation.mutate({
-						id: a.id,
-						name: a.name,
-						targetHostId: a.targetHostId,
-					}),
-				)
-			}
-			onToggleEnabled={(a) => {
-				const toggle = () =>
-					setEnabledMutation.mutate({
-						id: a.id,
-						enabled: !a.enabled,
-						name: a.name,
-					});
-				if (a.enabled) toggle();
-				else gateFeature(GATED_FEATURES.AUTOMATIONS, toggle);
-			}}
-			onDelete={setPendingDelete}
-		/>
-	);
+	const orgEmpty = !automationsPending && automations.length === 0;
 
 	return (
 		<div className="flex h-full w-full flex-1 flex-col overflow-hidden">
@@ -531,22 +52,14 @@ function AutomationsPage() {
 					<FeatureHeader
 						title={<Trans>Automations</Trans>}
 						docsUrl={`${COMPANY.DOCS_URL}/automations`}
-						onCreate={handleCreateWithAgent}
-						isCreating={creatingWithAgent}
-						showCreate={!orgEmpty}
-						createDescription={<Trans>Describe the work to your agent</Trans>}
-						primaryAction={{
-							label: <Trans>New automation</Trans>,
-							onSelect: handleCreateManually,
-							disabled: createMutation.isPending,
-						}}
+						onCreate={createWithAgent}
+						isCreating={isCreatingWithAgent}
+						showCreate={false}
 					/>
 
-					{/* Stats are org-wide, so they stay put while the tabs swap;
-					    only a truly empty org drops them. */}
 					{!orgEmpty && (
 						<div className="mt-5">
-							{showAutomationLoading ? (
+							{automationsPending ? (
 								<div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
 									{["a", "b", "c", "d", "e"].map((key) => (
 										<Skeleton key={key} className="h-[70px] w-full" />
@@ -582,244 +95,18 @@ function AutomationsPage() {
 						</div>
 					)}
 
-					{!orgEmpty && (
-						<div className="mt-6 flex items-center justify-between gap-2">
-							<Tabs value={scope} onValueChange={handleScopeChange}>
-								<TabsList className="h-8 bg-transparent p-0 gap-1">
-									<TabsTrigger
-										value="mine"
-										className="h-8 rounded-md px-3 data-[state=active]:bg-accent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
-									>
-										<span className="text-sm">
-											<Trans>Mine</Trans>
-										</span>
-										<span className="ml-1 tabular-nums text-xs text-muted-foreground">
-											{mineCount}
-										</span>
-									</TabsTrigger>
-									<TabsTrigger
-										value="team"
-										className="h-8 rounded-md px-3 data-[state=active]:bg-accent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
-									>
-										<span className="text-sm">
-											<Trans>Team</Trans>
-										</span>
-										<span className="ml-1 tabular-nums text-xs text-muted-foreground">
-											{teamCount}
-										</span>
-									</TabsTrigger>
-								</TabsList>
-							</Tabs>
-							<div className="flex items-center gap-2">
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="h-8 gap-1.5 px-3 text-muted-foreground hover:text-foreground"
-									onClick={() =>
-										navigate({
-											to: "/automations/runs",
-											search: { scope: scope === "mine" ? "mine" : "all" },
-										})
-									}
-								>
-									<span>
-										<Trans>All runs</Trans>
-									</span>
-									<LuArrowUpRight className="size-3.5" />
-								</Button>
-								<div className="relative">
-									<LuSearch className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-									<Input
-										value={search}
-										onChange={(e) => setSearch(e.target.value)}
-										placeholder={t({
-											message: "Search",
-										})}
-										aria-label={t({
-											message: "Search automations",
-										})}
-										className="h-8 w-44 pl-8"
-									/>
-								</div>
-							</div>
-						</div>
-					)}
-
-					<div className={cn("mt-3", tabEmpty && "flex flex-1 flex-col")}>
-						{showAutomationLoading ? (
-							<div className="space-y-2">
-								{["a", "b", "c", "d", "e", "f"].map((key) => (
-									<Skeleton key={key} className="h-10 w-full" />
-								))}
-							</div>
-						) : showAutomationError ? (
-							<Empty className="rounded-xl border border-border py-16">
-								<EmptyHeader>
-									<EmptyMedia
-										variant="icon"
-										className="size-14 [&_svg:not([class*='size-'])]:size-7"
-									>
-										<LuTriangleAlert />
-									</EmptyMedia>
-									<EmptyTitle>
-										<Trans>Couldn't load automations</Trans>
-									</EmptyTitle>
-									<EmptyDescription className="select-text cursor-text">
-										{automationsError instanceof Error ? (
-											automationsError.message
-										) : (
-											<Trans>The request failed.</Trans>
-										)}
-									</EmptyDescription>
-								</EmptyHeader>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => {
-										void refetchAutomations();
-									}}
-								>
-									<LuRotateCw className="size-4" />
-									<span>
-										<Trans>Try again</Trans>
-									</span>
-								</Button>
-							</Empty>
-						) : showMineEmptyState ? (
-							<div className="flex flex-1 flex-col py-6">
-								<AutomationsEmptyState
-									onSelectTemplate={handleSelectTemplate}
-									onCreateWithAgent={handleCreateWithAgent}
-									isCreating={creatingWithAgent}
-									onCreateManually={handleCreateManually}
-									isCreatingManually={createMutation.isPending}
-									showProBadge={showProBadge}
-								/>
-							</div>
-						) : showTeamEmptyState ? (
-							<Empty className="rounded-xl border border-border py-16">
-								<EmptyHeader>
-									<EmptyMedia
-										variant="icon"
-										className="size-14 [&_svg:not([class*='size-'])]:size-7"
-									>
-										<LuSearchX />
-									</EmptyMedia>
-									<EmptyTitle>
-										<Trans>No team automations</Trans>
-									</EmptyTitle>
-									<EmptyDescription>
-										<Trans>
-											Nobody on your team has shared automations yet.
-										</Trans>
-									</EmptyDescription>
-								</EmptyHeader>
-							</Empty>
-						) : (
-							// No overflow-hidden: it would break the sticky header, which
-							// sticks relative to the page scroll container.
-							<div className="rounded-xl border border-border">
-								<Table className="table-fixed">
-									{/* Radius + bg live on the corner cells: Chromium ignores
-									    border-radius on table-header-groups, so a thead bg pokes
-									    square past the container's rounded corners. */}
-									<TableHeader className="sticky top-0 z-10 shadow-[inset_0_-1px_0_0_var(--color-border)] [&_th]:bg-background [&_tr>th:first-child]:rounded-tl-xl [&_tr>th:last-child]:rounded-tr-xl [&_tr]:border-b-0">
-										<TableRow className="hover:bg-transparent">
-											<TableHead className={cn(DATA_TABLE_HEAD_CELL, "pl-4")}>
-												<SortableHeader
-													field="name"
-													label={t({
-														message: "Name",
-													})}
-													sortField={sortField}
-													sortDirection={sortDirection}
-													onSort={handleSort}
-												/>
-											</TableHead>
-											{scope === "team" && (
-												<TableHead
-													className={cn(DATA_TABLE_HEAD_CELL, "w-[14%]")}
-												>
-													<SortableHeader
-														field="owner"
-														label={t({
-															message: "Owner",
-														})}
-														sortField={sortField}
-														sortDirection={sortDirection}
-														onSort={handleSort}
-													/>
-												</TableHead>
-											)}
-											<TableHead
-												className={cn(DATA_TABLE_HEAD_CELL, scheduleWidth)}
-											>
-												<SortableHeader
-													field="schedule"
-													label={t({
-														message: "Schedule",
-													})}
-													sortField={sortField}
-													sortDirection={sortDirection}
-													onSort={handleSort}
-												/>
-											</TableHead>
-											<TableHead
-												className={cn(DATA_TABLE_HEAD_CELL, statusWidth)}
-											>
-												<SortableHeader
-													field="status"
-													label={t({
-														message: "Status",
-													})}
-													sortField={sortField}
-													sortDirection={sortDirection}
-													onSort={handleSort}
-												/>
-											</TableHead>
-											<TableHead
-												className={cn(DATA_TABLE_HEAD_CELL, lastRunWidth)}
-											>
-												<SortableHeader
-													field="lastRun"
-													label={
-														sortField !== "lastRun"
-															? t({ message: "Last run" })
-															: lastRunSortMode === "time"
-																? t({ message: "Last run (time)" })
-																: t({ message: "Last run (result)" })
-													}
-													sortField={sortField}
-													sortDirection={sortDirection}
-													onSort={handleSort}
-												/>
-											</TableHead>
-											<TableHead
-												className={cn(DATA_TABLE_HEAD_CELL, "w-20 pr-4")}
-											/>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{visible.length === 0 ? (
-											<TableRow className="hover:bg-transparent">
-												<TableCell
-													colSpan={columnCount}
-													className="h-24 text-center text-sm text-muted-foreground"
-												>
-													<Trans>No automations match</Trans>
-												</TableCell>
-											</TableRow>
-										) : (
-											sortedVisible.map(renderAutomationRow)
-										)}
-									</TableBody>
-								</Table>
-							</div>
-						)}
+					<div className="flex flex-1 flex-col py-6">
+						<AutomationsEmptyState
+							onSelectTemplate={createFromTemplate}
+							onCreateWithAgent={createWithAgent}
+							isCreating={isCreatingWithAgent}
+							onCreateManually={createManually}
+							isCreatingManually={isCreatingManually}
+							showProBadge={showProBadge}
+						/>
 					</div>
 
-					{!cliHintDismissed && !showAutomationLoading && !tabEmpty && (
+					{!cliHintDismissed && !orgEmpty && (
 						<div className="relative mt-4 flex items-center gap-2.5 rounded-lg border border-border/60 px-3 py-2 pr-9">
 							<LuTerminal className="size-3.5 shrink-0 text-muted-foreground" />
 							<p className="min-w-0 truncate text-xs text-muted-foreground">
@@ -855,55 +142,6 @@ function AutomationsPage() {
 					)}
 				</div>
 			</div>
-
-			<HostOfflineRunDialog
-				hostId={hostOfflineRun?.hostId ?? null}
-				open={!!hostOfflineRun}
-				onOpenChange={(next) => {
-					if (!next) setHostOfflineRun(null);
-				}}
-			/>
-
-			<AlertDialog
-				open={!!pendingDelete}
-				onOpenChange={(next) => {
-					if (!next) setPendingDelete(null);
-				}}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							<Trans>Delete automation?</Trans>
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{pendingDelete ? (
-								<Trans>
-									"{pendingDelete.name}" will stop firing and its run history
-									will be removed. This can't be undone.
-								</Trans>
-							) : null}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>
-							<Trans>Cancel</Trans>
-						</AlertDialogCancel>
-						<AlertDialogAction
-							disabled={deleteMutation.isPending}
-							onClick={() => {
-								if (pendingDelete) {
-									deleteMutation.mutate({
-										id: pendingDelete.id,
-										name: pendingDelete.name,
-									});
-								}
-							}}
-						>
-							<Trans>Delete</Trans>
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
 		</div>
 	);
 }
