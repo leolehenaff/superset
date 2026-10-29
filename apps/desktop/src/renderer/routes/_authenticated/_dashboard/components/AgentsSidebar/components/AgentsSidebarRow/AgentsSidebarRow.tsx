@@ -21,10 +21,10 @@ import {
 	formatModelFamily,
 	projectStripeColor,
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
+import { StatusGlyph } from "renderer/routes/_authenticated/_dashboard/components/StatusGlyph";
 import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
 import { getRelativeTime } from "renderer/screens/main/components/WorkspacesListView/utils";
 import { useV2NotificationStore } from "renderer/stores/v2-notifications";
-import { StatusGlyph } from "./components/StatusGlyph";
 
 interface AgentsSidebarRowProps {
 	session: AgentSession;

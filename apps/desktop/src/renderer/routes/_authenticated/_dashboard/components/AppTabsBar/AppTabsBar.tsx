@@ -33,7 +33,6 @@ import { NavigationControls } from "../NavigationControls";
 import { OfflineBadge } from "../OfflineBadge";
 import { PortsDropdown } from "../PortsDropdown";
 import { WindowControlsInset } from "../WindowControlsInset";
-import { WorkspaceSwitcher } from "./components/WorkspaceSwitcher";
 
 const TAB_CLASS =
 	"no-drag relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors";
@@ -126,7 +125,6 @@ export function AppTabsBar() {
 						</button>
 					))}
 				</nav>
-				<WorkspaceSwitcher />
 			</ZoomStable>
 			<div className="drag h-full min-w-0 flex-1" />
 			<ZoomStable enabled={isMac} className="flex items-center gap-1 pr-3">

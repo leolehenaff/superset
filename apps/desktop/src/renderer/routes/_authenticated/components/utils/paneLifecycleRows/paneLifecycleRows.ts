@@ -4,6 +4,7 @@ export interface PaneLifecycleRow {
 	workspaceId: unknown;
 	paneLayout: unknown;
 	rightPaneLayout?: unknown;
+	bottomPaneLayout?: unknown;
 }
 
 export interface RemovedPaneLocation {
@@ -22,7 +23,11 @@ export function extractWorkspaceIds(rows: PaneLifecycleRow[]): Set<string> {
 }
 
 function* rowPanes(row: PaneLifecycleRow): Generator<Pane<unknown>> {
-	for (const value of [row.paneLayout, row.rightPaneLayout]) {
+	for (const value of [
+		row.paneLayout,
+		row.rightPaneLayout,
+		row.bottomPaneLayout,
+	]) {
 		const layout = value as WorkspaceState<unknown> | undefined;
 		if (!layout?.tabs) continue;
 		for (const tab of layout.tabs) {

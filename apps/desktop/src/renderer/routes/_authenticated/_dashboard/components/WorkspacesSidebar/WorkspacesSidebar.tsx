@@ -1,6 +1,8 @@
+import { cn } from "@superset/ui/utils";
 import { useMemo } from "react";
 import { LuPlus } from "react-icons/lu";
 import { useOpenNewWorkspace } from "renderer/hooks/useOpenNewWorkspace";
+import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { V2WorkspacesSortMenu } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspacesSortMenu";
 import { useFilteredV2Workspaces } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useFilteredV2Workspaces";
 import { useV2WorkspacesFilterStore } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
@@ -35,7 +37,7 @@ export function WorkspacesSidebar({
 	const openNewWorkspace = useOpenNewWorkspace();
 
 	return (
-		<aside className="flex h-full w-full flex-col bg-muted/30">
+		<aside className={cn("flex h-full w-full flex-col", APP_CHASSIS_BG_CLASS)}>
 			<header className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 pr-2 pl-3">
 				<SidebarModeSwitch />
 				<button

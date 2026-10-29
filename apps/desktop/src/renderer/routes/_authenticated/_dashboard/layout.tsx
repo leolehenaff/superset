@@ -182,7 +182,7 @@ function DashboardLayout() {
 
 	const sidebarPanel = isV2CloudEnabled ? (
 		onV2WorkspaceRoute && !isWorkspaceSidebarCollapsed ? (
-			<WorkspaceSidebarPanel>
+			<WorkspaceSidebarPanel className="border-r-0">
 				{workspaceSidebarMode === "workspaces" ? (
 					<WorkspacesSidebar activeWorkspaceId={currentV2WorkspaceId} />
 				) : (

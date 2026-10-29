@@ -131,6 +131,7 @@ export interface WorkspaceProps<TData> {
 	/** Rendered at the trailing (right) edge of the tab bar row. */
 	renderTabBarTrailing?: () => ReactNode;
 	renderBelowTabBar?: () => ReactNode;
+	hideTabBar?: boolean;
 	onBeforeClosePane?: (
 		pane: Pane<TData>,
 		tab: Tab<TData>,

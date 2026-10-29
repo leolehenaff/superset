@@ -27,7 +27,10 @@ function getSnapshot(state: WorkspaceState<PaneViewerData>): string {
 	return getSharedPaneLayoutSnapshot(state);
 }
 
-export type PaneLayoutSlot = "paneLayout" | "rightPaneLayout";
+export type PaneLayoutSlot =
+	| "paneLayout"
+	| "rightPaneLayout"
+	| "bottomPaneLayout";
 
 export function useV2WorkspacePaneLayout({
 	slot = "paneLayout",
@@ -64,7 +67,7 @@ export function useV2WorkspacePaneLayout({
 			store: createWorkspaceStore<PaneViewerData>({
 				initialState: seededLayout,
 				getPaneKey,
-				...(slot === "rightPaneLayout" ? { placePane: placeInTabs } : {}),
+				...(slot !== "paneLayout" ? { placePane: placeInTabs } : {}),
 			}),
 		};
 	}, [collections, workspaceId, slot, selectionKey]);

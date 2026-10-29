@@ -22,6 +22,7 @@ import {
 	AGENT_COLUMN_ORDER,
 	groupSessionsByColumn,
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/agentColumns";
+import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useV2NotificationStore } from "renderer/stores/v2-notifications";
 import { SidebarModeSwitch } from "../SidebarModeSwitch";
 import { AgentsSidebarRow } from "./components/AgentsSidebarRow";
@@ -61,7 +62,7 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 	};
 
 	return (
-		<aside className="flex h-full w-full flex-col bg-muted/30">
+		<aside className={cn("flex h-full w-full flex-col", APP_CHASSIS_BG_CLASS)}>
 			<header className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 pr-2 pl-3">
 				<SidebarModeSwitch />
 				<Popover open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen}>
