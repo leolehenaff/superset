@@ -25,7 +25,7 @@ import { cloudTrpc } from "renderer/lib/cloud-trpc";
 import { useCreateAutomation } from "renderer/routes/_authenticated/_dashboard/automations/hooks/useCreateAutomation";
 import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useFailedAutomations } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
-import { SidebarModeSwitch } from "../SidebarModeSwitch";
+import { SidebarHeader } from "../SidebarHeader";
 import { WorkItemsSearch } from "../WorkItemsSearch";
 import { AutomationsSidebarRow } from "./components/AutomationsSidebarRow";
 import { AutomationsSidebarSection } from "./components/AutomationsSidebarSection";
@@ -120,40 +120,41 @@ export function AutomationsSidebar() {
 
 	return (
 		<aside className={cn("flex h-full w-full flex-col", APP_CHASSIS_BG_CLASS)}>
-			<header className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 pr-2 pl-3">
-				<SidebarModeSwitch />
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<button
-							type="button"
-							title="Nouvelle automatisation"
-							className={cn(
-								ICON_BUTTON_CLASS,
-								"data-[state=open]:bg-fill-selected data-[state=open]:text-foreground",
-							)}
+			<SidebarHeader
+				action={
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button
+								type="button"
+								title="Nouvelle automatisation"
+								className={cn(
+									ICON_BUTTON_CLASS,
+									"data-[state=open]:bg-fill-selected data-[state=open]:text-foreground",
+								)}
+							>
+								<LuPlus className="size-4" strokeWidth={1.5} />
+							</button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent
+							align="start"
+							side="right"
+							onCloseAutoFocus={(event) => event.preventDefault()}
 						>
-							<LuPlus className="size-4" strokeWidth={1.5} />
-						</button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent
-						align="start"
-						side="right"
-						onCloseAutoFocus={(event) => event.preventDefault()}
-					>
-						<DropdownMenuItem onSelect={createWithAgent}>
-							<LuBot className="size-4" />
-							Créer avec un agent
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onSelect={createManually}
-							disabled={isCreatingManually}
-						>
-							<LuPencil className="size-4" />
-							Créer manuellement
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</header>
+							<DropdownMenuItem onSelect={createWithAgent}>
+								<LuBot className="size-4" />
+								Créer avec un agent
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onSelect={createManually}
+								disabled={isCreatingManually}
+							>
+								<LuPencil className="size-4" />
+								Créer manuellement
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				}
+			/>
 			<div className="flex shrink-0 items-center border-b border-border/60 pr-1.5 pl-1">
 				<WorkItemsSearch
 					value={search}

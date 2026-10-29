@@ -7,7 +7,7 @@ import { V2WorkspacesSortMenu } from "renderer/routes/_authenticated/_dashboard/
 import { useFilteredV2Workspaces } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useFilteredV2Workspaces";
 import { useV2WorkspacesFilterStore } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
 import { groupByStatus } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/groupByStatus";
-import { SidebarModeSwitch } from "../SidebarModeSwitch";
+import { SidebarHeader } from "../SidebarHeader";
 import { WorkItemsSearch } from "../WorkItemsSearch";
 import { WorkspacesSidebarSection } from "./components/WorkspacesSidebarSection";
 
@@ -38,17 +38,18 @@ export function WorkspacesSidebar({
 
 	return (
 		<aside className={cn("flex h-full w-full flex-col", APP_CHASSIS_BG_CLASS)}>
-			<header className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 pr-2 pl-3">
-				<SidebarModeSwitch />
-				<button
-					type="button"
-					title="Nouveau workspace"
-					onClick={() => openNewWorkspace()}
-					className={ICON_BUTTON_CLASS}
-				>
-					<LuPlus className="size-4" strokeWidth={1.5} />
-				</button>
-			</header>
+			<SidebarHeader
+				action={
+					<button
+						type="button"
+						title="Nouveau workspace"
+						onClick={() => openNewWorkspace()}
+						className={ICON_BUTTON_CLASS}
+					>
+						<LuPlus className="size-4" strokeWidth={1.5} />
+					</button>
+				}
+			/>
 			<div className="flex shrink-0 items-center gap-1 border-b border-border/60 pr-1.5 pl-1">
 				<WorkItemsSearch
 					value={searchQuery}

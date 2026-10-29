@@ -2,7 +2,6 @@ import { cn } from "@superset/ui/utils";
 import { ZoomStable } from "renderer/components/ZoomStable";
 import { useZoomFactor } from "renderer/hooks/useZoomFactor";
 import { electronTrpc } from "renderer/lib/electron-trpc";
-import { COLLAPSED_WORKSPACE_SIDEBAR_WIDTH } from "renderer/stores/workspace-sidebar-state";
 import { NavigationControls } from "../NavigationControls";
 import { OfflineBadge } from "../OfflineBadge";
 import { PortsDropdown } from "../PortsDropdown";
@@ -16,8 +15,7 @@ import { useWindowChromeVisible } from "./hooks/useWindowChromeVisible";
 const TRAFFIC_LIGHTS_WIDTH = 80;
 
 /**
- * The window controls, when the sidebar is collapsed to its rail and cannot
- * hold them. The macOS window buttons overhang the rail into this header.
+ * The window controls, when the sidebar is hidden and cannot hold them.
  */
 export function WindowChrome({ className }: { className?: string }) {
 	const isVisible = useWindowChromeVisible();
@@ -32,7 +30,7 @@ export function WindowChrome({ className }: { className?: string }) {
 				<div
 					className="drag h-full shrink-0"
 					style={{
-						width: `${Math.max(TRAFFIC_LIGHTS_WIDTH / zoomFactor - COLLAPSED_WORKSPACE_SIDEBAR_WIDTH, 0)}px`,
+						width: `${TRAFFIC_LIGHTS_WIDTH / zoomFactor}px`,
 					}}
 				/>
 			)}

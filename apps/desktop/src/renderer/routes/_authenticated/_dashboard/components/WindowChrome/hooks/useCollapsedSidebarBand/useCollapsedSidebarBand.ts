@@ -1,4 +1,9 @@
-/** The sidebar is gone: the app tab bar holds the window controls, so no header joins a band. */
+import { useShowsAppTopBar } from "renderer/routes/_authenticated/_dashboard/hooks/useShowsAppTopBar";
+import { useWorkspaceSidebarStore } from "renderer/stores/workspace-sidebar-state";
+
+/** True while the sidebar is hidden: the page headers then hold the window controls. */
 export function useCollapsedSidebarBand(): boolean {
-	return false;
+	const showsAppTopBar = useShowsAppTopBar();
+	const isSidebarCollapsed = useWorkspaceSidebarStore((s) => s.isCollapsed());
+	return !showsAppTopBar && isSidebarCollapsed;
 }

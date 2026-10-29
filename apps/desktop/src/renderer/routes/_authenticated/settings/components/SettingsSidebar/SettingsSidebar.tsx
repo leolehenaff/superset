@@ -53,34 +53,32 @@ export function SettingsSidebar() {
 
 	return (
 		<div className="w-56 flex flex-col pt-2 pb-3 overflow-hidden border-r border-border bg-sidebar dark:bg-muted/35">
-			{!isV2CloudEnabled && (
-				<div className="mb-1 flex h-12 shrink-0 items-center">
-					{isMac ? (
-						<div className="drag h-full shrink-0" style={{ width: 96 }} />
-					) : (
-						<div
-							className="flex shrink-0 items-center justify-center self-start"
-							style={{
-								width: COLLAPSED_WORKSPACE_SIDEBAR_WIDTH,
-								marginTop: WINDOW_CONTROLS_ROW_TOP,
-								height: WINDOW_CONTROLS_ROW_HEIGHT,
-							}}
-						>
-							<AppMenuButton />
-						</div>
-					)}
+			<div className="mb-1 flex h-12 shrink-0 items-center">
+				{isMac ? (
+					<div className="drag h-full shrink-0" style={{ width: 96 }} />
+				) : (
 					<div
-						className="flex shrink-0 items-center self-start"
+						className="flex shrink-0 items-center justify-center self-start"
 						style={{
+							width: COLLAPSED_WORKSPACE_SIDEBAR_WIDTH,
 							marginTop: WINDOW_CONTROLS_ROW_TOP,
 							height: WINDOW_CONTROLS_ROW_HEIGHT,
 						}}
 					>
-						<NavigationControls />
+						<AppMenuButton />
 					</div>
-					<div className="drag h-full min-w-0 flex-1" />
+				)}
+				<div
+					className="flex shrink-0 items-center self-start"
+					style={{
+						marginTop: WINDOW_CONTROLS_ROW_TOP,
+						height: WINDOW_CONTROLS_ROW_HEIGHT,
+					}}
+				>
+					<NavigationControls />
 				</div>
-			)}
+				<div className="drag h-full min-w-0 flex-1" />
+			</div>
 			{/* Back button */}
 			<Link
 				to={originRoute}

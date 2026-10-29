@@ -24,7 +24,7 @@ import {
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/agentColumns";
 import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useV2NotificationStore } from "renderer/stores/v2-notifications";
-import { SidebarModeSwitch } from "../SidebarModeSwitch";
+import { SidebarHeader } from "../SidebarHeader";
 import { AgentsSidebarRow } from "./components/AgentsSidebarRow";
 import { AgentsSidebarSection } from "./components/AgentsSidebarSection";
 import { useActiveTerminalId } from "./hooks/useActiveTerminalId";
@@ -63,33 +63,34 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 
 	return (
 		<aside className={cn("flex h-full w-full flex-col", APP_CHASSIS_BG_CLASS)}>
-			<header className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 pr-2 pl-3">
-				<SidebarModeSwitch />
-				<Popover open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen}>
-					<PopoverTrigger asChild>
-						<button
-							type="button"
-							title="Nouvel agent"
-							className={cn(
-								ICON_BUTTON_CLASS,
-								"shrink-0",
-								isNewAgentOpen && "bg-fill-selected text-foreground",
-							)}
+			<SidebarHeader
+				action={
+					<Popover open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen}>
+						<PopoverTrigger asChild>
+							<button
+								type="button"
+								title="Nouvel agent"
+								className={cn(
+									ICON_BUTTON_CLASS,
+									"shrink-0",
+									isNewAgentOpen && "bg-fill-selected text-foreground",
+								)}
+							>
+								<LuPlus className="size-4" strokeWidth={1.5} />
+							</button>
+						</PopoverTrigger>
+						<PopoverContent
+							side="right"
+							align="start"
+							sideOffset={14}
+							className="w-96 p-4"
 						>
-							<LuPlus className="size-4" strokeWidth={1.5} />
-						</button>
-					</PopoverTrigger>
-					<PopoverContent
-						side="right"
-						align="start"
-						sideOffset={14}
-						className="w-96 p-4"
-					>
-						<p className="mb-4 text-sm font-semibold">Nouvel agent</p>
-						<NewAgentForm onDone={() => setIsNewAgentOpen(false)} />
-					</PopoverContent>
-				</Popover>
-			</header>
+							<p className="mb-4 text-sm font-semibold">Nouvel agent</p>
+							<NewAgentForm onDone={() => setIsNewAgentOpen(false)} />
+						</PopoverContent>
+					</Popover>
+				}
+			/>
 
 			<div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-2">
 				{sessions.length === 0 ? (

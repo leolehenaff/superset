@@ -1,3 +1,4 @@
+import { cn } from "@superset/ui/utils";
 import {
 	createFileRoute,
 	Outlet,
@@ -15,7 +16,10 @@ import { useHotkey } from "renderer/hotkeys";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { DashboardSidebarPortsProvider } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/providers/DashboardSidebarPortsProvider";
 import { PortForwardsProvider } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/providers/PortForwardsProvider";
-import { WorkspaceSidebarPanel } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
+import {
+	APP_CHASSIS_BG_CLASS,
+	WorkspaceSidebarPanel,
+} from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useHistoryNavigationShortcuts } from "renderer/routes/_authenticated/_dashboard/hooks/useHistoryNavigationShortcuts";
 import { useCloudSidebarStore } from "renderer/routes/_authenticated/_dashboard/stores/cloudSidebarStore";
 import { useDevSeedV2Sidebar } from "renderer/routes/_authenticated/hooks/useDevSeedV2Sidebar";
@@ -31,12 +35,12 @@ import { useWorkspaceSidebarStore } from "renderer/stores/workspace-sidebar-stat
 import { ContentBoundary } from "../components/ContentBoundary";
 import { AddRepositoryModals } from "./components/AddRepositoryModals";
 import { AgentsSidebar } from "./components/AgentsSidebar";
-import { AppTabsBar } from "./components/AppTabsBar";
 import { AutomationsSidebar } from "./components/AutomationsSidebar";
 import { CrossVersionMismatchState } from "./components/CrossVersionMismatchState";
 import { RemotePortForwarder } from "./components/RemotePortForwarder";
 import { RestoreCloudWorkspaceMount } from "./components/RestoreCloudWorkspaceMount";
 import { SaveAsEnvironmentMount } from "./components/SaveAsEnvironmentMount";
+import { SidebarSettingsBar } from "./components/SidebarSettingsBar";
 import { TopBar } from "./components/TopBar";
 import { WorkspacesSidebar } from "./components/WorkspacesSidebar";
 import { useShowsAppTopBar } from "./hooks/useShowsAppTopBar";
@@ -184,13 +188,18 @@ function DashboardLayout() {
 	const sidebarPanel = isV2CloudEnabled ? (
 		!isWorkspaceSidebarCollapsed ? (
 			<WorkspaceSidebarPanel className="border-r-0">
-				{workspaceSidebarMode === "workspaces" ? (
-					<WorkspacesSidebar activeWorkspaceId={currentV2WorkspaceId} />
-				) : workspaceSidebarMode === "automations" ? (
-					<AutomationsSidebar />
-				) : (
-					<AgentsSidebar activeWorkspaceId={currentV2WorkspaceId} />
-				)}
+				<div className={cn("flex h-full flex-col", APP_CHASSIS_BG_CLASS)}>
+					<div className="min-h-0 flex-1">
+						{workspaceSidebarMode === "workspaces" ? (
+							<WorkspacesSidebar activeWorkspaceId={currentV2WorkspaceId} />
+						) : workspaceSidebarMode === "automations" ? (
+							<AutomationsSidebar />
+						) : (
+							<AgentsSidebar activeWorkspaceId={currentV2WorkspaceId} />
+						)}
+					</div>
+					<SidebarSettingsBar />
+				</div>
 			</WorkspaceSidebarPanel>
 		) : null
 	) : (
@@ -222,7 +231,6 @@ function DashboardLayout() {
 			<PortForwardsProvider>
 				<RemotePortForwarder />
 				<div className="flex h-full w-full flex-col overflow-hidden">
-					{isV2CloudEnabled && <AppTabsBar />}
 					<div className="flex min-h-0 w-full flex-1 overflow-hidden">
 						<CommandPaletteHost />
 						{sidebarOutsideColumn && sidebarPanel}

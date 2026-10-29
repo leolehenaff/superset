@@ -1,6 +1,10 @@
 import { cn } from "@superset/ui/utils";
 import { useNavigate } from "@tanstack/react-router";
 import {
+	getPresetIcon,
+	useIsDarkTheme,
+} from "renderer/assets/app-icons/preset-icons";
+import {
 	type UsageAccount,
 	useHostUsageQuota,
 } from "renderer/hooks/host-service/useHostUsageQuota";
@@ -9,8 +13,9 @@ import { useLocalHostService } from "renderer/routes/_authenticated/providers/Lo
 import { formatResetIn } from "renderer/utils/usage/formatResetIn";
 
 const SESSION_WINDOWS = [
-	{ agent: "claude", label: "Claude", windowId: "five_hour" },
-	{ agent: "codex", label: "Codex", windowId: "primary" },
+	{ agent: "claude", label: "Claude · 5h", windowId: "five_hour" },
+	{ agent: "claude", label: "Claude · semaine", windowId: "seven_day" },
+	{ agent: "codex", label: "Codex · 5h", windowId: "primary" },
 ] as const;
 
 function pickAccount(
@@ -32,11 +37,12 @@ export function SessionQuotaBars({ stacked = false }: { stacked?: boolean }) {
 	const { activeHostUrl } = useLocalHostService();
 	const { data: accounts = [] } = useHostUsageQuota(activeHostUrl ?? null);
 	const now = useNow(30_000);
+	const isDark = useIsDarkTheme();
 
 	const bars = SESSION_WINDOWS.flatMap(({ agent, label, windowId }) => {
 		const account = pickAccount(accounts, agent);
 		const window = account?.windows.find((w) => w.id === windowId);
-		return window ? [{ agent, label, window }] : [];
+		return window ? [{ agent, label, windowId, window }] : [];
 	});
 	if (bars.length === 0) return null;
 
@@ -49,16 +55,23 @@ export function SessionQuotaBars({ stacked = false }: { stacked?: boolean }) {
 				stacked ? "w-full flex-col gap-2 py-1.5" : "items-center gap-5",
 			)}
 		>
-			{bars.map(({ agent, label, window }) => (
+			{bars.map(({ agent, label, windowId, window }) => (
 				<div
-					key={agent}
+					key={`${agent}:${windowId}`}
 					className={cn(
 						"flex flex-col gap-1 text-left",
 						stacked ? "w-full" : "w-44",
 					)}
 				>
 					<div className="flex items-baseline justify-between text-xs">
-						<span className="font-medium">{label} · 5h</span>
+						<span className="flex min-w-0 items-center gap-1.5 font-medium">
+							<img
+								src={getPresetIcon(agent, isDark)}
+								alt=""
+								className="size-3.5 shrink-0 object-contain"
+							/>
+							<span className="truncate">{label}</span>
+						</span>
 						<span className="tabular-nums text-muted-foreground">
 							{window.usedPercent}%
 							{window.resetsAt
