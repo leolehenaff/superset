@@ -1,5 +1,5 @@
 import type { WorkspaceStore } from "@superset/panes";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTerminalAgentBindings } from "renderer/hooks/host-service/useTerminalAgentBindings";
 import { useV2PaneNotificationStatus } from "renderer/hooks/host-service/useV2NotificationStatus";
 import { useWorkspace } from "renderer/routes/_authenticated/_dashboard/v2-workspace/providers/WorkspaceProvider";
@@ -31,9 +31,18 @@ export function useClearActivePaneAttention({
 		(state) => state.markTerminalSeen,
 	);
 	const bindings = useTerminalAgentBindings(workspace.id);
+	// Each event in view is handled once per activation, so "mark for
+	// review" on the pane in view is not undone at once.
+	const handled = useRef({
+		paneId: activePane?.id,
+		events: new Set<string>(),
+	});
 
 	useEffect(() => {
-		if (activePaneStatus !== "review") return;
+		if (handled.current.paneId !== activePane?.id) {
+			handled.current = { paneId: activePane?.id, events: new Set() };
+		}
+		if (activePaneStatus != null && activePaneStatus !== "review") return;
 		for (const source of getV2NotificationSourcesForPane(activePane)) {
 			if (source.type !== "terminal") continue;
 			// Seen marks are host-clock only: mark "seen through the binding's
@@ -41,7 +50,12 @@ export function useClearActivePaneAttention({
 			// monotonic comparison whenever the clocks drift.
 			const binding = bindings.get(source.id);
 			if (!binding) continue;
-			markTerminalSeen(source.id, binding.lastEventAt);
+			const event = `${source.id}:${binding.lastEventAt}`;
+			if (handled.current.events.has(event)) continue;
+			handled.current.events.add(event);
+			if (activePaneStatus === "review") {
+				markTerminalSeen(source.id, binding.lastEventAt);
+			}
 		}
 	}, [activePane, activePaneStatus, bindings, markTerminalSeen]);
 }

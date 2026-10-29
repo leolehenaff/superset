@@ -8,7 +8,7 @@ import {
 import { cn } from "@superset/ui/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { memo } from "react";
-import { LuGitBranch, LuX } from "react-icons/lu";
+import { LuEye, LuGitBranch, LuX } from "react-icons/lu";
 import {
 	getPresetIcon,
 	useIsDarkTheme,
@@ -23,6 +23,7 @@ import {
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
 import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
 import { getRelativeTime } from "renderer/screens/main/components/WorkspacesListView/utils";
+import { useV2NotificationStore } from "renderer/stores/v2-notifications";
 import { StatusGlyph } from "./components/StatusGlyph";
 
 interface AgentsSidebarRowProps {
@@ -36,10 +37,14 @@ export const AgentsSidebarRow = memo(function AgentsSidebarRow({
 	isActive,
 	isOverlay = false,
 }: AgentsSidebarRowProps) {
+	const canMarkForReview = session.status === "idle" && session.canMarkUnread;
 	const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
 		id: session.terminalId,
-		disabled: isOverlay || session.status !== "idle" || !session.canMarkUnread,
+		disabled: isOverlay || !canMarkForReview,
 	});
+	const pruneTerminalSeen = useV2NotificationStore(
+		(state) => state.pruneTerminalSeen,
+	);
 	const navigate = useNavigate();
 	const closeSession = useCloseAgentSession();
 	const agentIcon = getPresetIcon(session.agentId, useIsDarkTheme());
@@ -151,6 +156,13 @@ export const AgentsSidebarRow = memo(function AgentsSidebarRow({
 				</button>
 			</ContextMenuTrigger>
 			<ContextMenuContent onCloseAutoFocus={(event) => event.preventDefault()}>
+				<ContextMenuItem
+					onSelect={() => pruneTerminalSeen(session.terminalId)}
+					disabled={!canMarkForReview}
+				>
+					<LuEye className="size-4" />
+					Marquer à relire
+				</ContextMenuItem>
 				<ContextMenuItem
 					onSelect={() => void closeSession(session)}
 					disabled={!session.hostUrl}
