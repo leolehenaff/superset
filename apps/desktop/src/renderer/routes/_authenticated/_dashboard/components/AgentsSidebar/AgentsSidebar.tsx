@@ -83,9 +83,11 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 							side="right"
 							align="start"
 							sideOffset={14}
-							className="w-96 p-4"
+							className={cn(
+								"w-80 overflow-hidden rounded-xl p-0 shadow-xl",
+								APP_CHASSIS_BG_CLASS,
+							)}
 						>
-							<p className="mb-4 text-sm font-semibold">Nouvel agent</p>
 							<NewAgentForm onDone={() => setIsNewAgentOpen(false)} />
 						</PopoverContent>
 					</Popover>

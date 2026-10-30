@@ -8,20 +8,31 @@ import {
 	CommandList,
 	CommandSeparator,
 } from "@superset/ui/command";
-import { Label } from "@superset/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@superset/ui/popover";
 import { toast } from "@superset/ui/sonner";
-import { Switch } from "@superset/ui/switch";
+import { cn } from "@superset/ui/utils";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDownIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { HiCheck } from "react-icons/hi2";
-import { AgentSelect } from "renderer/components/AgentSelect";
+import {
+	LuBot,
+	LuCheck,
+	LuChevronsUpDown,
+	LuFolderGit2,
+	LuFolderX,
+	LuGitBranch,
+	LuLoaderCircle,
+	LuPlay,
+} from "react-icons/lu";
+import {
+	getPresetIcon,
+	useIsDarkTheme,
+} from "renderer/assets/app-icons/preset-icons";
 import { resolveProjectIconUrl } from "renderer/hooks/host-projects/resolveProjectIconUrl";
 import { useHostProjects } from "renderer/hooks/host-projects/useHostProjects";
 import { useV2AgentChoices } from "renderer/hooks/useV2AgentChoices";
 import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
+import { projectStripeColor } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
 import { navigateToV2Workspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";
 import { ProjectThumbnail } from "renderer/routes/_authenticated/components/ProjectThumbnail";
 import { useHostWorkspaces } from "renderer/routes/_authenticated/providers/HostWorkspacesProvider";
@@ -30,6 +41,12 @@ import { useWorkspaceCreates } from "renderer/stores/workspace-creates";
 
 const NO_PROJECT = "__none__";
 const QUICK_PROJECT_NAMES = ["master flech", "backoffice"];
+const SECTION_LABEL_CLASS =
+	"px-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground";
+const CHECKOUT_OPTIONS = [
+	{ worktree: false, label: "Dépôt principal", icon: LuFolderGit2 },
+	{ worktree: true, label: "Nouveau worktree", icon: LuGitBranch },
+] as const;
 
 interface NewAgentFormProps {
 	onDone: () => void;
@@ -43,6 +60,7 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 	const { workspaces } = useHostWorkspaces();
 	const { agents } = useV2AgentChoices(activeHostUrl);
 	const { submit } = useWorkspaceCreates();
+	const isDark = useIsDarkTheme();
 
 	const [projectId, setProjectId] = useState<string | null>(null);
 	const [worktree, setWorktree] = useState(false);
@@ -152,33 +170,55 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 	};
 
 	return (
-		<>
-			<div className="flex flex-col gap-4">
-				<div className="flex flex-col gap-2">
-					<Label>Projet</Label>
+		<div className="flex flex-col">
+			<header className="flex items-center gap-2 border-b border-border/60 px-3.5 py-2.5">
+				<div className="flex size-6 items-center justify-center rounded-md bg-foreground/[0.06]">
+					<LuBot className="size-3.5 text-foreground/80" strokeWidth={1.75} />
+				</div>
+				<p className="text-[13px] font-medium">Nouvel agent</p>
+			</header>
+
+			<div className="flex flex-col gap-4 px-3.5 py-3.5">
+				<section className="flex flex-col gap-1.5">
+					<p className={SECTION_LABEL_CLASS}>Projet</p>
 					<Popover open={projectPickerOpen} onOpenChange={setProjectPickerOpen}>
 						<PopoverTrigger asChild>
-							<Button
-								variant="outline"
-								className="w-full justify-between font-normal"
+							<button
+								type="button"
+								className={cn(
+									"relative flex h-9 w-full items-center gap-2 rounded-lg bg-foreground/[0.04] pr-2.5 pl-3.5 text-left ring-1 ring-border/60 ring-inset transition-colors hover:bg-fill-hover",
+									projectPickerOpen && "bg-fill-hover ring-border",
+								)}
 							>
-								<span className="flex min-w-0 items-center gap-2">
-									{selectedProject ? (
-										<>
-											<ProjectThumbnail
-												projectName={selectedProject.name}
-												iconUrl={selectedProject.iconUrl}
-												color={selectedProject.color}
-												className="size-4"
-											/>
-											<span className="truncate">{selectedProject.name}</span>
-										</>
-									) : (
-										"Aucun projet"
-									)}
-								</span>
-								<ChevronDownIcon className="size-4 shrink-0 opacity-50" />
-							</Button>
+								{selectedProject ? (
+									<>
+										<span
+											aria-hidden
+											className="absolute top-2 bottom-2 left-1 w-[3px] rounded-full"
+											style={{
+												backgroundColor: projectStripeColor(selectedProject.id),
+											}}
+										/>
+										<ProjectThumbnail
+											projectName={selectedProject.name}
+											iconUrl={selectedProject.iconUrl}
+											color={selectedProject.color}
+											className="size-4 rounded-[4px] text-[9px]"
+										/>
+										<span className="min-w-0 flex-1 truncate text-[13px]">
+											{selectedProject.name}
+										</span>
+									</>
+								) : (
+									<>
+										<LuFolderX className="size-4 shrink-0 text-muted-foreground" />
+										<span className="flex-1 text-[13px] text-muted-foreground">
+											Aucun projet
+										</span>
+									</>
+								)}
+								<LuChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+							</button>
 						</PopoverTrigger>
 						<PopoverContent
 							align="start"
@@ -200,11 +240,11 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 													projectName={project.name}
 													iconUrl={project.iconUrl}
 													color={project.color}
-													className="size-4"
+													className="size-4 rounded-[4px] text-[9px]"
 												/>
 												<span className="flex-1 truncate">{project.name}</span>
 												{project.id === selectedProjectId && (
-													<HiCheck className="size-3.5 shrink-0" />
+													<LuCheck className="size-3.5 shrink-0" />
 												)}
 											</CommandItem>
 										))}
@@ -216,8 +256,9 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 											keywords={["aucun projet", "session"]}
 											onSelect={() => pickProject(NO_PROJECT)}
 										>
+											<LuFolderX className="size-4 text-muted-foreground" />
 											<span className="flex-1">Aucun projet</span>
-											{!inProject && <HiCheck className="size-3.5 shrink-0" />}
+											{!inProject && <LuCheck className="size-3.5 shrink-0" />}
 										</CommandItem>
 									</CommandGroup>
 								</CommandList>
@@ -225,75 +266,147 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 						</PopoverContent>
 					</Popover>
 					{quickProjects.length > 0 && (
-						<div className="flex flex-wrap gap-2">
+						<div className="flex flex-wrap gap-1.5 pt-0.5">
 							{quickProjects.map((project) => (
-								<Button
+								<button
 									key={project.id}
 									type="button"
-									size="sm"
-									variant={
-										project.id === selectedProjectId ? "secondary" : "outline"
-									}
-									className="h-7 gap-1.5 px-2 font-normal"
+									title={`Lancer directement dans ${project.name}`}
 									disabled={launch.isPending || !selectedAgentId}
 									onClick={() => {
 										setProjectId(project.id);
 										launch.mutate(project.id);
 									}}
+									className="group flex h-6 items-center gap-1.5 rounded-md bg-foreground/[0.05] pr-2 pl-1.5 text-[11px] text-foreground/80 transition-colors hover:bg-fill-hover hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
 								>
 									<ProjectThumbnail
 										projectName={project.name}
 										iconUrl={project.iconUrl}
 										color={project.color}
-										className="size-3.5"
+										className="size-3.5 rounded-[3px] text-[8px]"
 									/>
 									{project.name}
-								</Button>
+									<LuPlay className="size-2.5 fill-current text-muted-foreground transition-colors group-hover:text-foreground" />
+								</button>
 							))}
 						</div>
 					)}
-				</div>
+				</section>
 
-				<div className="flex items-center justify-between gap-4">
-					<Label htmlFor="new-agent-worktree">
-						Nouveau worktree
-						<span className="block text-xs font-normal text-muted-foreground">
-							{worktree && inProject
+				<section className="flex flex-col gap-1.5">
+					<p className={SECTION_LABEL_CLASS}>Emplacement</p>
+					<div
+						className={cn(
+							"grid grid-cols-2 gap-1 rounded-lg bg-foreground/[0.04] p-1 ring-1 ring-border/60 ring-inset",
+							!inProject && "opacity-50",
+						)}
+					>
+						{CHECKOUT_OPTIONS.map((option) => {
+							const isSelected = (worktree && inProject) === option.worktree;
+							return (
+								<button
+									key={option.label}
+									type="button"
+									aria-pressed={isSelected}
+									disabled={!inProject}
+									onClick={() => setWorktree(option.worktree)}
+									className={cn(
+										"flex h-7 items-center justify-center gap-1.5 rounded-md text-[12px] transition-colors disabled:pointer-events-none",
+										isSelected
+											? "bg-background font-medium text-foreground shadow-sm ring-1 ring-border"
+											: "text-muted-foreground hover:text-foreground",
+									)}
+								>
+									<option.icon className="size-3.5" />
+									{option.label}
+								</button>
+							);
+						})}
+					</div>
+					<p className="px-0.5 text-[11px] text-muted-foreground">
+						{!inProject
+							? "Session libre, hors de tout dépôt"
+							: worktree
 								? "Branche isolée, créée pour cet agent"
 								: "Directement dans le dépôt principal"}
-						</span>
-					</Label>
-					<Switch
-						id="new-agent-worktree"
-						checked={worktree && inProject}
-						disabled={!inProject}
-						onCheckedChange={setWorktree}
-					/>
-				</div>
+					</p>
+				</section>
 
-				<div className="flex flex-col gap-2">
-					<Label>Agent</Label>
-					<AgentSelect
-						agents={agents}
-						value={selectedAgentId ?? undefined}
-						placeholder="Choisir un agent"
-						onValueChange={setAgentId}
-						triggerClassName="w-full"
-					/>
-				</div>
+				<section className="flex flex-col gap-1.5">
+					<div className="flex items-center justify-between">
+						<p className={SECTION_LABEL_CLASS}>Agent</p>
+						<button
+							type="button"
+							onClick={() => {
+								onDone();
+								void navigate({ to: "/settings/agents" });
+							}}
+							className="text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+						>
+							Configurer
+						</button>
+					</div>
+					{agents.length === 0 ? (
+						<p className="rounded-lg border border-dashed border-border px-3 py-2.5 text-[11px] text-muted-foreground">
+							Aucun agent configuré sur cette machine.
+						</p>
+					) : (
+						<div className="flex flex-wrap gap-1.5">
+							{agents.map((agent) => {
+								const icon = getPresetIcon(agent.iconId ?? agent.id, isDark);
+								const isSelected = agent.id === selectedAgentId;
+								return (
+									<button
+										key={agent.id}
+										type="button"
+										aria-pressed={isSelected}
+										onClick={() => setAgentId(agent.id)}
+										className={cn(
+											"flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12px] ring-inset transition-colors",
+											isSelected
+												? "bg-background font-medium text-foreground shadow-sm ring-1 ring-border"
+												: "bg-foreground/[0.04] text-foreground/75 hover:bg-fill-hover hover:text-foreground",
+										)}
+									>
+										{icon ? (
+											<img
+												src={icon}
+												alt=""
+												className="size-3.5 object-contain"
+											/>
+										) : null}
+										{agent.label}
+									</button>
+								);
+							})}
+						</div>
+					)}
+				</section>
 			</div>
 
-			<div className="flex justify-end gap-2">
-				<Button variant="ghost" onClick={onDone}>
+			<footer className="flex items-center justify-end gap-1.5 border-t border-border/60 bg-foreground/[0.02] px-3.5 py-2.5">
+				<Button
+					size="sm"
+					variant="ghost"
+					className="h-7 text-[12px]"
+					onClick={onDone}
+				>
 					Annuler
 				</Button>
 				<Button
+					size="sm"
+					className="h-7 gap-1.5 px-3 text-[12px]"
 					onClick={() => launch.mutate(selectedProjectId)}
 					disabled={launch.isPending || !selectedAgentId}
 				>
+					{launch.isPending ? (
+						<LuLoaderCircle className="size-3.5 animate-spin" />
+					) : (
+						<LuPlay className="size-3 fill-current" />
+					)}
 					{launch.isPending ? "Lancement…" : "Lancer"}
 				</Button>
-			</div>
-		</>
+			</footer>
+		</div>
 	);
 }
