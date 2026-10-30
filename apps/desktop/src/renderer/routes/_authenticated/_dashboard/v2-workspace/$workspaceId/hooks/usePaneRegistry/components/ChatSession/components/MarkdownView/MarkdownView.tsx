@@ -15,11 +15,11 @@ import { planMarkdown } from "./utils/planMarkdown";
 const findPageLinks = pageLinkFinder(env.NEXT_PUBLIC_WEB_URL);
 
 const MarkdownBlock = memo(function MarkdownBlock({
-	animated,
+	animated = false,
 	block,
 	first,
 }: {
-	animated: boolean;
+	animated?: boolean;
 	block: string;
 	first: boolean;
 }) {
@@ -84,12 +84,7 @@ export function MarkdownView({
 	};
 	plan.stable.forEach((entry, index) => {
 		blocks.push(
-			<MarkdownBlock
-				animated={fading}
-				block={entry.block}
-				first={index === 0}
-				key={entry.key}
-			/>,
+			<MarkdownBlock block={entry.block} first={index === 0} key={entry.key} />,
 		);
 		pushCards(index);
 	});
@@ -121,7 +116,8 @@ export function MarkdownView({
 		<div
 			className={cn(
 				"flex min-w-0 flex-col gap-4 font-sans text-sm leading-6 [&>:empty]:hidden",
-				fading && "[&>*]:animate-block-fade motion-reduce:[&>*]:animate-none",
+				fading &&
+					"[&>*]:animate-block-fade motion-reduce:[&>*]:animate-none motion-reduce:[&_[data-sd-animate]]:animate-none",
 				className,
 			)}
 			data-find-item={findItemId}

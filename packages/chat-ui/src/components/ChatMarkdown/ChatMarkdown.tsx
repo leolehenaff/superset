@@ -131,7 +131,12 @@ export type ChatMarkdownProps = {
 	animated?: boolean;
 };
 
-const WORD_FADE = { animation: "fadeIn", sep: "word", duration: 400 } as const;
+const WORD_FADE = {
+	animation: "fadeIn",
+	sep: "word",
+	duration: 250,
+	stagger: 0,
+} as const;
 
 /** One block of agent markdown, rendered the way every chat surface does. */
 export const ChatMarkdown = memo(function ChatMarkdown({
