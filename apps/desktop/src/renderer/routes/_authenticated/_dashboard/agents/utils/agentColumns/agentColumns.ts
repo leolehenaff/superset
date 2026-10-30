@@ -13,8 +13,8 @@ export const AGENT_COLUMN_LABELS: Record<AgentColumn, string> = {
 };
 
 export const AGENT_COLUMN_ORDER: AgentColumn[] = [
-	"working",
 	"permission",
+	"working",
 	"review",
 	"idle",
 ];

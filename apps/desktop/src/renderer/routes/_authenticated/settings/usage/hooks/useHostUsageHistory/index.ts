@@ -1,2 +1,5 @@
 export type { UsageHistory } from "./useHostUsageHistory";
-export { useHostUsageHistory } from "./useHostUsageHistory";
+export {
+	hostUsageHistoryOptions,
+	useHostUsageHistory,
+} from "./useHostUsageHistory";

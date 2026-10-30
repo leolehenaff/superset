@@ -32,8 +32,6 @@ export function AgentsSidebarSection({
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const showsRows = !isCollapsed || (isDropTarget && isDragging);
 
-	if (sessions.length === 0 && !(isDropTarget && isDragging)) return null;
-
 	return (
 		<section
 			ref={setNodeRef}
@@ -63,7 +61,12 @@ export function AgentsSidebarSection({
 					)}
 				/>
 			</button>
-			{!showsRows ? null : sessions.length === 0 ? (
+			{!showsRows ? null : sessions.length === 0 &&
+				!(isDropTarget && isDragging) ? (
+				<p className="px-2 pt-0.5 pb-1 pl-7 text-[11px] text-muted-foreground/60">
+					Aucun agent
+				</p>
+			) : sessions.length === 0 ? (
 				<div className="m-1 flex h-10 items-center justify-center rounded-md border border-dashed border-sky-500/40 text-[11px] text-sky-600 dark:text-sky-400">
 					Déposer ici pour relire
 				</div>

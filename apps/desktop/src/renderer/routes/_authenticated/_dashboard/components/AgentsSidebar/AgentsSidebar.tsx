@@ -7,11 +7,10 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
-import { Button } from "@superset/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@superset/ui/popover";
 import { cn } from "@superset/ui/utils";
 import { useMemo, useState } from "react";
-import { LuBot, LuPlus } from "react-icons/lu";
+import { LuPlus } from "react-icons/lu";
 import { NewAgentForm } from "renderer/routes/_authenticated/_dashboard/agents/components/NewAgentForm";
 import { SessionQuotaBars } from "renderer/routes/_authenticated/_dashboard/agents/components/SessionQuotaBars";
 import {
@@ -95,55 +94,29 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 			/>
 
 			<div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-2">
-				{sessions.length === 0 ? (
-					<div className="flex flex-col items-center gap-3 px-4 pt-16 text-center">
-						<div className="flex size-10 items-center justify-center rounded-full bg-foreground/[0.06]">
-							<LuBot
-								className="size-5 text-muted-foreground"
-								strokeWidth={1.5}
+				<DndContext
+					sensors={sensors}
+					onDragStart={onDragStart}
+					onDragEnd={onDragEnd}
+					onDragCancel={() => setDragged(null)}
+				>
+					<div className="flex flex-col gap-1.5">
+						{AGENT_COLUMN_ORDER.map((column) => (
+							<AgentsSidebarSection
+								key={column}
+								column={column}
+								sessions={byColumn.get(column) ?? []}
+								activeTerminalId={activeTerminalId}
+								isDragging={dragged !== null}
 							/>
-						</div>
-						<p className="text-xs text-muted-foreground">
-							Aucun agent en cours.
-						</p>
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => setIsNewAgentOpen(true)}
-						>
-							<LuPlus className="size-3.5" />
-							Lancer un agent
-						</Button>
+						))}
 					</div>
-				) : (
-					<DndContext
-						sensors={sensors}
-						onDragStart={onDragStart}
-						onDragEnd={onDragEnd}
-						onDragCancel={() => setDragged(null)}
-					>
-						<div className="flex flex-col gap-1.5">
-							{AGENT_COLUMN_ORDER.map((column) => (
-								<AgentsSidebarSection
-									key={column}
-									column={column}
-									sessions={byColumn.get(column) ?? []}
-									activeTerminalId={activeTerminalId}
-									isDragging={dragged !== null}
-								/>
-							))}
-						</div>
-						<DragOverlay>
-							{dragged ? (
-								<AgentsSidebarRow
-									session={dragged}
-									isActive={false}
-									isOverlay
-								/>
-							) : null}
-						</DragOverlay>
-					</DndContext>
-				)}
+					<DragOverlay>
+						{dragged ? (
+							<AgentsSidebarRow session={dragged} isActive={false} isOverlay />
+						) : null}
+					</DragOverlay>
+				</DndContext>
 			</div>
 
 			<footer className="shrink-0 border-t border-border/60 p-1.5">
