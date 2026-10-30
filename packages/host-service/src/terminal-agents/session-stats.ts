@@ -1,17 +1,21 @@
 import { open, stat } from "node:fs/promises";
 import type { AgentIdentityId } from "@superset/shared/agent-catalog";
+import { eq } from "drizzle-orm";
 import type { HostDb } from "../db";
+import { workspaces } from "../db/schema";
 import {
 	costUsd,
 	matchModelRate,
 	type TokenCounts,
 } from "../trpc/router/usage/history/pricing";
 import { terminalHarnessSession } from "./harness-session-ref";
+import type { HarnessSessionRef } from "./harness-sessions";
 import { toSessionQuery } from "./harness-sessions/query";
 import {
 	HARNESS_SESSION_FILES,
 	reportedSessionFile,
 } from "./harness-sessions/transcript";
+import type { TerminalAgentBinding } from "./types";
 
 /** Context fill and conversation length of a terminal's agent session. */
 export interface TerminalAgentSessionStats {
@@ -212,8 +216,35 @@ export async function advance(cursor: Cursor): Promise<void> {
 }
 
 /** Finds the session file again only when the terminal's session changed. */
-function cursorFor(db: HostDb, terminalId: string): Cursor | null {
-	const bound = terminalHarnessSession(db, terminalId);
+type StatsBinding = Pick<
+	TerminalAgentBinding,
+	"terminalId" | "workspaceId" | "agentId" | "agentSessionId"
+>;
+
+/** A chat's binding lives only in memory, so its session comes from there. */
+function harnessSessionOf(
+	db: HostDb,
+	binding: StatsBinding,
+): { ref: HarnessSessionRef } | null {
+	const bound = terminalHarnessSession(db, binding.terminalId);
+	if (bound || !binding.agentSessionId) return bound;
+	const worktreePath = db
+		.select({ path: workspaces.worktreePath })
+		.from(workspaces)
+		.where(eq(workspaces.id, binding.workspaceId))
+		.get()?.path;
+	return {
+		ref: {
+			agentId: binding.agentId,
+			sessionId: binding.agentSessionId,
+			worktreePath,
+		},
+	};
+}
+
+function cursorFor(db: HostDb, binding: StatsBinding): Cursor | null {
+	const { terminalId } = binding;
+	const bound = harnessSessionOf(db, binding);
 	const resolved = bound && toSessionQuery(bound.ref);
 	if (!bound || !resolved) return null;
 	const existing = cursors.get(terminalId);
@@ -253,16 +284,17 @@ function cursorFor(db: HostDb, terminalId: string): Cursor | null {
  */
 export async function readTerminalAgentSessionStats(
 	db: HostDb,
-	terminalIds: string[],
+	bindings: StatsBinding[],
 ): Promise<TerminalAgentSessionStats[]> {
-	const live = new Set(terminalIds);
+	const live = new Set(bindings.map((binding) => binding.terminalId));
 	for (const terminalId of cursors.keys()) {
 		if (!live.has(terminalId)) cursors.delete(terminalId);
 	}
 	const results = await Promise.all(
-		terminalIds.map(async (terminalId) => {
+		bindings.map(async (binding) => {
+			const { terminalId } = binding;
 			try {
-				const cursor = cursorFor(db, terminalId);
+				const cursor = cursorFor(db, binding);
 				if (!cursor) return null;
 				await advance(cursor);
 				return {

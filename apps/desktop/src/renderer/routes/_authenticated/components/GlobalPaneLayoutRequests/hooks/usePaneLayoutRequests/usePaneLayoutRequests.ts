@@ -101,7 +101,7 @@ export function closeTerminalPanes(
 	for (const tab of tabs) {
 		for (const pane of Object.values(tab.panes)) {
 			if (
-				pane.kind === "terminal" &&
+				(pane.kind === "terminal" || pane.kind === "chat-v3") &&
 				(pane.data as { terminalId?: string }).terminalId === terminalId
 			) {
 				runPaneLayoutOp(collections, workspaceId, {

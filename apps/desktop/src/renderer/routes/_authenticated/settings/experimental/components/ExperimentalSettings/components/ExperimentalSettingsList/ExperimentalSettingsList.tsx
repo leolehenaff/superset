@@ -1,9 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { FEATURE_FLAGS } from "@superset/shared/constants";
 import { Button } from "@superset/ui/button";
 import { Label } from "@superset/ui/label";
 import { Switch } from "@superset/ui/switch";
-import { useFeatureFlagEnabled } from "posthog-js/react";
 import { useAcpChatEnabled } from "renderer/hooks/useAcpChatEnabled";
 import { HighlightText } from "renderer/routes/_authenticated/settings/components/HighlightText";
 import { useAcpChatStore } from "renderer/stores/acp-chat";
@@ -59,7 +57,7 @@ export function ExperimentalSettingsList({
 	const setRightPaneAreaEnabled = useRightPaneAreaStore(
 		(state) => state.setEnabled,
 	);
-	const acpChatFlag = useFeatureFlagEnabled(FEATURE_FLAGS.ACP_CHAT) === true;
+	const acpChatFlag = true;
 	const showAcpChat =
 		acpChatFlag &&
 		isItemVisible(SETTING_ITEM_ID.EXPERIMENTAL_ACP_CHAT, visibleItems);

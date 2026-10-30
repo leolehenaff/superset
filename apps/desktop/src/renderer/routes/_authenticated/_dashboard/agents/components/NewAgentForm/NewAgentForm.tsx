@@ -1,3 +1,4 @@
+import { acpHarnessForPreset } from "@superset/chat/core";
 import { Button } from "@superset/ui/button";
 import {
 	Command,
@@ -22,7 +23,9 @@ import {
 	LuFolderX,
 	LuGitBranch,
 	LuLoaderCircle,
+	LuMessageSquare,
 	LuPlay,
+	LuSquareTerminal,
 } from "react-icons/lu";
 import {
 	getPresetIcon,
@@ -30,6 +33,7 @@ import {
 } from "renderer/assets/app-icons/preset-icons";
 import { resolveProjectIconUrl } from "renderer/hooks/host-projects/resolveProjectIconUrl";
 import { useHostProjects } from "renderer/hooks/host-projects/useHostProjects";
+import { useAcpChatEnabled } from "renderer/hooks/useAcpChatEnabled";
 import { useV2AgentChoices } from "renderer/hooks/useV2AgentChoices";
 import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
 import { projectStripeColor } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
@@ -47,12 +51,16 @@ const CHECKOUT_OPTIONS = [
 	{ worktree: false, label: "Dépôt principal", icon: LuFolderGit2 },
 	{ worktree: true, label: "Nouveau worktree", icon: LuGitBranch },
 ] as const;
+const SURFACE_OPTIONS = [
+	{ chat: true, label: "Chat", icon: LuMessageSquare },
+	{ chat: false, label: "Terminal", icon: LuSquareTerminal },
+] as const;
 
 interface NewAgentFormProps {
 	onDone: () => void;
 }
 
-/** Starts a bare agent terminal: in a project (worktree or main checkout) or in a project-less session. */
+/** Starts a bare agent, as a chat or a terminal: in a project (worktree or main checkout) or in a project-less session. */
 export function NewAgentForm({ onDone }: NewAgentFormProps) {
 	const navigate = useNavigate();
 	const { machineId, activeHostUrl } = useLocalHostService();
@@ -64,6 +72,7 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 
 	const [projectId, setProjectId] = useState<string | null>(null);
 	const [worktree, setWorktree] = useState(false);
+	const [asChat, setAsChat] = useState(true);
 	const [agentId, setAgentId] = useState<string | null>(null);
 	const [projectPickerOpen, setProjectPickerOpen] = useState(false);
 
@@ -102,6 +111,12 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 		agents[0]?.id ??
 		null;
 
+	const selectedAgent = agents.find((agent) => agent.id === selectedAgentId);
+	const canChat =
+		useAcpChatEnabled() === "enabled" &&
+		!!selectedAgent &&
+		!!acpHarnessForPreset(selectedAgent.presetId);
+	const launchAsChat = canChat && asChat;
 	const launch = useMutation({
 		mutationFn: async (selectedProjectId: string) => {
 			if (!machineId || !activeHostUrl || !selectedAgentId) {
@@ -140,14 +155,22 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 				workspaceId,
 				agent: selectedAgentId,
 				prompt: "",
+				...(launchAsChat ? { surface: "chat" as const } : {}),
 			});
-			return { workspaceId, terminalId: run.sessionId };
+			return {
+				workspaceId,
+				terminalId: run.sessionId,
+				chatSessionId: run.kind === "terminal" ? run.chatSessionId : undefined,
+			};
 		},
-		onSuccess: ({ workspaceId, terminalId }) => {
+		onSuccess: ({ workspaceId, terminalId, chatSessionId }) => {
 			onDone();
 			localStorage.setItem("lastViewedWorkspaceId", workspaceId);
 			void navigateToV2Workspace(workspaceId, navigate, {
-				search: { terminalId, focusRequestId: crypto.randomUUID() },
+				search: {
+					...(chatSessionId ? { sessionId: chatSessionId } : { terminalId }),
+					focusRequestId: crypto.randomUUID(),
+				},
 			});
 		},
 		onError: (error) => {
@@ -380,6 +403,43 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 								);
 							})}
 						</div>
+					)}
+				</section>
+
+				<section className="flex flex-col gap-1.5">
+					<p className={SECTION_LABEL_CLASS}>Interface</p>
+					<div
+						className={cn(
+							"grid grid-cols-2 gap-1 rounded-lg bg-foreground/[0.04] p-1 ring-1 ring-border/60 ring-inset",
+							!canChat && "opacity-50",
+						)}
+					>
+						{SURFACE_OPTIONS.map((option) => {
+							const isSelected = launchAsChat === option.chat;
+							return (
+								<button
+									key={option.label}
+									type="button"
+									aria-pressed={isSelected}
+									disabled={!canChat}
+									onClick={() => setAsChat(option.chat)}
+									className={cn(
+										"flex h-7 items-center justify-center gap-1.5 rounded-md text-[12px] transition-colors disabled:pointer-events-none",
+										isSelected
+											? "bg-background font-medium text-foreground shadow-sm ring-1 ring-border"
+											: "text-muted-foreground hover:text-foreground",
+									)}
+								>
+									<option.icon className="size-3.5" />
+									{option.label}
+								</button>
+							);
+						})}
+					</div>
+					{!canChat && (
+						<p className="px-0.5 text-[11px] text-muted-foreground">
+							Cet agent ne s’ouvre qu’en terminal
+						</p>
 					)}
 				</section>
 			</div>

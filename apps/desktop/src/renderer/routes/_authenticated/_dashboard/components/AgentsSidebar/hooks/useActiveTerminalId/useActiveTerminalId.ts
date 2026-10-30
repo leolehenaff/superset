@@ -13,7 +13,7 @@ function activeTerminalIdOf(
 		(candidate) => candidate.id === state.activeTabId,
 	);
 	const pane = tab?.activePaneId ? tab.panes[tab.activePaneId] : undefined;
-	if (pane?.kind !== "terminal") return null;
+	if (pane?.kind !== "terminal" && pane?.kind !== "chat-v3") return null;
 	return (pane.data as { terminalId?: string }).terminalId ?? null;
 }
 

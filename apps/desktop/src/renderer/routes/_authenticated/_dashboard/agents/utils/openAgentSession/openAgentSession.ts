@@ -9,7 +9,9 @@ export function openAgentSession(
 	localStorage.setItem("lastViewedWorkspaceId", session.workspaceId);
 	void navigateToV2Workspace(session.workspaceId, navigate, {
 		search: {
-			terminalId: session.terminalId,
+			...(session.chatSessionId
+				? { sessionId: session.chatSessionId }
+				: { terminalId: session.terminalId }),
 			focusRequestId: crypto.randomUUID(),
 		},
 	});

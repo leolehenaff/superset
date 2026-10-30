@@ -38,7 +38,7 @@ export function SettingsSidebar() {
 	const cloudWorkspacesEnabled =
 		useFeatureFlagEnabled(FEATURE_FLAGS.CLOUD_WORKSPACES) === true;
 	const rightPaneAreaFlag = true;
-	const acpChatFlag = useFeatureFlagEnabled(FEATURE_FLAGS.ACP_CHAT) === true;
+	const acpChatFlag = true;
 	const normalizedSearchQuery = searchQuery.trim();
 	const matchCounts = normalizedSearchQuery
 		? getVisibleMatchCountBySection(

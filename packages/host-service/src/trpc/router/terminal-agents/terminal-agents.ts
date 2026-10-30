@@ -498,8 +498,7 @@ export const terminalAgentsRouter = router({
 			ctx.db,
 			ctx.terminalAgentStore
 				.list()
-				.filter((binding) => !binding.chatSessionId && binding.endedAt == null)
-				.map((binding) => binding.terminalId),
+				.filter((binding) => binding.endedAt == null),
 		),
 	),
 

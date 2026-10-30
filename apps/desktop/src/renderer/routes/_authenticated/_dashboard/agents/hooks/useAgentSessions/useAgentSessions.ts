@@ -15,6 +15,8 @@ import type { PaneStatus } from "shared/tabs-types";
 
 export interface AgentSession {
 	terminalId: string;
+	/** Set when the session runs as an ACP chat pane, not a terminal. */
+	chatSessionId: string | null;
 	workspaceId: string;
 	workspaceName: string;
 	branch: string;
@@ -159,13 +161,13 @@ export function useAgentSessions(): {
 		for (const [index, query] of queries.entries()) {
 			const hostUrl = targets[index]?.hostUrl ?? null;
 			for (const binding of query.data ?? []) {
-				// Ended sessions and ACP chat sessions are out of scope.
-				if (binding.endedAt != null || binding.chatSessionId) continue;
+				if (binding.endedAt != null) continue;
 				const workspace = workspacesById.get(binding.workspaceId);
 				if (!workspace) continue;
 				const stat = stats.get(binding.terminalId);
 				result.push({
 					terminalId: binding.terminalId,
+					chatSessionId: binding.chatSessionId ?? null,
 					workspaceId: workspace.id,
 					workspaceName: workspace.name || workspace.branch,
 					branch: workspace.branch,
