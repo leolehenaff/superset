@@ -18,6 +18,7 @@ import { useTerminalAgentBindings } from "renderer/hooks/host-service/useTermina
 import { useWorkspaceEvent } from "renderer/hooks/host-service/useWorkspaceEvent";
 import { useV2AgentConfigs } from "renderer/hooks/useV2AgentConfigs";
 import type { OpenFile } from "../../../../../../types";
+import { isChatSessionClosed } from "../../../../../../utils/closedChatSessions";
 import { saveLastChatAgent } from "../../../../../../utils/lastChatAgent";
 import { SessionView } from "../../../ChatSession/components/SessionView";
 import { useSessionClient } from "../../../ChatSession/hooks/useSessionClient";
@@ -394,7 +395,10 @@ export function AcpChatPane({
 				binding.endedAt === undefined,
 		);
 	const recoverable = Boolean(
-		(sessionStopped || sessionDead) && harness && !continuedInTerminal,
+		(sessionStopped || sessionDead) &&
+			harness &&
+			!continuedInTerminal &&
+			!(sessionId && isChatSessionClosed(sessionId)),
 	);
 	const recoveries = useRef(0);
 	if (stored?.live && !sessionDead) recoveries.current = 0;
