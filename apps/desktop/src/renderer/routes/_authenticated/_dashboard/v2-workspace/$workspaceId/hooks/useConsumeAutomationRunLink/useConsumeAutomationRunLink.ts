@@ -120,6 +120,9 @@ export function useConsumeAutomationRunLink({
 			refetchOnWindowFocus: false,
 		},
 	);
+	const refetchedFromRef = useRef<Map<string, number>>(new Map());
+	const refetchTerminalSessions = terminalSessionsQuery.refetch;
+	const sessionsUpdatedAt = terminalSessionsQuery.dataUpdatedAt;
 	// undefined = still resolving; null = nothing to open.
 	const targetTerminalId = linkedTerminalIsLive
 		? terminalId
@@ -140,6 +143,16 @@ export function useConsumeAutomationRunLink({
 			focusRequestId,
 		});
 		if (consumedRef.current.has(key)) return;
+		// A cached list can predate a just-started agent: refetch once before giving up.
+		if (targetTerminalId === null) {
+			const refetchedFrom = refetchedFromRef.current.get(key);
+			if (refetchedFrom === undefined) {
+				refetchedFromRef.current.set(key, sessionsUpdatedAt);
+				void refetchTerminalSessions();
+				return;
+			}
+			if (refetchedFrom === sessionsUpdatedAt) return;
+		}
 		consumedRef.current.add(key);
 		consumeSearch(["terminalId"]);
 		if (targetTerminalId === null) {
@@ -160,6 +173,8 @@ export function useConsumeAutomationRunLink({
 		targetTerminalId,
 		workspaceId,
 		consumeSearch,
+		refetchTerminalSessions,
+		sessionsUpdatedAt,
 	]);
 }
 
