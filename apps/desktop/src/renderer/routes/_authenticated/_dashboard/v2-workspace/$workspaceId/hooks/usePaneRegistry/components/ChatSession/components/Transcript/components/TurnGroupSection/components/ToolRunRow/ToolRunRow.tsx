@@ -15,6 +15,7 @@ import { memo } from "react";
 import { stepSummary } from "../../../../utils/stepSummary";
 import { isNestedTool } from "../../../../utils/subagentLines";
 import { toolKindIcon } from "../../../../utils/toolKindIcon";
+import { toolKindTone } from "../../../../utils/toolKindTone";
 import { NestedToolCallRow } from "../../../NestedToolCallRow";
 import { ReasoningRow } from "../../../ReasoningRow";
 import { ToolCallRow } from "../../../ToolCallRow";
@@ -95,18 +96,24 @@ export const ToolRunRow = memo(function ToolRunRow({
 			)}
 		</RailStep>
 	);
-	const Icon = toolKindIcon(dominantKind(items));
+	const kind = dominantKind(items);
+	const Icon = toolKindIcon(kind);
 	return (
 		<Collapsible
 			onOpenChange={(open) => onToggle(rowKey, !open)}
 			open={!collapsed}
 		>
-			<CollapsibleTrigger className="group/phase flex w-full min-w-0 items-center gap-1.5 py-1 text-left font-sans text-sm">
+			<CollapsibleTrigger
+				className={cn(
+					"group/phase my-0.5 flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-left font-sans text-[13px] transition-[filter] hover:brightness-125",
+					toolKindTone(kind),
+				)}
+			>
 				<span className="relative flex size-3.5 shrink-0 items-center justify-center">
-					<Icon className="size-3.5 text-foreground/45 transition-opacity group-hover/phase:opacity-0" />
+					<Icon className="size-3.5 transition-opacity group-hover/phase:opacity-0" />
 					<ChevronRight
 						className={cn(
-							"absolute size-3.5 text-foreground/45 opacity-0 transition group-hover/phase:opacity-100",
+							"absolute size-3.5 opacity-0 transition group-hover/phase:opacity-100",
 							!collapsed && "rotate-90",
 						)}
 					/>
@@ -120,7 +127,7 @@ export const ToolRunRow = memo(function ToolRunRow({
 						{summary}
 					</Shimmer>
 				) : (
-					<span className="min-w-0 flex-1 truncate text-foreground/50 transition-colors duration-200 first-letter:uppercase group-hover/phase:text-foreground/80">
+					<span className="min-w-0 flex-1 truncate first-letter:uppercase">
 						{summary}
 					</span>
 				)}

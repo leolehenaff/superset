@@ -15,14 +15,17 @@ import { planMarkdown } from "./utils/planMarkdown";
 const findPageLinks = pageLinkFinder(env.NEXT_PUBLIC_WEB_URL);
 
 const MarkdownBlock = memo(function MarkdownBlock({
+	animated,
 	block,
 	first,
 }: {
+	animated: boolean;
 	block: string;
 	first: boolean;
 }) {
 	return (
 		<ChatMarkdown
+			animated={animated}
 			className={first ? chatMarkdownFirstBlock : undefined}
 			components={CHAT_MARKDOWN_COMPONENTS}
 			remarkPlugins={CHAT_REMARK_PLUGINS}
@@ -81,7 +84,12 @@ export function MarkdownView({
 	};
 	plan.stable.forEach((entry, index) => {
 		blocks.push(
-			<MarkdownBlock block={entry.block} first={index === 0} key={entry.key} />,
+			<MarkdownBlock
+				animated={fading}
+				block={entry.block}
+				first={index === 0}
+				key={entry.key}
+			/>,
 		);
 		pushCards(index);
 	});
@@ -100,6 +108,7 @@ export function MarkdownView({
 			) : (
 				// Keyed like the stable block it becomes, so a finished paragraph keeps its words.
 				<MarkdownBlock
+					animated={fading}
 					block={plan.tail}
 					first={plan.stable.length === 0}
 					key={tailKey}

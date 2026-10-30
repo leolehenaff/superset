@@ -127,10 +127,15 @@ export type ChatMarkdownProps = {
 	components?: Components;
 	/** Remark plugins a surface runs after Streamdown's own. */
 	remarkPlugins?: NonNullable<StreamdownProps["remarkPlugins"]>;
+	/** Fade in each new word while the text streams. */
+	animated?: boolean;
 };
+
+const WORD_FADE = { animation: "fadeIn", sep: "word", duration: 400 } as const;
 
 /** One block of agent markdown, rendered the way every chat surface does. */
 export const ChatMarkdown = memo(function ChatMarkdown({
+	animated = false,
 	children,
 	className,
 	components,
@@ -154,7 +159,9 @@ export const ChatMarkdown = memo(function ChatMarkdown({
 		// The elements carry their own bottom margins, so Streamdown's
 		// `space-y-4` between root children goes.
 		<Streamdown
+			animated={animated ? WORD_FADE : undefined}
 			className={cn("space-y-0 break-words", className)}
+			isAnimating={animated}
 			components={merged}
 			linkSafety={{ enabled: false }}
 			mode="streaming"

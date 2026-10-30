@@ -152,10 +152,10 @@ export function UserMessageRow({
 			{(text || files.length > 0) && (
 				<MessageContent
 					className={cn(
-						"max-w-[min(100%,36rem)] font-sans transition-opacity group-[.is-user]:bg-foreground/10 group-[.is-user]:px-3 group-[.is-user]:py-2",
+						"max-w-[min(100%,36rem)] font-sans transition-opacity group-[.is-user]:bg-linear-to-br group-[.is-user]:from-[#d97757] group-[.is-user]:to-[#b9567f] group-[.is-user]:px-4 group-[.is-user]:py-2.5 group-[.is-user]:text-white group-[.is-user]:shadow-[0_6px_24px_rgba(217,119,87,.18)]",
 						oneLine && files.length === 0
-							? "group-[.is-user]:rounded-full"
-							: "group-[.is-user]:rounded-xl",
+							? "group-[.is-user]:rounded-[20px_20px_6px_20px]"
+							: "group-[.is-user]:rounded-[18px_18px_6px_18px]",
 						pending && !pending.failed && "opacity-60",
 					)}
 				>

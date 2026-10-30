@@ -12,6 +12,8 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { PluginIcon } from "renderer/components/PluginIcon";
 import { useTranscriptPlugins } from "../../providers/TranscriptPluginsProvider";
+import { toolKindIcon } from "../../utils/toolKindIcon";
+import { toolKindTone } from "../../utils/toolKindTone";
 import { toolTitle } from "../../utils/toolTitle";
 import { ToolContentList } from "../ToolContentList";
 import { FileChangeTitle } from "./components/FileChangeTitle";
@@ -39,6 +41,7 @@ export function ToolCallRow({ item }: { item: ToolCall }) {
 		? installedPlugins.find((candidate) => candidate.name === mcpServer.name)
 		: undefined;
 	const toggle = hasBody ? () => setOpen((value) => !value) : undefined;
+	const KindIcon = toolKindIcon(item.toolKind);
 
 	const { change, label } = toolTitle(item, t, Boolean(plugin));
 	let title: ReactNode;
@@ -81,9 +84,10 @@ export function ToolCallRow({ item }: { item: ToolCall }) {
 		<Collapsible onOpenChange={setOpen} open={hasBody && open}>
 			<div
 				className={cn(
-					"group/tool relative flex w-full min-w-0 items-center gap-1.5 py-1 font-sans text-sm transition-colors duration-200",
-					running ? "text-muted-foreground" : "text-foreground/50",
-					hasBody && !running && "hover:text-foreground/80",
+					"group/tool relative my-0.5 flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full border px-2.5 py-1 font-sans text-[13px] transition-[filter] duration-200",
+					toolKindTone(item.toolKind),
+					open && "rounded-b-none rounded-t-xl",
+					hasBody && !running && "hover:brightness-125",
 				)}
 			>
 				<CollapsibleTrigger
@@ -97,13 +101,13 @@ export function ToolCallRow({ item }: { item: ToolCall }) {
 							className="size-3.5 shrink-0 animate-spin-slow text-foreground/40 motion-reduce:animate-none"
 							strokeWidth={1.75}
 						/>
+					) : plugin ? (
+						<PluginIcon
+							className="size-3.5 rounded-sm"
+							pluginName={plugin.name}
+						/>
 					) : (
-						plugin && (
-							<PluginIcon
-								className="size-3.5 rounded-sm"
-								pluginName={plugin.name}
-							/>
-						)
+						<KindIcon className="size-3.5 shrink-0" />
 					)}
 					<span
 						className="flex min-w-0 items-center gap-1.5"
@@ -125,7 +129,7 @@ export function ToolCallRow({ item }: { item: ToolCall }) {
 			</div>
 			{hasBody && (
 				<CollapsibleContent>
-					<div className="mt-1 mb-2 ml-[7px] flex flex-col gap-2 border-border/60 border-l pl-3">
+					<div className="mb-2 flex flex-col gap-2 rounded-b-xl rounded-tr-xl border border-border/60 bg-foreground/[.03] p-3">
 						<ToolContentList
 							itemId={item.id}
 							items={item.content}

@@ -17,6 +17,7 @@ import { PageLinkCard } from "../../../PageLinkCard";
 import type { TranscriptRow } from "../../utils/transcriptRows";
 import { AttachmentRail, type RailImage } from "../AttachmentRail";
 import { ReplyFooter } from "../ReplyFooter";
+import { AgentAvatar } from "./components/AgentAvatar";
 import { ItemRow } from "./components/ItemRow";
 import { ToolRunRow } from "./components/ToolRunRow";
 import { TurnStatusRow } from "./components/TurnStatusRow";
@@ -107,10 +108,13 @@ export function TurnGroupSection({
 	switch (row.kind) {
 		case "working":
 			return (
-				<WorkingFor
-					completedAtMs={row.completedAtMs}
-					startedAtMs={row.startedAtMs}
-				/>
+				<div className="mt-2 flex items-center gap-2.5">
+					<AgentAvatar harness={harness} />
+					<WorkingFor
+						completedAtMs={row.completedAtMs}
+						startedAtMs={row.startedAtMs}
+					/>
+				</div>
 			);
 		case "item": {
 			const asker = approvalAsker(snapshot.items, row.item);

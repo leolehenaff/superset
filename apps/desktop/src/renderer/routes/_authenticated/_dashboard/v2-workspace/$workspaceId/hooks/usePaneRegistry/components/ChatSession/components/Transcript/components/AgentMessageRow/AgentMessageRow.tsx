@@ -38,7 +38,7 @@ export function AgentMessageRow({
 		// reachable by keyboard regardless.
 		<div className="group/message flex flex-col gap-1">
 			<MarkdownView
-				className="text-foreground"
+				className="text-[15px] text-foreground leading-7 [&_:is(h1,h2,h3)]:flex [&_:is(h1,h2,h3)]:items-center [&_:is(h1,h2,h3)]:gap-2 [&_:is(h1,h2,h3)]:before:h-4 [&_:is(h1,h2,h3)]:before:w-1 [&_:is(h1,h2,h3)]:before:shrink-0 [&_:is(h1,h2,h3)]:before:rounded-sm [&_:is(h1,h2,h3)]:before:bg-linear-to-b [&_:is(h1,h2,h3)]:before:from-[#d97757] [&_:is(h1,h2,h3)]:before:to-[#b9567f] [&_li]:marker:text-[#d97757]"
 				fading={fading}
 				final={!streaming && !paced.revealing}
 				findItemId={item.id}
