@@ -93,6 +93,42 @@ describe("transcriptRows", () => {
 		expect(separated).not.toHaveProperty("afterTarget");
 	});
 
+	test("a message between tool calls joins the run, the final reply stays out", () => {
+		const message = (id: string, startedAtMs: number) => ({
+			kind: "item" as const,
+			item: { id, kind: "agent_message" as const, text: id, startedAtMs },
+		});
+		const rows = transcriptRows(
+			[
+				{
+					turnId: "t1",
+					turn: { id: "t1", status: "completed", startedAtMs: 2 },
+					entries: [
+						{ kind: "item", item: prompt },
+						{ kind: "tool_run", items: [publish("c1", 3)] },
+						message("interim", 4),
+						{ kind: "tool_run", items: [publish("c2", 5)] },
+						message("reply", 6),
+					],
+				},
+			],
+			[],
+			new Set(),
+			find,
+		);
+		const run = rows.find((row) => row.kind === "tool_run");
+
+		expect(rows.map((row) => row.kind)).toEqual([
+			"item",
+			"working",
+			"tool_run",
+			"item",
+		]);
+		expect(
+			run?.kind === "tool_run" && run.steps.map((step) => step.id),
+		).toEqual(["c1", "interim", "c2"]);
+	});
+
 	test("a prompt keeps one key from sending, through its echo, into its turn", () => {
 		const pending = transcriptRows([], [sending], new Set(), find);
 		const echoed = transcriptRows(

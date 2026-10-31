@@ -12,6 +12,7 @@ import {
 import { cn } from "@superset/ui/utils";
 import { ChevronRight } from "lucide-react";
 import { memo } from "react";
+import { MarkdownView } from "../../../../../MarkdownView";
 import { stepSummary } from "../../../../utils/stepSummary";
 import { isNestedTool } from "../../../../utils/subagentLines";
 import { toolKindIcon } from "../../../../utils/toolKindIcon";
@@ -28,7 +29,7 @@ type ToolRunRowProps = {
 	rowKey: string;
 	items: ToolCall[];
 	steps: readonly Item[];
-	/** Each step's thinking text, "" for a tool call. */
+	/** Each step's thinking or message text, "" for a tool call. */
 	stepTexts: readonly string[];
 	childLists?: readonly (readonly Item[] | undefined)[] | undefined;
 	collapsed: boolean;
@@ -81,7 +82,12 @@ export const ToolRunRow = memo(function ToolRunRow({
 			: undefined;
 	const renderStep = (step: Item) => (
 		<RailStep key={step.id}>
-			{step.kind === "reasoning" ? (
+			{step.kind === "agent_message" ? (
+				<MarkdownView
+					className="py-1 text-foreground/70 text-sm"
+					text={stepTexts[steps.indexOf(step)] ?? ""}
+				/>
+			) : step.kind === "reasoning" ? (
 				<ReasoningRow
 					item={step as ReasoningItem}
 					text={stepTexts[steps.indexOf(step)] ?? ""}
@@ -105,7 +111,7 @@ export const ToolRunRow = memo(function ToolRunRow({
 		>
 			<CollapsibleTrigger
 				className={cn(
-					"group/phase my-0.5 flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-left font-sans text-[13px] transition-[filter] hover:brightness-125",
+					"group/phase flex w-fit max-w-full min-w-0 items-center gap-1.5 py-1 text-left font-sans text-[13px] transition-[filter] hover:brightness-125",
 					toolKindTone(kind),
 				)}
 			>

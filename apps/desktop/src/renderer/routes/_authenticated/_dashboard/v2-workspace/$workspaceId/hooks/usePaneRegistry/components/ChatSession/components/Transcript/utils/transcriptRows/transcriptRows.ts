@@ -41,7 +41,7 @@ export type TranscriptRow =
 			key: string;
 			groupStart: boolean;
 			items: ToolCall[];
-			/** The run's tool calls with the agent's thinking between them, in order. */
+			/** The run's tool calls with the agent's thinking and interim messages between them, in order. */
 			steps: Item[];
 			defaultCollapsed: boolean;
 			active?: boolean;
@@ -97,6 +97,9 @@ export function transcriptRows(
 		const links = turnPageLinks(group.entries, turnSettled, findPageLinks);
 		const lastPrompt = group.entries.findLastIndex(
 			(entry) => entry.kind === "item" && entry.item.kind === "user_message",
+		);
+		const lastTools = group.entries.findLastIndex(
+			(entry) => entry.kind === "tool_run" || entry.item.kind === "tool_call",
 		);
 		let run = null as Extract<TranscriptRow, { kind: "tool_run" }> | null;
 		let runAt = -1;
@@ -177,7 +180,9 @@ export function transcriptRows(
 						: null;
 			if (entry.kind === "item" && !tools) {
 				if (hiddenToolIds.has(entry.item.id)) continue;
-				if (run && entry.item.kind === "reasoning") {
+				const interim =
+					entry.item.kind === "agent_message" && index < lastTools;
+				if (run && (entry.item.kind === "reasoning" || interim)) {
 					run.steps.push(entry.item);
 					continue;
 				}

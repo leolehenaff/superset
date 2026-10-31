@@ -84,9 +84,8 @@ export function ToolCallRow({ item }: { item: ToolCall }) {
 		<Collapsible onOpenChange={setOpen} open={hasBody && open}>
 			<div
 				className={cn(
-					"group/tool relative my-0.5 flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-full border px-2.5 py-1 font-sans text-[13px] transition-[filter] duration-200",
+					"group/tool relative flex w-fit max-w-full min-w-0 items-center gap-1.5 py-1 font-sans text-[13px] transition-[filter] duration-200",
 					toolKindTone(item.toolKind),
-					open && "rounded-b-none rounded-t-xl",
 					hasBody && !running && "hover:brightness-125",
 				)}
 			>
@@ -129,7 +128,7 @@ export function ToolCallRow({ item }: { item: ToolCall }) {
 			</div>
 			{hasBody && (
 				<CollapsibleContent>
-					<div className="mb-2 flex flex-col gap-2 rounded-b-xl rounded-tr-xl border border-border/60 bg-foreground/[.03] p-3">
+					<div className="mt-1 mb-2 flex flex-col gap-2 rounded-lg border border-border/60 bg-foreground/[.03] p-3">
 						<ToolContentList
 							itemId={item.id}
 							items={item.content}

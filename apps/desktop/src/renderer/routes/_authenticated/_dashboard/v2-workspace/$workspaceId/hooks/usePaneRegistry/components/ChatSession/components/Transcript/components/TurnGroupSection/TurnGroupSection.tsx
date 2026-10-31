@@ -169,7 +169,7 @@ export function TurnGroupSection({
 						rowKey={row.key}
 						steps={row.steps}
 						stepTexts={row.steps.map((step) =>
-							step.kind === "reasoning" ? displayText(snapshot, step.id) : "",
+							step.kind === "tool_call" ? "" : displayText(snapshot, step.id),
 						)}
 					/>
 					{imageRail(row.items)}
