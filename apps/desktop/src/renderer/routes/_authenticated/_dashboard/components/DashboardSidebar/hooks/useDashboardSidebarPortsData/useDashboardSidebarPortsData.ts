@@ -3,6 +3,7 @@ import { i18n } from "@superset/i18n";
 import type { PortChangedPayload } from "@superset/workspace-client";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
+import { useHostProjects } from "renderer/hooks/host-projects/useHostProjects";
 import { useKnownHosts } from "renderer/hooks/known-hosts/useKnownHosts";
 import { useRelayUrl } from "renderer/hooks/useRelayUrl";
 import { getHostEventBus } from "renderer/lib/host-event-bus";
@@ -41,17 +42,26 @@ export function useDashboardSidebarPortsData(enabled = true): {
 	const { hosts, organizationId: knownHostsOrgId } = useKnownHosts();
 
 	const { workspaces: allWorkspaces } = useHostWorkspaces();
-	const workspaces = useMemo(
-		() =>
-			allWorkspaces
-				.filter((workspace) => visibleWorkspaceIds.has(workspace.id))
-				.map((workspace) => ({
-					id: workspace.id,
-					name: workspace.name,
-					hostId: workspace.hostId,
-				})),
-		[allWorkspaces, visibleWorkspaceIds],
-	);
+	const { projects } = useHostProjects();
+	const workspaces = useMemo(() => {
+		const projectNames = new Map(
+			projects.map((project) => [project.projectKey, project.name]),
+		);
+		return allWorkspaces
+			.filter(
+				(workspace) =>
+					workspace.hostId === machineId ||
+					visibleWorkspaceIds.has(workspace.id),
+			)
+			.map((workspace) => ({
+				id: workspace.id,
+				name:
+					workspace.type === "local" && workspace.projectId
+						? `${projectNames.get(workspace.projectId) ?? workspace.name} - ${workspace.branch}`
+						: workspace.name,
+				hostId: workspace.hostId,
+			}));
+	}, [allWorkspaces, projects, visibleWorkspaceIds, machineId]);
 
 	// Skip per-host queries, polling, and `port:changed` subscriptions when
 	// nothing will render ports (e.g. inline mode with the sidebar collapsed).

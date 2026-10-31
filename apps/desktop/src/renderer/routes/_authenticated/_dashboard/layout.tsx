@@ -33,6 +33,7 @@ import { syncPersistedStoreAcrossWindows } from "renderer/stores/syncPersistedSt
 import { useV2NotificationStore } from "renderer/stores/v2-notifications";
 import { useWorkspaceSidebarStore } from "renderer/stores/workspace-sidebar-state";
 import { ContentBoundary } from "../components/ContentBoundary";
+import { SessionQuotaBars } from "./agents/components/SessionQuotaBars";
 import { AddRepositoryModals } from "./components/AddRepositoryModals";
 import { AgentsSidebar } from "./components/AgentsSidebar";
 import { AutomationsSidebar } from "./components/AutomationsSidebar";
@@ -40,6 +41,7 @@ import { CrossVersionMismatchState } from "./components/CrossVersionMismatchStat
 import { RemotePortForwarder } from "./components/RemotePortForwarder";
 import { RestoreCloudWorkspaceMount } from "./components/RestoreCloudWorkspaceMount";
 import { SaveAsEnvironmentMount } from "./components/SaveAsEnvironmentMount";
+import { SidebarPorts } from "./components/SidebarPorts";
 import { SidebarSettingsBar } from "./components/SidebarSettingsBar";
 import { TopBar } from "./components/TopBar";
 import { WorkspacesSidebar } from "./components/WorkspacesSidebar";
@@ -198,6 +200,12 @@ function DashboardLayout() {
 							<AgentsSidebar activeWorkspaceId={currentV2WorkspaceId} />
 						)}
 					</div>
+					<SidebarPorts />
+					{workspaceSidebarMode === "agents" && (
+						<footer className="shrink-0 border-t border-border/60 p-1.5">
+							<SessionQuotaBars stacked />
+						</footer>
+					)}
 					<SidebarSettingsBar />
 				</div>
 			</WorkspaceSidebarPanel>

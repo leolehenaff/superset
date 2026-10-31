@@ -12,7 +12,6 @@ import { cn } from "@superset/ui/utils";
 import { useMemo, useState } from "react";
 import { LuPlus } from "react-icons/lu";
 import { NewAgentForm } from "renderer/routes/_authenticated/_dashboard/agents/components/NewAgentForm";
-import { SessionQuotaBars } from "renderer/routes/_authenticated/_dashboard/agents/components/SessionQuotaBars";
 import {
 	type AgentSession,
 	useAgentSessions,
@@ -118,10 +117,6 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 					</DragOverlay>
 				</DndContext>
 			</div>
-
-			<footer className="shrink-0 border-t border-border/60 p-1.5">
-				<SessionQuotaBars stacked />
-			</footer>
 		</aside>
 	);
 }
