@@ -18,7 +18,7 @@ import {
 } from "@superset/ui/dropdown-menu";
 import { cn } from "@superset/ui/utils";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
 	LuArrowUpRight,
 	LuBot,
@@ -35,7 +35,10 @@ import { cloudTrpc } from "renderer/lib/cloud-trpc";
 import { AutomationDragPreview } from "renderer/routes/_authenticated/_dashboard/automations/components/AutomationDragPreview";
 import { useCreateAutomation } from "renderer/routes/_authenticated/_dashboard/automations/hooks/useCreateAutomation";
 import { useSetAutomationGroup } from "renderer/routes/_authenticated/_dashboard/automations/hooks/useSetAutomationGroup";
-import { groupAutomations } from "renderer/routes/_authenticated/_dashboard/automations/utils/groupAutomations";
+import {
+	groupAutomations,
+	listAutomationGroups,
+} from "renderer/routes/_authenticated/_dashboard/automations/utils/groupAutomations";
 import { snapToCursor } from "renderer/routes/_authenticated/_dashboard/automations/utils/snapToCursor";
 import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useFailedAutomations } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
@@ -165,6 +168,16 @@ export function AutomationsSidebar() {
 			(section) => section.items.length > 0 || section.dropGroup === null,
 		);
 	}, [automations, search, currentUserId, failedIds, dragged]);
+
+	const groups = useMemo(
+		() => listAutomationGroups(automations),
+		[automations],
+	);
+	const moveToGroup = useCallback(
+		(automation: AutomationListItem, group: string | null) =>
+			setGroup({ ids: [automation.id], name: automation.name, group }),
+		[setGroup],
+	);
 
 	const handleDragStart = ({ active }: DragStartEvent) => {
 		setDragged(automations.find((a) => a.id === active.id) ?? null);
@@ -296,7 +309,9 @@ export function AutomationsSidebar() {
 											now={now}
 											isActive={automation.id === activeAutomationId}
 											showGroup={section.showGroup ?? false}
-											draggable={
+											groups={groups}
+											onMoveToGroup={moveToGroup}
+											editable={
 												!currentUserId ||
 												automation.ownerUserId === currentUserId
 											}

@@ -3,10 +3,16 @@ import { formatCompactRelativeTime } from "@superset/i18n/format";
 import { CLOUD_HOST_ID } from "@superset/shared/host-routing";
 import { describeSchedule } from "@superset/shared/rrule";
 import type { RouterOutputs } from "@superset/trpc";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuTrigger,
+} from "@superset/ui/context-menu";
 import { cn } from "@superset/ui/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { memo } from "react";
 import { LuCloud } from "react-icons/lu";
+import { AutomationGroupMenuItems } from "renderer/routes/_authenticated/_dashboard/automations/components/AutomationGroupMenuItems";
 import { RUN_STATUS_META } from "renderer/routes/_authenticated/_dashboard/automations/utils/runStatus";
 import type { AutomationLastRun } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
 
@@ -19,8 +25,10 @@ interface AutomationsSidebarRowProps {
 	now: Date;
 	isActive: boolean;
 	showGroup: boolean;
-	draggable: boolean;
+	editable: boolean;
 	dimmed: boolean;
+	groups: string[];
+	onMoveToGroup: (automation: AutomationListItem, group: string | null) => void;
 }
 
 export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
@@ -30,13 +38,15 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 	now,
 	isActive,
 	showGroup,
-	draggable,
+	editable,
 	dimmed,
+	groups,
+	onMoveToGroup,
 }: AutomationsSidebarRowProps) {
 	const navigate = useNavigate();
 	const { setNodeRef, attributes, listeners } = useDraggable({
 		id: automation.id,
-		disabled: !draggable,
+		disabled: !editable,
 	});
 	const scheduleLabel = automation.rrule
 		? describeSchedule(automation.rrule)
@@ -52,63 +62,77 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 		: "bg-muted-foreground/30";
 
 	return (
-		<button
-			ref={setNodeRef}
-			{...attributes}
-			{...listeners}
-			type="button"
-			onClick={() =>
-				navigate({
-					to: "/automations/$automationId",
-					params: { automationId: automation.id },
-				})
-			}
-			aria-current={isActive ? "page" : undefined}
-			className={cn(
-				"flex w-full flex-col gap-1 rounded-lg py-2 pr-2.5 pl-3 text-left ring-inset transition-colors",
-				dimmed && "opacity-40",
-				isActive
-					? "bg-background shadow-sm ring-1 ring-border"
-					: "hover:bg-fill-hover",
-			)}
-		>
-			<div className="flex min-w-0 items-center gap-2">
-				<span
-					aria-hidden
-					className={cn("size-1.5 shrink-0 rounded-full", dotClassName)}
-				/>
-				<span
+		<ContextMenu>
+			<ContextMenuTrigger asChild disabled={!editable}>
+				<button
+					ref={setNodeRef}
+					{...attributes}
+					{...listeners}
+					type="button"
+					onClick={() =>
+						navigate({
+							to: "/automations/$automationId",
+							params: { automationId: automation.id },
+						})
+					}
+					aria-current={isActive ? "page" : undefined}
 					className={cn(
-						"min-w-0 flex-1 truncate text-[13px] leading-5",
-						!automation.enabled
-							? "text-muted-foreground"
-							: isActive
-								? "font-medium text-foreground"
-								: "text-foreground/90",
+						"flex w-full flex-col gap-1 rounded-lg py-2 pr-2.5 pl-3 text-left ring-inset transition-colors",
+						dimmed && "opacity-40",
+						isActive
+							? "bg-background shadow-sm ring-1 ring-border"
+							: "hover:bg-fill-hover",
 					)}
 				>
-					{automation.name}
-				</span>
-				{nextRunAt !== null ? (
-					<span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
-						{nextRunAt - now.getTime() < 60_000
-							? "bientôt"
-							: formatCompactRelativeTime(nextRunAt, now)}
-					</span>
-				) : null}
-			</div>
-			<div className="flex min-w-0 items-center gap-1 pl-3.5 text-[11px] text-muted-foreground">
-				<span className="min-w-0 flex-1 truncate">
-					{showGroup && automation.group
-						? `${automation.group} · ${scheduleLabel}`
-						: scheduleLabel}
-				</span>
-				{automation.targetHostId === CLOUD_HOST_ID ? (
-					<LuCloud className="size-3 shrink-0 opacity-70" />
-				) : projectName ? (
-					<span className="max-w-[45%] shrink-0 truncate">{projectName}</span>
-				) : null}
-			</div>
-		</button>
+					<div className="flex min-w-0 items-center gap-2">
+						<span
+							aria-hidden
+							className={cn("size-1.5 shrink-0 rounded-full", dotClassName)}
+						/>
+						<span
+							className={cn(
+								"min-w-0 flex-1 truncate text-[13px] leading-5",
+								!automation.enabled
+									? "text-muted-foreground"
+									: isActive
+										? "font-medium text-foreground"
+										: "text-foreground/90",
+							)}
+						>
+							{automation.name}
+						</span>
+						{nextRunAt !== null ? (
+							<span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+								{nextRunAt - now.getTime() < 60_000
+									? "bientôt"
+									: formatCompactRelativeTime(nextRunAt, now)}
+							</span>
+						) : null}
+					</div>
+					<div className="flex min-w-0 items-center gap-1 pl-3.5 text-[11px] text-muted-foreground">
+						<span className="min-w-0 flex-1 truncate">
+							{showGroup && automation.group
+								? `${automation.group} · ${scheduleLabel}`
+								: scheduleLabel}
+						</span>
+						{automation.targetHostId === CLOUD_HOST_ID ? (
+							<LuCloud className="size-3 shrink-0 opacity-70" />
+						) : projectName ? (
+							<span className="max-w-[45%] shrink-0 truncate">
+								{projectName}
+							</span>
+						) : null}
+					</div>
+				</button>
+			</ContextMenuTrigger>
+			<ContextMenuContent>
+				<AutomationGroupMenuItems
+					kind="context"
+					groups={groups}
+					currentGroup={automation.group}
+					onMove={(group) => onMoveToGroup(automation, group)}
+				/>
+			</ContextMenuContent>
+		</ContextMenu>
 	);
 });
