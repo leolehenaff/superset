@@ -28,6 +28,8 @@ export type {
 
 const PORTS_FALLBACK_REFETCH_INTERVAL_MS = 30_000;
 const PORT_EVENT_CACHE_BATCH_DELAY_MS = 100;
+// Placeholder set by host-service until the workspace gets a real name.
+const UNNAMED_WORKSPACE_NAME = "New workspace";
 
 export function useDashboardSidebarPortsData(enabled = true): {
 	workspacePortGroups: DashboardSidebarPortGroup[];
@@ -56,7 +58,9 @@ export function useDashboardSidebarPortsData(enabled = true): {
 			.map((workspace) => ({
 				id: workspace.id,
 				name:
-					workspace.type === "local" && workspace.projectId
+					(workspace.type === "local" ||
+						workspace.name === UNNAMED_WORKSPACE_NAME) &&
+					workspace.projectId
 						? `${projectNames.get(workspace.projectId) ?? workspace.name} - ${workspace.branch}`
 						: workspace.name,
 				hostId: workspace.hostId,
