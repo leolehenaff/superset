@@ -13,6 +13,7 @@ import {
 } from "../../../../workspaces/local-workspace-store";
 import {
 	getWorkspaceNamingState,
+	setWorkspaceNamingState,
 	type WorkspaceNamingState,
 } from "../../../../workspaces/workspace-naming-state";
 import {
@@ -33,6 +34,8 @@ import { listBranchNames } from "./list-branch-names";
 import { findGitHubReferences, resolveNamingLinks } from "./naming-links";
 import { deduplicateBranchName } from "./sanitize-branch";
 
+/** Until a name is typed or generated; the branch stays unique on its own. */
+export const NEW_WORKSPACE_NAME = "New workspace";
 const MAX_NAMING_ATTEMPTS = 3;
 const GIT_TASK_TIMEOUT_MS = 10_000;
 
@@ -283,6 +286,34 @@ async function renameAutomaticBranch(
 }
 
 /**
+ * A worktree created without a prompt keeps its placeholder name and random
+ * branch: its first agent reply stands in for the prompt it never got.
+ */
+function startLateNaming(
+	ctx: HostServiceContext,
+	workspaceId: string,
+	agentReply: string,
+	agentId: string | undefined,
+): void {
+	const row = getLocalWorkspace(ctx.db, workspaceId);
+	if (
+		!row ||
+		row.archivedAt != null ||
+		row.type !== "worktree" ||
+		row.name !== NEW_WORKSPACE_NAME ||
+		getWorkspaceNamingState(ctx.db, workspaceId) ||
+		hasWorkspaceTitleJob(ctx.db, workspaceId)
+	)
+		return;
+	setWorkspaceNamingState(ctx.db, workspaceId, {
+		prompt: agentReply,
+		attempts: 0,
+		branch: row.branch,
+		agent: agentId ?? null,
+	});
+}
+
+/**
  * Agent-event follow-ups to the attempt creation queued: a Start runs a
  * first attempt that never ran (the queue was full), and each Stop retries
  * a failed or vague attempt with the agent's reply. A Stop during a running
@@ -291,8 +322,11 @@ async function renameAutomaticBranch(
 export function continueWorkspaceNaming(
 	ctx: HostServiceContext,
 	workspaceId: string,
-	event: { eventType: string; agentReply?: string },
+	event: { eventType: string; agentReply?: string; agentId?: string },
 ): void {
+	if (event.eventType === "Stop" && event.agentReply) {
+		startLateNaming(ctx, workspaceId, event.agentReply, event.agentId);
+	}
 	const pending = pendingNaming(ctx, workspaceId);
 	if (!pending) return;
 	if (event.eventType === "Start") {

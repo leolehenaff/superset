@@ -66,6 +66,7 @@ export function fanOutAgentLifecycle(
 		continueWorkspaceNaming(ctx, workspaceId, {
 			eventType,
 			agentReply: preview,
+			agentId: event.agent?.agentId,
 		});
 	} catch (err) {
 		console.warn(

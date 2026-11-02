@@ -101,7 +101,10 @@ import {
 	resolveNewBranchStartPoint,
 } from "../workspace-creation/utils/resolve-new-branch-start-point";
 import { deduplicateBranchName } from "../workspace-creation/utils/sanitize-branch";
-import { scheduleWorkspaceNaming } from "../workspace-creation/utils/workspace-naming-job";
+import {
+	NEW_WORKSPACE_NAME,
+	scheduleWorkspaceNaming,
+} from "../workspace-creation/utils/workspace-naming-job";
 
 const createInputSchema = z
 	.object({
@@ -165,9 +168,6 @@ const createInputSchema = z
 				"A local workspace uses the project's checkout: `branch`, `pr`, `baseBranch` and `worktreePath` cannot be set",
 		},
 	);
-
-/** Until a name is typed or generated; the branch stays unique on its own. */
-const NEW_WORKSPACE_NAME = "New workspace";
 
 /** "local", then "local 2", "local 3", … among the project's live local rows. */
 function nextLocalWorkspaceName(

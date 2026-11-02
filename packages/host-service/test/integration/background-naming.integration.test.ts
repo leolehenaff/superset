@@ -196,6 +196,29 @@ for (const kind of ["session", "worktree"] as const) {
 		}
 	});
 
+	if (kind === "worktree")
+		test("worktree: created without a prompt, it is named from the agent's first reply", async () => {
+			const f = await fixture();
+			try {
+				await f.create({ namingPrompt: undefined });
+				f.host.db
+					.insert(terminalSessions)
+					.values({ id: "test-agent", originWorkspaceId: f.id })
+					.run();
+				f.generator.mockResolvedValueOnce(title);
+				await f.hook("Stop", "I fixed the expired login token.");
+				await until(() => f.row()?.name === title.title);
+				expect(f.generator.mock.calls[0]?.[0]).toBe(
+					"I fixed the expired login token.",
+				);
+				expect(f.row()?.branch).toBe(
+					`${title.branchName}-${f.id.slice(0, 8)}`,
+				);
+			} finally {
+				await f.cleanup();
+			}
+		});
+
 	for (const edit of [
 		"manual",
 		"away-and-back",
