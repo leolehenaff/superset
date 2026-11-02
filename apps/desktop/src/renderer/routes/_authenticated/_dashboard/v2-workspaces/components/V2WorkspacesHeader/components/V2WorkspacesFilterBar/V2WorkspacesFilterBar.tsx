@@ -56,6 +56,7 @@ import {
 	type BoardColumnKey,
 } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/deriveBoardColumn";
 import { CloudGlyph } from "renderer/routes/_authenticated/components/CloudGlyph";
+import { V2WorkspacesSortMenu } from "../../../V2WorkspacesSortMenu";
 import { SaveViewPopover } from "../SaveViewPopover";
 import { DeviceOptionLabel } from "./components/DeviceOptionLabel";
 import { V2WorkspacesDisplayMenu } from "./components/V2WorkspacesDisplayMenu";
@@ -454,6 +455,7 @@ export function V2WorkspacesFilterBar({
 						</Button>
 					</>
 				) : null}
+				<V2WorkspacesSortMenu labelClassName="@max-2xl:hidden" />
 				<V2WorkspacesDisplayMenu />
 			</span>
 			<span className="ml-0.5 flex h-full shrink-0">
