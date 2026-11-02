@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { claudeProjectDirName } from "@superset/agent-setup/claude-project-links";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
@@ -10,7 +11,6 @@ import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 import type { HostDb } from "../../../db";
 import * as schema from "../../../db/schema";
 import { TerminalAgentStore } from "../../../terminal-agents";
-import { claudeProjectDirName } from "../../../terminal-agents/harness-sessions/claude";
 import { setDefaultAccountSelection } from "../usage/default-account";
 import {
 	bindResumedSession,
@@ -687,13 +687,13 @@ describe("validateAgentModelSelection", () => {
 
 	it("rejects overrides for agents without model support", () => {
 		try {
-			validateAgentModelSelection("superset", "Superset", "claude-opus-5");
+			validateAgentModelSelection("superset", "Paradev", "claude-opus-5");
 			throw new Error("Expected validation to fail");
 		} catch (error) {
 			expect(error).toBeInstanceOf(TRPCError);
 			expect((error as TRPCError).code).toBe("BAD_REQUEST");
 			expect((error as Error).message).toBe(
-				"Superset does not support a model override. Omit model to use the agent default.",
+				"Paradev does not support a model override. Omit model to use the agent default.",
 			);
 		}
 	});
@@ -730,24 +730,24 @@ describe("validateAgentEffortSelection", () => {
 			validateAgentEffortSelection("codex", "Codex", "ultra", "gpt-5.6-sol"),
 		).not.toThrow();
 		try {
-			validateAgentEffortSelection("codex", "Codex", "ultra", "gpt-5.5");
+			validateAgentEffortSelection("codex", "Codex", "ultra", "gpt-6-luna");
 			throw new Error("Expected validation to fail");
 		} catch (error) {
 			expect((error as Error).message).toBe(
-				'Unsupported reasoning effort "ultra" for Codex with model gpt-5.5. Choose one of: low, medium, high, xhigh.',
+				'Unsupported reasoning effort "ultra" for Codex with model gpt-6-luna. Choose one of: low, medium, high, xhigh, max.',
 			);
 		}
 	});
 
 	it("rejects overrides for agents without effort support", () => {
 		try {
-			validateAgentEffortSelection("superset", "Superset", "high");
+			validateAgentEffortSelection("superset", "Paradev", "high");
 			throw new Error("Expected validation to fail");
 		} catch (error) {
 			expect(error).toBeInstanceOf(TRPCError);
 			expect((error as TRPCError).code).toBe("BAD_REQUEST");
 			expect((error as Error).message).toBe(
-				"Superset does not support a reasoning effort override. Omit effort to use the agent default.",
+				"Paradev does not support a reasoning effort override. Omit effort to use the agent default.",
 			);
 		}
 	});

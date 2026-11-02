@@ -1,6 +1,7 @@
 import { useDeferredValue, useMemo } from "react";
 import { useResourceSnapshot } from "renderer/routes/_authenticated/_dashboard/components/TopBar/components/ResourceConsumption/hooks/useResourceSnapshot";
 import { useV2WorkspacesFilterStore } from "../../stores/v2WorkspacesFilterStore";
+import { deriveBoardColumn } from "../../utils/deriveBoardColumn";
 import { useAccessibleV2Workspaces } from "../useAccessibleV2Workspaces";
 
 export function useFilteredV2Workspaces() {
@@ -11,6 +12,9 @@ export function useFilteredV2Workspaces() {
 	);
 	const creatorFilters = useV2WorkspacesFilterStore(
 		(state) => state.creatorFilters,
+	);
+	const statusFilters = useV2WorkspacesFilterStore(
+		(state) => state.statusFilters,
 	);
 	const showArchived = useV2WorkspacesFilterStore(
 		(state) => state.showArchived,
@@ -44,7 +48,13 @@ export function useFilteredV2Workspaces() {
 				metrics,
 			]),
 		);
-		return all.map((workspace) => {
+		const byStatus =
+			statusFilters.length === 0
+				? all
+				: all.filter((workspace) =>
+						statusFilters.includes(deriveBoardColumn(workspace)),
+					);
+		return byStatus.map((workspace) => {
 			const metrics = byId.get(workspace.id);
 			return metrics
 				? {
@@ -53,7 +63,7 @@ export function useFilteredV2Workspaces() {
 					}
 				: workspace;
 		});
-	}, [all, snapshot]);
+	}, [all, snapshot, statusFilters]);
 
 	return {
 		...accessible,

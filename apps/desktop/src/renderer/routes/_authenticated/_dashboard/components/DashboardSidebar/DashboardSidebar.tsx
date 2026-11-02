@@ -42,6 +42,8 @@ import {
 } from "./components/DashboardSidebarActiveWorkspaceSwitcher";
 import { DashboardSidebarBulkActions } from "./components/DashboardSidebarBulkActions";
 import { DashboardSidebarBulkDeleteMount } from "./components/DashboardSidebarBulkDeleteMount";
+import { DashboardSidebarChannelsSection } from "./components/DashboardSidebarChannelsSection";
+import { DashboardSidebarDevsSection } from "./components/DashboardSidebarDevsSection";
 import { DashboardSidebarGithubNotice } from "./components/DashboardSidebarGithubNotice";
 import { DashboardSidebarHeader } from "./components/DashboardSidebarHeader";
 import { DashboardSidebarHiddenProjects } from "./components/DashboardSidebarHiddenProjects";
@@ -161,6 +163,8 @@ const DashboardSidebarContent = memo(function DashboardSidebarContent({
 	const { t } = useLingui();
 	const isCloudEnabled =
 		useFeatureFlagEnabled(FEATURE_FLAGS.CLOUD_WORKSPACES) === true;
+	const isChannelsEnabled =
+		useFeatureFlagEnabled(FEATURE_FLAGS.CHANNELS) === true;
 	const {
 		groups,
 		hiddenProjects,
@@ -490,6 +494,12 @@ const DashboardSidebarContent = memo(function DashboardSidebarContent({
 											status={githubStatus}
 											isCollapsed={isCollapsed}
 										/>
+										{isChannelsEnabled && !isCollapsed && (
+											<>
+												<DashboardSidebarChannelsSection />
+												<DashboardSidebarDevsSection />
+											</>
+										)}
 										{(isCollapsed || !workspacesListCollapsed) && (
 											<DashboardSidebarPinnedSection
 												pinnedWorkspaces={displayedPinnedWorkspaces}

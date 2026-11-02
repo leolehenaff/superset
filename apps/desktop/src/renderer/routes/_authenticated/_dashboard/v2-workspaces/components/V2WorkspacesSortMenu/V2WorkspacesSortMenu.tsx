@@ -8,10 +8,10 @@ import {
 import { LuArrowDownUp, LuChevronDown } from "react-icons/lu";
 import { ToolbarMenuButton } from "renderer/routes/_authenticated/_dashboard/components/ToolbarMenuButton";
 import {
+	ORDER_BY_LABELS,
+	ORDER_BY_VALUES,
 	useV2WorkspacesFilterStore,
-	V2_WORKSPACES_SORT_LABELS,
-	V2_WORKSPACES_SORT_MODES,
-	type V2WorkspacesSortMode,
+	type V2WorkspacesOrderBy,
 } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
 
 interface V2WorkspacesSortMenuProps {
@@ -21,28 +21,26 @@ interface V2WorkspacesSortMenuProps {
 export function V2WorkspacesSortMenu({
 	labelClassName,
 }: V2WorkspacesSortMenuProps) {
-	const sortMode = useV2WorkspacesFilterStore((state) => state.sortMode);
-	const setSortMode = useV2WorkspacesFilterStore((state) => state.setSortMode);
+	const orderBy = useV2WorkspacesFilterStore((state) => state.orderBy);
+	const setOrderBy = useV2WorkspacesFilterStore((state) => state.setOrderBy);
 
 	return (
 		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger asChild>
-				<ToolbarMenuButton isActive={sortMode !== "activity"}>
+				<ToolbarMenuButton isActive={orderBy !== "activity"}>
 					<LuArrowDownUp className="size-3.5" />
-					<span className={labelClassName}>
-						{V2_WORKSPACES_SORT_LABELS[sortMode]}
-					</span>
+					<span className={labelClassName}>{ORDER_BY_LABELS[orderBy]}</span>
 					<LuChevronDown className="size-3 opacity-60" />
 				</ToolbarMenuButton>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="min-w-[10rem]">
 				<DropdownMenuRadioGroup
-					value={sortMode}
-					onValueChange={(next) => setSortMode(next as V2WorkspacesSortMode)}
+					value={orderBy}
+					onValueChange={(next) => setOrderBy(next as V2WorkspacesOrderBy)}
 				>
-					{V2_WORKSPACES_SORT_MODES.map((mode) => (
+					{ORDER_BY_VALUES.map((mode) => (
 						<DropdownMenuRadioItem key={mode} value={mode}>
-							{V2_WORKSPACES_SORT_LABELS[mode]}
+							{ORDER_BY_LABELS[mode]}
 						</DropdownMenuRadioItem>
 					))}
 				</DropdownMenuRadioGroup>

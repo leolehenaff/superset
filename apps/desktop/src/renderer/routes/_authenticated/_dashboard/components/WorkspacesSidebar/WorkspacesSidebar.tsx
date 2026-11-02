@@ -29,10 +29,10 @@ export function WorkspacesSidebar({
 	const showArchived = useV2WorkspacesFilterStore(
 		(state) => state.showArchived,
 	);
-	const sortMode = useV2WorkspacesFilterStore((state) => state.sortMode);
+	const orderBy = useV2WorkspacesFilterStore((state) => state.orderBy);
 	const sections = useMemo(
-		() => groupByStatus(workspaces, showArchived, sortMode),
-		[workspaces, showArchived, sortMode],
+		() => groupByStatus(workspaces, showArchived, orderBy),
+		[workspaces, showArchived, orderBy],
 	);
 	const openNewWorkspace = useOpenNewWorkspace();
 

@@ -2,6 +2,11 @@ import type { WorkspaceStore } from "@superset/panes";
 import type { PaneViewerData } from "renderer/routes/_authenticated/_dashboard/v2-workspace/$workspaceId/types";
 import type { StoreApi } from "zustand";
 
+export type PaneLayoutSlot =
+	| "paneLayout"
+	| "rightPaneLayout"
+	| "bottomPaneLayout";
+
 type PaneLayoutStore = StoreApi<WorkspaceStore<PaneViewerData>>;
 
 const stores = new Map<string, PaneLayoutStore>();
@@ -11,24 +16,30 @@ function notify() {
 	for (const listener of listeners) listener();
 }
 
-/** Main pane layouts mounted in this renderer, so outside edits apply live. */
+const storeKey = (workspaceId: string, slot: PaneLayoutSlot) =>
+	`${workspaceId}:${slot}`;
+
+/** Pane layouts mounted in this renderer, so outside edits apply live. */
 export function registerV2PaneLayoutStore(
 	workspaceId: string,
+	slot: PaneLayoutSlot,
 	store: PaneLayoutStore,
 ): () => void {
-	stores.set(workspaceId, store);
+	const key = storeKey(workspaceId, slot);
+	stores.set(key, store);
 	notify();
 	return () => {
-		if (stores.get(workspaceId) !== store) return;
-		stores.delete(workspaceId);
+		if (stores.get(key) !== store) return;
+		stores.delete(key);
 		notify();
 	};
 }
 
 export function getV2PaneLayoutStore(
 	workspaceId: string,
+	slot: PaneLayoutSlot,
 ): PaneLayoutStore | undefined {
-	return stores.get(workspaceId);
+	return stores.get(storeKey(workspaceId, slot));
 }
 
 export function subscribeV2PaneLayoutStores(listener: () => void): () => void {

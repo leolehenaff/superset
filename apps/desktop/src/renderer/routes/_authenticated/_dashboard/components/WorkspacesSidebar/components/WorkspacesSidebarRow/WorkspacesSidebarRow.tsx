@@ -1,3 +1,4 @@
+import { useFormat } from "@superset/i18n/react";
 import { cn } from "@superset/ui/utils";
 import { memo } from "react";
 import { LuGitBranch, LuSquareTerminal } from "react-icons/lu";
@@ -7,7 +8,6 @@ import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboar
 import { WorkspaceResourceMeters } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceResourceMeters";
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
 import { workspaceActivityAt } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/sortWorkspaces";
-import { getRelativeTime } from "renderer/screens/main/components/WorkspacesListView/utils";
 
 interface WorkspacesSidebarRowProps {
 	workspace: AccessibleV2Workspace;
@@ -18,6 +18,7 @@ export const WorkspacesSidebarRow = memo(function WorkspacesSidebarRow({
 	workspace,
 	isActive,
 }: WorkspacesSidebarRowProps) {
+	const { formatAge } = useFormat();
 	const isArchived = workspace.archivedAt != null;
 	const diff = workspace.diffStats;
 	const hasDiff = !!diff && (diff.additions > 0 || diff.deletions > 0);
@@ -65,9 +66,7 @@ export const WorkspacesSidebarRow = memo(function WorkspacesSidebarRow({
 							{workspace.name}
 						</span>
 						<span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
-							{getRelativeTime(workspaceActivityAt(workspace), {
-								format: "compact",
-							})}
+							{formatAge(workspaceActivityAt(workspace))}
 						</span>
 					</div>
 					<div className="flex min-w-0 items-center gap-1 pl-6 text-[11px] text-muted-foreground">

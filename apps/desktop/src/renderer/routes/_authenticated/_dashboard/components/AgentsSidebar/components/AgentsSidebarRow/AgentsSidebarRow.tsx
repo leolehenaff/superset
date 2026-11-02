@@ -1,4 +1,5 @@
 import { useDraggable } from "@dnd-kit/core";
+import { useFormat } from "@superset/i18n/react";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -23,7 +24,6 @@ import {
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
 import { StatusGlyph } from "renderer/routes/_authenticated/_dashboard/components/StatusGlyph";
 import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
-import { getRelativeTime } from "renderer/screens/main/components/WorkspacesListView/utils";
 import { useV2NotificationStore } from "renderer/stores/v2-notifications";
 
 interface AgentsSidebarRowProps {
@@ -46,6 +46,7 @@ export const AgentsSidebarRow = memo(function AgentsSidebarRow({
 		(state) => state.pruneTerminalSeen,
 	);
 	const navigate = useNavigate();
+	const { formatAge } = useFormat();
 	const closeSession = useCloseAgentSession();
 	const agentIcon = getPresetIcon(session.agentId, useIsDarkTheme());
 	const since =
@@ -104,7 +105,7 @@ export const AgentsSidebarRow = memo(function AgentsSidebarRow({
 						</span>
 						<StatusGlyph status={session.status} />
 						<span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
-							{getRelativeTime(since, { format: "compact" })}
+							{formatAge(since)}
 						</span>
 					</div>
 					<div className="flex min-w-0 items-center gap-1 pl-6 text-[11px] text-muted-foreground">

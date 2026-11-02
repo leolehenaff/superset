@@ -20,7 +20,7 @@ function activeTerminalIdOf(
 /** Terminal of the focused pane in the mounted workspace, if any. */
 export function useActiveTerminalId(workspaceId: string | null): string | null {
 	const store = useSyncExternalStore(subscribeV2PaneLayoutStores, () =>
-		workspaceId ? getV2PaneLayoutStore(workspaceId) : undefined,
+		workspaceId ? getV2PaneLayoutStore(workspaceId, "paneLayout") : undefined,
 	);
 	const [terminalId, setTerminalId] = useState<string | null>(null);
 

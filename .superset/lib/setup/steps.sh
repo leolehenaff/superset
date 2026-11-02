@@ -67,6 +67,30 @@ step_install_dependencies() {
   return 0
 }
 
+# RFC 3339 timestamp NEON_BRANCH_LEASE_DAYS from now, empty when no lease is set.
+neon_branch_lease_expiry() {
+  local days="${NEON_BRANCH_LEASE_DAYS:-}"
+  [ -n "$days" ] || return 0
+  date -u -d "+${days} days" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+    || date -u -v+"${days}"d +%Y-%m-%dT%H:%M:%SZ
+}
+
+# Push a branch's expiry NEON_BRANCH_LEASE_DAYS out. Never call
+# set-expiration without --expires-at: that removes the expiry.
+renew_neon_branch_lease() {
+  local branch_id="$1"
+  local lease_expiry
+  lease_expiry="$(neon_branch_lease_expiry)"
+  [ -n "$lease_expiry" ] || return 0
+  if neonctl branches set-expiration "$branch_id" \
+      --project-id "$NEON_PROJECT_ID" \
+      --expires-at "$lease_expiry" --output json > /dev/null; then
+    echo "  Lease renewed until $lease_expiry"
+  else
+    warn "Could not renew the Neon branch lease (continuing)"
+  fi
+}
+
 step_setup_neon_branch() {
   echo "🗄️  Setting up Neon branch..."
 
@@ -104,16 +128,23 @@ step_setup_neon_branch() {
   # Now safe to parse with jq - use // empty for fallback
   EXISTING_BRANCH=$(echo "$branches_output" | jq -r ".[] | select(.name == \"$WORKSPACE_NAME\") | .id // empty" 2>/dev/null)
 
+  local lease_expiry
+  lease_expiry="$(neon_branch_lease_expiry)"
+
   if [ -n "$EXISTING_BRANCH" ]; then
     echo "  Using existing Neon branch..."
     BRANCH_ID="$EXISTING_BRANCH"
+    renew_neon_branch_lease "$BRANCH_ID"
   else
     echo "  Creating new Neon branch..."
     local neon_output
+    local lease_args=()
+    [ -n "$lease_expiry" ] && lease_args=(--expires-at "$lease_expiry")
     # NO 2>&1 - keep stdout (JSON) and stderr (errors) separate
     if ! neon_output=$(neonctl branches create \
         --project-id "$NEON_PROJECT_ID" \
         --name "$WORKSPACE_NAME" \
+        ${lease_args[@]+"${lease_args[@]}"} \
         --output json); then
       error "Failed to create Neon branch (check output above)"
       return 1
@@ -201,13 +232,13 @@ assert_unique_ports() {
 }
 
 allocate_port_base() {
-  local alloc_file="$HOME/.superset/port-allocations.json"
-  local lock_dir="$HOME/.superset/port-allocations.lock"
+  local alloc_file="$(prod_app_home)/port-allocations.json"
+  local lock_dir="$(prod_app_home)/port-allocations.lock"
   local start=3000
   local range=20
 
   # Ensure directory and file exist
-  mkdir -p "$HOME/.superset"
+  mkdir -p "$(prod_app_home)"
   if [ ! -f "$alloc_file" ]; then
     echo '{}' > "$alloc_file"
   fi
@@ -300,7 +331,7 @@ step_write_env() {
     echo ""
     echo "# Workspace Identity"
     # Stable folder-derived identity (data dir, protocol scheme, Neon branch).
-    # The dev app reads its display title live from ~/.superset/host/*/host.db,
+    # The dev app reads its display title live from the app home's host/*/host.db,
     # so a later workspace rename never needs this file rewritten.
     write_env_var "SUPERSET_WORKSPACE_NAME" "${WORKSPACE_NAME:-$(basename "$PWD")}"
     write_env_var "SUPERSET_HOME_DIR" "$PWD/superset-dev-data"
@@ -461,7 +492,7 @@ step_setup_local_mcp() {
 step_seed_auth_token() {
   echo "🔑 Seeding auth token into superset-dev-data/..."
 
-  local source_token="$HOME/.superset/auth-token.enc"
+  local source_token="$(prod_app_home)/auth-token.enc"
   local dev_data_dir="superset-dev-data"
   local dest_token="$dev_data_dir/auth-token.enc"
 
@@ -493,7 +524,7 @@ step_seed_auth_token() {
 step_seed_host_dbs() {
   echo "🛰️  Seeding host-service DBs into superset-dev-data/host/..."
 
-  local source_root="$HOME/.superset/host"
+  local source_root="$(prod_app_home)/host"
   local dev_data_dir="superset-dev-data"
   local dest_root="$dev_data_dir/host"
   local force_overwrite="$FORCE_OVERWRITE_DATA"
@@ -583,7 +614,7 @@ step_seed_host_dbs() {
 step_seed_local_db() {
   echo "💾 Seeding local DB into superset-dev-data/..."
 
-  local source_db="$HOME/.superset/local.db"
+  local source_db="$(prod_app_home)/local.db"
   local dev_data_dir="superset-dev-data"
   local dest_db="$dev_data_dir/local.db"
   local force_overwrite="$FORCE_OVERWRITE_DATA"

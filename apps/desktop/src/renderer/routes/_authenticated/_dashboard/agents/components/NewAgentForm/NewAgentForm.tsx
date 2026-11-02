@@ -113,7 +113,7 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 
 	const selectedAgent = agents.find((agent) => agent.id === selectedAgentId);
 	const canChat =
-		useAcpChatEnabled() === "enabled" &&
+		useAcpChatEnabled() &&
 		!!selectedAgent &&
 		!!acpHarnessForPreset(selectedAgent.presetId);
 	const launchAsChat = canChat && asChat;

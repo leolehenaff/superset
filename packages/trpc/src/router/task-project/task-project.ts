@@ -23,9 +23,11 @@ import {
 } from "../../lib/document-files";
 import { nudge } from "../../lib/realtime";
 import { jwtProcedure } from "../../trpc";
+import { announceProjectTasks } from "../channel/channel-task";
 import {
 	assertTaskInOrganization,
 	taskColumns,
+	toAssignee,
 	toTaskChip,
 } from "../cloud-workspace/record";
 import { recordTaskActivity } from "../task/activity";
@@ -61,21 +63,6 @@ async function loadProject(ctx: { organizationIds: string[] }, id: string) {
 	}
 	assertMember(ctx.organizationIds, project.organizationId);
 	return project;
-}
-
-function toAssignee(task: {
-	assigneeId: string | null;
-	assigneeName: string | null;
-	assigneeImage: string | null;
-}) {
-	if (task.assigneeId && task.assigneeName) {
-		return {
-			id: task.assigneeId,
-			name: task.assigneeName,
-			image: task.assigneeImage,
-		};
-	}
-	return null;
 }
 
 export const taskProjectRouter = {
@@ -227,6 +214,7 @@ export const taskProjectRouter = {
 				);
 			}
 			nudge(project.organizationId, "cloud_workspaces");
+			await announceProjectTasks([project.id, previous?.projectId]);
 			return { added: true };
 		}),
 
@@ -252,6 +240,7 @@ export const taskProjectRouter = {
 				);
 			}
 			nudge(project.organizationId, "cloud_workspaces");
+			await announceProjectTasks([project.id]);
 			return { removed: true };
 		}),
 

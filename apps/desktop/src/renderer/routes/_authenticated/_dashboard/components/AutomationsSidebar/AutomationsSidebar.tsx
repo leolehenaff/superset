@@ -79,7 +79,12 @@ export function AutomationsSidebar() {
 	const sections = useMemo(() => {
 		const query = search.trim().toLowerCase();
 		const matching = [...automations]
-			.filter((a) => !query || a.name.toLowerCase().includes(query))
+			.filter(
+				(a) =>
+					!query ||
+					a.name.toLowerCase().includes(query) ||
+					a.group?.toLowerCase().includes(query),
+			)
 			.sort(
 				(a, b) =>
 					nextRunTime(a) - nextRunTime(b) || a.name.localeCompare(b.name),

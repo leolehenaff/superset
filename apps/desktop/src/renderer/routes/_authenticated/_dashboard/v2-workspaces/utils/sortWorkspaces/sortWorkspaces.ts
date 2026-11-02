@@ -1,5 +1,5 @@
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
-import type { V2WorkspacesSortMode } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
+import type { V2WorkspacesOrderBy } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
 
 /** Best-known activity timestamp: last agent event, else creation. */
 export function workspaceActivityAt(workspace: AccessibleV2Workspace): number {
@@ -14,32 +14,41 @@ function workspaceChurn(workspace: AccessibleV2Workspace): number {
 	return workspace.diffStats.additions + workspace.diffStats.deletions;
 }
 
-/** Shared by the list sections and board columns so both views order rows
- * identically. All modes are deterministic: ties fall back to activity. */
+function workspaceResources(
+	a: AccessibleV2Workspace,
+	b: AccessibleV2Workspace,
+): number {
+	return (
+		(b.resources?.memory ?? -1) - (a.resources?.memory ?? -1) ||
+		(b.resources?.cpu ?? -1) - (a.resources?.cpu ?? -1)
+	);
+}
+
+/** Newest activity first. Shared by the list sections and board columns so
+ * both views order rows identically. */
 export function compareWorkspaces(
 	a: AccessibleV2Workspace,
 	b: AccessibleV2Workspace,
-	mode: V2WorkspacesSortMode,
 ): number {
-	let cmp = 0;
-	switch (mode) {
-		case "activity":
-			break;
-		case "created":
-			cmp = b.createdAt.getTime() - a.createdAt.getTime();
-			break;
-		case "churn":
-			cmp = workspaceChurn(b) - workspaceChurn(a);
-			break;
-		case "resources":
-			cmp =
-				(b.resources?.memory ?? -1) - (a.resources?.memory ?? -1) ||
-				(b.resources?.cpu ?? -1) - (a.resources?.cpu ?? -1);
-			break;
-		case "name":
-			cmp = a.name.localeCompare(b.name);
-			break;
-	}
-	if (cmp !== 0) return cmp;
 	return workspaceActivityAt(b) - workspaceActivityAt(a);
+}
+
+export function compareWorkspacesBy(
+	orderBy: V2WorkspacesOrderBy,
+): (a: AccessibleV2Workspace, b: AccessibleV2Workspace) => number {
+	switch (orderBy) {
+		case "created":
+			return (a, b) => b.createdAt.getTime() - a.createdAt.getTime();
+		case "churn":
+			return (a, b) =>
+				workspaceChurn(b) - workspaceChurn(a) || compareWorkspaces(a, b);
+		case "resources":
+			return (a, b) => workspaceResources(a, b) || compareWorkspaces(a, b);
+		case "name":
+			return (a, b) =>
+				a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) ||
+				compareWorkspaces(a, b);
+		default:
+			return compareWorkspaces;
+	}
 }

@@ -1,14 +1,27 @@
 import { chmodSync, existsSync, mkdirSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
-import { SUPERSET_DIR_NAME } from "shared/constants";
+import { moveLegacyAppHome } from "@superset/agent-setup/legacy-home-move";
+import { resolveUserHomeDir } from "@superset/agent-setup/paths";
 import { getWorkspaceName } from "shared/env.shared";
 
-const SUPERSET_HOME_DIR_ENV = "SUPERSET_HOME_DIR";
+const workspace = getWorkspaceName();
+if (workspace && !process.env.SUPERSET_HOME_DIR?.trim()) {
+	process.env.SUPERSET_HOME_DIR = join(
+		resolveUserHomeDir(),
+		`.paradev-${workspace}`,
+	);
+}
+const appHome = moveLegacyAppHome();
+if (appHome.move === "moved") {
+	console.log("[app-environment] Moved the app home to", appHome.homeDir);
+} else if (appHome.move === "failed") {
+	console.warn(
+		"[app-environment] Could not move the app home; using",
+		appHome.homeDir,
+	);
+}
 
-export const SUPERSET_HOME_DIR =
-	process.env[SUPERSET_HOME_DIR_ENV] || join(homedir(), SUPERSET_DIR_NAME);
-process.env[SUPERSET_HOME_DIR_ENV] = SUPERSET_HOME_DIR;
+export const SUPERSET_HOME_DIR = appHome.homeDir;
 
 // The update feed serves official builds; a named build would update into one.
 if (getWorkspaceName()) process.env.DISABLE_UPDATE_CHECK ??= "1";
@@ -29,7 +42,7 @@ export function ensureSupersetHomeDirExists(): void {
 		chmodSync(SUPERSET_HOME_DIR, SUPERSET_HOME_DIR_MODE);
 	} catch (error) {
 		console.warn(
-			"[app-environment] Failed to chmod Superset home dir (best-effort):",
+			"[app-environment] Failed to chmod Paradev home dir (best-effort):",
 			SUPERSET_HOME_DIR,
 			error,
 		);

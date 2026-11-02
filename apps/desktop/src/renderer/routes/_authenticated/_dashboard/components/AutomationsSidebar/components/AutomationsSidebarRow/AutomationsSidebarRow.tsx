@@ -83,7 +83,11 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 				) : null}
 			</div>
 			<div className="flex min-w-0 items-center gap-1 pl-3.5 text-[11px] text-muted-foreground">
-				<span className="min-w-0 flex-1 truncate">{scheduleLabel}</span>
+				<span className="min-w-0 flex-1 truncate">
+					{automation.group
+						? `${automation.group} · ${scheduleLabel}`
+						: scheduleLabel}
+				</span>
 				{automation.targetHostId === CLOUD_HOST_ID ? (
 					<LuCloud className="size-3 shrink-0 opacity-70" />
 				) : projectName ? (
