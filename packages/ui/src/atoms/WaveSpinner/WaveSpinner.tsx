@@ -22,17 +22,23 @@ function cellOpacity(frame: number, diagonal: number): number {
 
 interface WaveSpinnerProps {
 	className?: string;
+	/** Shows every cell lit, without motion. */
+	still?: boolean;
 }
 
-export function WaveSpinner({ className }: WaveSpinnerProps) {
-	const [frame, setFrame] = useState(0);
+export function WaveSpinner({ className, still = false }: WaveSpinnerProps) {
+	const [frame, setFrame] = useState(still ? EMPTY_START_FRAME : 0);
 
 	useEffect(() => {
+		if (still) {
+			setFrame(EMPTY_START_FRAME);
+			return;
+		}
 		const interval = setInterval(() => {
 			setFrame((current) => (current + 1) % FRAMES_PER_LOOP);
 		}, FRAME_MS);
 		return () => clearInterval(interval);
-	}, []);
+	}, [still]);
 
 	return (
 		<span

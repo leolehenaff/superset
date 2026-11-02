@@ -7,6 +7,7 @@ import type { BoardColumnKey } from "renderer/routes/_authenticated/_dashboard/v
 interface BoardColumnIconProps {
 	column: BoardColumnKey;
 	className?: string;
+	still?: boolean;
 }
 
 /**
@@ -15,7 +16,11 @@ interface BoardColumnIconProps {
  * (CloudWorkspaceStatus): dots for waiting states, the wave for work in
  * progress. Every variant sits in one 12px box so headers line up.
  */
-export function BoardColumnIcon({ column, className }: BoardColumnIconProps) {
+export function BoardColumnIcon({
+	column,
+	className,
+	still,
+}: BoardColumnIconProps) {
 	return (
 		<span
 			aria-hidden
@@ -24,17 +29,23 @@ export function BoardColumnIcon({ column, className }: BoardColumnIconProps) {
 				className,
 			)}
 		>
-			<BoardColumnGlyph column={column} />
+			<BoardColumnGlyph column={column} still={still} />
 		</span>
 	);
 }
 
-function BoardColumnGlyph({ column }: { column: BoardColumnKey }) {
+function BoardColumnGlyph({
+	column,
+	still,
+}: {
+	column: BoardColumnKey;
+	still?: boolean;
+}) {
 	switch (column) {
 		case "attention":
 			return <span className="size-2 rounded-full bg-yellow-500" />;
 		case "working":
-			return <WaveSpinner className="text-amber-500" />;
+			return <WaveSpinner className="text-amber-500" still={still} />;
 		case "finished":
 			return <span className="size-2 rounded-full bg-success" />;
 		case "review":

@@ -49,7 +49,7 @@ export function AgentsSidebarSection({
 				aria-expanded={!isCollapsed}
 				className="group flex w-full items-center gap-2 rounded-md px-2 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
 			>
-				<AgentColumnIcon status={column} />
+				<AgentColumnIcon status={column} still={sessions.length === 0} />
 				{AGENT_COLUMN_LABELS[column]}
 				<span className="rounded-full bg-foreground/[0.07] px-1.5 text-[10px] tabular-nums normal-case tracking-normal">
 					{sessions.length}
