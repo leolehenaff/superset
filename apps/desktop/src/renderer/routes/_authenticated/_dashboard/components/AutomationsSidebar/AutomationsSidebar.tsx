@@ -138,6 +138,9 @@ export function AutomationsSidebar() {
 		if (dragged && !groups.some((section) => section.group === null)) {
 			groups.push({ group: null, items: [] });
 		}
+		const soonest = (items: AutomationListItem[]) =>
+			Math.min(Infinity, ...items.map(nextRunTime));
+		groups.sort((a, b) => soonest(a.items) - soonest(b.items));
 		const all: SidebarSection[] = [
 			{
 				key: "failed",
