@@ -1,20 +1,13 @@
 import { useCallback } from "react";
-import { cloudTrpc } from "renderer/lib/cloud-trpc";
+import { useAcpChatStore } from "renderer/stores/acp-chat";
 
 export function useAcpChatEnabled(): boolean {
-	const { data } = cloudTrpc.userSettings.get.useQuery();
-	return data?.experimentalChat === true;
+	return useAcpChatStore((state) => state.enabled) !== false;
 }
 
-/** For choosing chat or terminal at launch: waits for the setting instead of reading "off" while it loads. */
 export function useResolveAcpChatEnabled(): () => Promise<boolean> {
-	const utils = cloudTrpc.useUtils();
 	return useCallback(
-		() =>
-			utils.userSettings.get
-				.ensureData()
-				.then((settings) => settings.experimentalChat)
-				.catch(() => false),
-		[utils],
+		() => Promise.resolve(useAcpChatStore.getState().enabled !== false),
+		[],
 	);
 }

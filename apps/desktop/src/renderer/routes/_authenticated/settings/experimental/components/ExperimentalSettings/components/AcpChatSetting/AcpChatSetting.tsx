@@ -5,12 +5,14 @@ import { Switch } from "@superset/ui/switch";
 import { useAcpChatEnabled } from "renderer/hooks/useAcpChatEnabled";
 import { cloudTrpc } from "renderer/lib/cloud-trpc";
 import { HighlightText } from "renderer/routes/_authenticated/settings/components/HighlightText";
+import { useAcpChatStore } from "renderer/stores/acp-chat";
 import { useSettingsSearchQuery } from "renderer/stores/settings-state";
 
 export function AcpChatSetting() {
 	const { t } = useLingui();
 	const searchQuery = useSettingsSearchQuery();
-	const savedEnabled = useAcpChatEnabled();
+	const enabled = useAcpChatEnabled();
+	const setEnabled = useAcpChatStore((state) => state.setEnabled);
 	const utils = cloudTrpc.useUtils();
 	const updateSettings = cloudTrpc.userSettings.update.useMutation({
 		onSuccess: (settings) =>
@@ -18,9 +20,6 @@ export function AcpChatSetting() {
 		onError: () =>
 			toast.error(t({ message: "Couldn't update the Chat setting" })),
 	});
-	const enabled = updateSettings.isPending
-		? updateSettings.variables.experimentalChat === true
-		: savedEnabled;
 
 	return (
 		<div className="flex items-center justify-between gap-6">
@@ -41,10 +40,10 @@ export function AcpChatSetting() {
 			<Switch
 				id="acp-chat"
 				checked={enabled}
-				disabled={updateSettings.isPending}
-				onCheckedChange={(next) =>
-					updateSettings.mutate({ experimentalChat: next })
-				}
+				onCheckedChange={(next) => {
+					setEnabled(next);
+					updateSettings.mutate({ experimentalChat: next });
+				}}
 			/>
 		</div>
 	);
