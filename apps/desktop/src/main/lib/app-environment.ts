@@ -2,12 +2,16 @@ import { chmodSync, existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { SUPERSET_DIR_NAME } from "shared/constants";
+import { getWorkspaceName } from "shared/env.shared";
 
 const SUPERSET_HOME_DIR_ENV = "SUPERSET_HOME_DIR";
 
 export const SUPERSET_HOME_DIR =
 	process.env[SUPERSET_HOME_DIR_ENV] || join(homedir(), SUPERSET_DIR_NAME);
 process.env[SUPERSET_HOME_DIR_ENV] = SUPERSET_HOME_DIR;
+
+// The update feed serves official builds; a named build would update into one.
+if (getWorkspaceName()) process.env.DISABLE_UPDATE_CHECK ??= "1";
 
 export const SUPERSET_HOME_DIR_MODE = 0o700;
 export const SUPERSET_SENSITIVE_FILE_MODE = 0o600;
