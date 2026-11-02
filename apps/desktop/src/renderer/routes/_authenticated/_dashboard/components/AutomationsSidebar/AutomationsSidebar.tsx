@@ -1,3 +1,13 @@
+import {
+	DndContext,
+	type DragEndEvent,
+	type DragOverEvent,
+	DragOverlay,
+	type DragStartEvent,
+	MouseSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
 import type { RouterOutputs } from "@superset/trpc";
 import { Button } from "@superset/ui/button";
 import {
@@ -22,7 +32,11 @@ import { useRecentProjects } from "renderer/hooks/host-projects/useRecentProject
 import { useNow } from "renderer/hooks/useNow";
 import { authClient } from "renderer/lib/auth-client";
 import { cloudTrpc } from "renderer/lib/cloud-trpc";
+import { AutomationDragPreview } from "renderer/routes/_authenticated/_dashboard/automations/components/AutomationDragPreview";
 import { useCreateAutomation } from "renderer/routes/_authenticated/_dashboard/automations/hooks/useCreateAutomation";
+import { useSetAutomationGroup } from "renderer/routes/_authenticated/_dashboard/automations/hooks/useSetAutomationGroup";
+import { groupAutomations } from "renderer/routes/_authenticated/_dashboard/automations/utils/groupAutomations";
+import { snapToCursor } from "renderer/routes/_authenticated/_dashboard/automations/utils/snapToCursor";
 import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useFailedAutomations } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
 import { SidebarHeader } from "../SidebarHeader";
@@ -36,6 +50,25 @@ const FOOTER_LINK_CLASS =
 	"flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-colors";
 
 type AutomationListItem = RouterOutputs["automation"]["list"][number];
+
+interface SidebarSection {
+	key: string;
+	title: string;
+	dotClassName: string;
+	items: AutomationListItem[];
+	defaultCollapsed?: boolean;
+	dropGroup?: string | null;
+	showGroup?: boolean;
+}
+
+function swallowNextClick() {
+	const swallow = (event: MouseEvent) => {
+		event.stopPropagation();
+		event.preventDefault();
+	};
+	window.addEventListener("click", swallow, { capture: true, once: true });
+	setTimeout(() => window.removeEventListener("click", swallow, true), 0);
+}
 
 function nextRunTime(automation: AutomationListItem): number {
 	if (!automation.enabled || !automation.nextRunAt) return Infinity;
@@ -61,6 +94,12 @@ export function AutomationsSidebar() {
 	} = cloudTrpc.automation.list.useQuery(undefined, {
 		refetchInterval: 60_000,
 	});
+	const { setGroup } = useSetAutomationGroup();
+	const sensors = useSensors(
+		useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+	);
+	const [dragged, setDragged] = useState<AutomationListItem | null>(null);
+	const [overGroup, setOverGroup] = useState<string | null | undefined>();
 
 	const detailMatch = matchRoute({ to: "/automations/$automationId" });
 	const activeAutomationId =
@@ -76,7 +115,7 @@ export function AutomationsSidebar() {
 		[recentProjects],
 	);
 
-	const sections = useMemo(() => {
+	const sections = useMemo((): SidebarSection[] => {
 		const query = search.trim().toLowerCase();
 		const matching = [...automations]
 			.filter(
@@ -92,25 +131,25 @@ export function AutomationsSidebar() {
 		const mine = matching.filter(
 			(a) => !currentUserId || a.ownerUserId === currentUserId,
 		);
-		return [
+		const groups = groupAutomations(mine.filter((a) => !failedIds.has(a.id)));
+		if (dragged && !groups.some((section) => section.group === null)) {
+			groups.push({ group: null, items: [] });
+		}
+		const all: SidebarSection[] = [
 			{
 				key: "failed",
 				title: "En échec",
 				dotClassName: "bg-red-500",
 				items: mine.filter((a) => failedIds.has(a.id)),
+				showGroup: true,
 			},
-			{
-				key: "active",
-				title: "Actives",
-				dotClassName: "bg-emerald-500",
-				items: mine.filter((a) => a.enabled && !failedIds.has(a.id)),
-			},
-			{
-				key: "paused",
-				title: "En pause",
-				dotClassName: "bg-muted-foreground/40",
-				items: mine.filter((a) => !a.enabled && !failedIds.has(a.id)),
-			},
+			...groups.map(({ group, items }) => ({
+				key: `group:${group ?? ""}`,
+				title: group ?? "Sans groupe",
+				dotClassName: group ? "bg-violet-500" : "bg-muted-foreground/40",
+				items,
+				dropGroup: group,
+			})),
 			{
 				key: "team",
 				title: "Équipe",
@@ -119,9 +158,33 @@ export function AutomationsSidebar() {
 				items: currentUserId
 					? matching.filter((a) => a.ownerUserId !== currentUserId)
 					: [],
+				showGroup: true,
 			},
-		].filter((section) => section.items.length > 0);
-	}, [automations, search, currentUserId, failedIds]);
+		];
+		return all.filter(
+			(section) => section.items.length > 0 || section.dropGroup === null,
+		);
+	}, [automations, search, currentUserId, failedIds, dragged]);
+
+	const handleDragStart = ({ active }: DragStartEvent) => {
+		setDragged(automations.find((a) => a.id === active.id) ?? null);
+	};
+	const handleDragOver = ({ over }: DragOverEvent) => {
+		setOverGroup(over?.data.current?.group as string | null | undefined);
+	};
+	const handleDragEnd = ({ over }: DragEndEvent) => {
+		swallowNextClick();
+		const target = over?.data.current?.group as string | null | undefined;
+		const moving = dragged;
+		setDragged(null);
+		setOverGroup(undefined);
+		if (!moving || target === undefined || moving.group === target) return;
+		setGroup({ ids: [moving.id], name: moving.name, group: target });
+	};
+	const handleDragCancel = () => {
+		setDragged(null);
+		setOverGroup(undefined);
+	};
 
 	return (
 		<aside className={cn("flex h-full w-full flex-col", APP_CHASSIS_BG_CLASS)}>
@@ -196,32 +259,59 @@ export function AutomationsSidebar() {
 						</div>
 					)
 				) : (
-					<div className="flex flex-col gap-1.5">
-						{sections.map((section) => (
-							<AutomationsSidebarSection
-								key={section.key}
-								title={section.title}
-								count={section.items.length}
-								dotClassName={section.dotClassName}
-								defaultCollapsed={section.defaultCollapsed}
-							>
-								{section.items.map((automation) => (
-									<AutomationsSidebarRow
-										key={automation.id}
-										automation={automation}
-										projectName={
-											automation.v2ProjectId
-												? projectNameById.get(automation.v2ProjectId)
-												: undefined
-										}
-										lastRun={lastRunById.get(automation.id) ?? null}
-										now={now}
-										isActive={automation.id === activeAutomationId}
-									/>
-								))}
-							</AutomationsSidebarSection>
-						))}
-					</div>
+					<DndContext
+						sensors={sensors}
+						onDragStart={handleDragStart}
+						onDragOver={handleDragOver}
+						onDragEnd={handleDragEnd}
+						onDragCancel={handleDragCancel}
+					>
+						<div className="flex flex-col gap-1.5">
+							{sections.map((section) => (
+								<AutomationsSidebarSection
+									key={section.key}
+									sectionKey={section.key}
+									title={section.title}
+									count={section.items.length}
+									dotClassName={section.dotClassName}
+									defaultCollapsed={section.defaultCollapsed}
+									dropGroup={section.dropGroup}
+									isDropActive={
+										dragged !== null &&
+										section.dropGroup !== undefined &&
+										overGroup === section.dropGroup &&
+										dragged.group !== section.dropGroup
+									}
+								>
+									{section.items.map((automation) => (
+										<AutomationsSidebarRow
+											key={automation.id}
+											automation={automation}
+											projectName={
+												automation.v2ProjectId
+													? projectNameById.get(automation.v2ProjectId)
+													: undefined
+											}
+											lastRun={lastRunById.get(automation.id) ?? null}
+											now={now}
+											isActive={automation.id === activeAutomationId}
+											showGroup={section.showGroup ?? false}
+											draggable={
+												!currentUserId ||
+												automation.ownerUserId === currentUserId
+											}
+											dimmed={dragged?.id === automation.id}
+										/>
+									))}
+								</AutomationsSidebarSection>
+							))}
+						</div>
+						<DragOverlay dropAnimation={null} modifiers={[snapToCursor]}>
+							{dragged && (
+								<AutomationDragPreview name={dragged.name} count={1} />
+							)}
+						</DragOverlay>
+					</DndContext>
 				)}
 			</div>
 

@@ -1,3 +1,4 @@
+import { useDraggable } from "@dnd-kit/core";
 import { formatCompactRelativeTime } from "@superset/i18n/format";
 import { CLOUD_HOST_ID } from "@superset/shared/host-routing";
 import { describeSchedule } from "@superset/shared/rrule";
@@ -17,6 +18,9 @@ interface AutomationsSidebarRowProps {
 	lastRun: AutomationLastRun | null;
 	now: Date;
 	isActive: boolean;
+	showGroup: boolean;
+	draggable: boolean;
+	dimmed: boolean;
 }
 
 export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
@@ -25,8 +29,15 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 	lastRun,
 	now,
 	isActive,
+	showGroup,
+	draggable,
+	dimmed,
 }: AutomationsSidebarRowProps) {
 	const navigate = useNavigate();
+	const { setNodeRef, attributes, listeners } = useDraggable({
+		id: automation.id,
+		disabled: !draggable,
+	});
 	const scheduleLabel = automation.rrule
 		? describeSchedule(automation.rrule)
 		: automation.triggerCount > 0
@@ -42,6 +53,9 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 
 	return (
 		<button
+			ref={setNodeRef}
+			{...attributes}
+			{...listeners}
 			type="button"
 			onClick={() =>
 				navigate({
@@ -52,6 +66,7 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 			aria-current={isActive ? "page" : undefined}
 			className={cn(
 				"flex w-full flex-col gap-1 rounded-lg py-2 pr-2.5 pl-3 text-left ring-inset transition-colors",
+				dimmed && "opacity-40",
 				isActive
 					? "bg-background shadow-sm ring-1 ring-border"
 					: "hover:bg-fill-hover",
@@ -84,7 +99,7 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 			</div>
 			<div className="flex min-w-0 items-center gap-1 pl-3.5 text-[11px] text-muted-foreground">
 				<span className="min-w-0 flex-1 truncate">
-					{automation.group
+					{showGroup && automation.group
 						? `${automation.group} · ${scheduleLabel}`
 						: scheduleLabel}
 				</span>
