@@ -138,7 +138,9 @@ export function SessionQuotaBars({ stacked = false }: { stacked?: boolean }) {
 	const bars = SESSION_WINDOWS.flatMap(({ agent, label, windowId }) => {
 		const account = pickAccount(accounts, agent);
 		const window = account?.windows.find((w) => w.id === windowId);
-		return window ? [{ agent, label, windowId, window }] : [];
+		return window
+			? [{ agent, label, windowId, window, extraUsage: account?.extraUsage }]
+			: [];
 	});
 	if (bars.length === 0 && !rangeStats) return null;
 
@@ -231,7 +233,7 @@ export function SessionQuotaBars({ stacked = false }: { stacked?: boolean }) {
 							stacked ? "w-full flex-col gap-2 px-0.5" : "items-center gap-5",
 						)}
 					>
-						{bars.map(({ agent, label, windowId, window }) => (
+						{bars.map(({ agent, label, windowId, window, extraUsage }) => (
 							<div
 								key={`${agent}:${windowId}`}
 								className={cn(
@@ -268,6 +270,12 @@ export function SessionQuotaBars({ stacked = false }: { stacked?: boolean }) {
 										}}
 									/>
 								</div>
+								{window.usedPercent >= 100 && extraUsage ? (
+									<span className="text-[10px] tabular-nums text-muted-foreground">
+										supplément de {(extraUsage.usedCents / 100).toFixed(2)} $
+										sur {(extraUsage.limitCents / 100).toFixed(2)} $
+									</span>
+								) : null}
 							</div>
 						))}
 					</div>
