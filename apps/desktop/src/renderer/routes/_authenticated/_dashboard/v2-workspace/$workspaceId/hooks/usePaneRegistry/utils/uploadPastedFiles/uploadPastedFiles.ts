@@ -13,8 +13,7 @@ import { fileToBase64 } from "renderer/lib/file-to-base64";
 // The directory self-ignores (see the `.gitignore` write below) so
 // attachments never dirty git status.
 
-/** Collision-probe cap; matches the spirit of createUniqueEntry's bound. */
-const MAX_NAME_ATTEMPTS = 50;
+const MAX_NAME_ATTEMPTS = 10;
 
 // Same caps as the agent-launch adapter's attachment writer. The bytes are
 // FileReader-read and base64'd (~1.33x) in renderer memory, then travel as
@@ -77,7 +76,8 @@ function baseFileName(file: File, index: number): string {
  * against an in-memory set; pastes arrive one at a time across a session, so
  * probe the real directory instead (create-only writes report "exists") —
  * a second screenshot must never overwrite a path an earlier prompt already
- * references.
+ * references. A timestamp suffix keeps one probe enough however many
+ * screenshots the folder already holds.
  */
 async function writeUnique(
 	deps: UploadPastedFilesDeps,
@@ -87,7 +87,10 @@ async function writeUnique(
 	data: string,
 ): Promise<string> {
 	for (let attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt++) {
-		const fileName = attachmentNameWithSuffix(base, attempt);
+		const fileName =
+			attempt === 0
+				? base
+				: attachmentNameWithSuffix(base, Date.now() + attempt);
 		const outcome = await deps.writeFile({
 			workspaceId,
 			absolutePath: `${dirAbs}/${fileName}`,

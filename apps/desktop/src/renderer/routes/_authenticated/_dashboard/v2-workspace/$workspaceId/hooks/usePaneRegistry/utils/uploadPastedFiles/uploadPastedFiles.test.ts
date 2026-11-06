@@ -123,9 +123,15 @@ describe("uploadPastedFiles", () => {
 		});
 	});
 
-	it("never overwrites an earlier paste — collisions probe to a fresh _N name", async () => {
+	it("never overwrites an earlier paste, even with many earlier pastes", async () => {
 		const { deps, writes } = makeDeps({
-			existing: [`${DIR_ABS}/image.png`, `${DIR_ABS}/image_1.png`],
+			existing: [
+				`${DIR_ABS}/image.png`,
+				...Array.from(
+					{ length: 60 },
+					(_, i) => `${DIR_ABS}/image_${i + 1}.png`,
+				),
+			],
 		});
 
 		const paths = await uploadPastedFiles({
@@ -135,7 +141,9 @@ describe("uploadPastedFiles", () => {
 			files: [new File(["x"], "image.png", { type: "image/png" })],
 		});
 
-		expect(paths).toEqual([`${WORKSPACE_ATTACHMENTS_DIR}/image_2.png`]);
+		expect(paths[0]).toMatch(
+			new RegExp(`^${WORKSPACE_ATTACHMENTS_DIR}/image_\\d{13,}\\.png$`),
+		);
 		// Every probe was create-only; nothing was written over.
 		expect(writes.every((w) => w.options.overwrite === false)).toBe(true);
 	});
