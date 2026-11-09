@@ -64,6 +64,7 @@ import { renderBrowserTabIcon } from "./hooks/usePaneRegistry/components/Browser
 import { browserRuntimeRegistry } from "./hooks/usePaneRegistry/components/BrowserPane/browserRuntimeRegistry";
 import { usePullRequestPaneIntentOpener } from "./hooks/usePullRequestPaneIntentOpener";
 import { useRestoreExpandedPaneArea } from "./hooks/useRestoreExpandedPaneArea";
+import { useRightSidebarHotkeys } from "./hooks/useRightSidebarHotkeys";
 import { useRunPendingChatHandoff } from "./hooks/useRunPendingChatHandoff";
 import { useRunWorkspaceCreationPresets } from "./hooks/useRunWorkspaceCreationPresets";
 import { useShellInteractionPassthrough } from "./hooks/useShellInteractionPassthrough";
@@ -492,6 +493,9 @@ function V2WorkspaceContent() {
 	const onBeforeCloseRightTab = useTabCloseGuard(rightStore);
 	const onBeforeCloseBottomTab = useTabCloseGuard(bottomStore);
 	const activeAreaRef = useRef<PaneArea>("center");
+	const [focusedArea, setFocusedArea] = useState<PaneArea>("center");
+	const isRightAreaFocused =
+		isRightPaneAreaEnabled && sidebarOpen && focusedArea === "right";
 	const getCloseTarget = useCallback(() => {
 		if (isTerminalDrawerVisible && activeAreaRef.current === "bottom") {
 			return { store: bottomStore, onBeforeCloseTab: onBeforeCloseBottomTab };
@@ -535,6 +539,15 @@ function V2WorkspaceContent() {
 		getCloseTarget,
 		isSandbox,
 		isMobilePaneEnabled,
+	});
+	useRightSidebarHotkeys({
+		centerStore: store,
+		rightStore,
+		enabled: isRightPaneAreaEnabled,
+		isOpen: sidebarOpen,
+		isExpanded: rightPaneMode === "expanded",
+		open: openRightSidebar,
+		activeAreaRef,
 	});
 	useHotkey("QUICK_OPEN", handleQuickOpen);
 	useHotkey("NEW_CHAT", addChatTab);
@@ -597,6 +610,7 @@ function V2WorkspaceContent() {
 			toolbar={renderWorkspaceToolbar(true)}
 			isFullScreen={rightPaneMode === "expanded"}
 			onToggleFullScreen={toggleRightPaneAreaFullScreen}
+			isFocused={isRightAreaFocused}
 		/>
 	);
 
@@ -644,6 +658,7 @@ function V2WorkspaceContent() {
 							<WorkspaceSplitLayout
 								mode={rightPaneMode}
 								activeAreaRef={activeAreaRef}
+								onActiveAreaChange={setFocusedArea}
 								{...(isRightPaneAreaEnabled
 									? {
 											width: v2UserPreferences.rightPaneAreaWidth,
@@ -694,6 +709,7 @@ function V2WorkspaceContent() {
 									{
 										<Workspace<PaneViewerData>
 											key={workspaceId}
+											isFocused={!isRightAreaFocused}
 											registry={paneRegistry}
 											paneActions={defaultPaneActions}
 											contextMenuActions={centerContextMenuActions}
