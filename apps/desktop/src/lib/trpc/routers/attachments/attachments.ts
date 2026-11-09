@@ -7,7 +7,7 @@ import {
 } from "@superset/shared/attachment-limits";
 import {
 	attachmentFallbackName,
-	attachmentNameWithSuffix,
+	attachmentProbeName,
 	sanitizeAttachmentFileName,
 	WORKSPACE_ATTACHMENTS_DIR,
 } from "@superset/shared/workspace-attachments";
@@ -16,7 +16,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { publicProcedure, router } from "../..";
 
-const MAX_NAME_ATTEMPTS = 50;
+const MAX_NAME_ATTEMPTS = 10;
 
 const itemSchema = z.discriminatedUnion("kind", [
 	z.object({ kind: z.literal("path"), sourcePath: z.string().min(1) }),
@@ -96,7 +96,7 @@ async function writeUnique(
 	base: string,
 ): Promise<string> {
 	for (let attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt++) {
-		const fileName = attachmentNameWithSuffix(base, attempt);
+		const fileName = attachmentProbeName(base, attempt);
 		try {
 			await writeExclusive(item, join(directory, fileName));
 			return fileName;

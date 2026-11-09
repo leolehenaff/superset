@@ -3,6 +3,7 @@ import {
 	assignAttachmentFileName,
 	attachmentFallbackName,
 	attachmentNameWithSuffix,
+	attachmentProbeName,
 	sanitizeAttachmentFileName,
 } from "./workspace-attachments";
 
@@ -111,5 +112,12 @@ describe("assignAttachmentFileName", () => {
 		expect(
 			assignAttachmentFileName({ rawName: undefined, index: 1, used }),
 		).toBe("attachment_2_1");
+	});
+});
+
+describe("attachmentProbeName", () => {
+	it("keeps the base first, then a timestamp suffix", () => {
+		expect(attachmentProbeName("image.png", 0)).toBe("image.png");
+		expect(attachmentProbeName("image.png", 1)).toMatch(/^image_\d{13,}\.png$/);
 	});
 });

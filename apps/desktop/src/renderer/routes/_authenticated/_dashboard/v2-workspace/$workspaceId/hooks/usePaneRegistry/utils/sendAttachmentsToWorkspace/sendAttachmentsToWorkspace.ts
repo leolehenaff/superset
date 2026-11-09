@@ -8,7 +8,7 @@ import {
 } from "@superset/shared/attachment-limits";
 import {
 	attachmentFallbackName,
-	attachmentNameWithSuffix,
+	attachmentProbeName,
 	sanitizeAttachmentFileName,
 	WORKSPACE_ATTACHMENTS_DIR,
 	WORKSPACE_ATTACHMENTS_GITIGNORE,
@@ -111,7 +111,7 @@ const MIME_EXTENSIONS: Record<string, string> = {
 };
 
 const FALLBACK_CONTENT_TYPE = "application/octet-stream";
-const MAX_NAME_ATTEMPTS = 50;
+const MAX_NAME_ATTEMPTS = 10;
 
 /**
  * Clipboard files keep their name when they have one (Chromium synthesizes
@@ -253,7 +253,7 @@ async function writeUnique(
 	data: string,
 ): Promise<string> {
 	for (let attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt++) {
-		const fileName = attachmentNameWithSuffix(base, attempt);
+		const fileName = attachmentProbeName(base, attempt);
 		const outcome = await deps.writeFile({
 			workspaceId,
 			absolutePath: `${dirAbs}/${fileName}`,

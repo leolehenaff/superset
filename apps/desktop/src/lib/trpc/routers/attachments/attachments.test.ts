@@ -70,8 +70,9 @@ describe("writeAttachmentsIntoWorktree", () => {
 
 		await writeAttachmentsIntoWorktree({ worktreePath, items });
 		writeFileSync(source, "second");
-		expect(await writeAttachmentsIntoWorktree({ worktreePath, items })).toEqual(
-			{ ok: true, paths: [`${WORKSPACE_ATTACHMENTS_DIR}/build_1.dmg`] },
+		const second = await writeAttachmentsIntoWorktree({ worktreePath, items });
+		expect(second.ok && second.paths[0]).toMatch(
+			new RegExp(`^${WORKSPACE_ATTACHMENTS_DIR}/build_\\d{13,}\\.dmg$`),
 		);
 		expect(readFileSync(join(directory, "build.dmg"), "utf8")).toBe("first");
 	});

@@ -60,6 +60,17 @@ export function attachmentNameWithSuffix(
 }
 
 /**
+ * Candidate name for a create-only write into a directory that may already
+ * hold many attachments: the base, then a timestamp suffix, so one probe is
+ * enough however many files share the base.
+ */
+export function attachmentProbeName(base: string, attempt: number): string {
+	return attempt === 0
+		? base
+		: attachmentNameWithSuffix(base, Date.now() + attempt);
+}
+
+/**
  * Assign a collision-free name within one batch, recording it in `used`.
  * Deterministic for a given input list — writers and prompt renderers call
  * this with the same list and get the same names.

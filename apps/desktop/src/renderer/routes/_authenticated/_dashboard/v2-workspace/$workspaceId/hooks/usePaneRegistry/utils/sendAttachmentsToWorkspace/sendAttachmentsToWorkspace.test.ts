@@ -279,16 +279,22 @@ describe("sendAttachmentsToWorkspace", () => {
 		expect(paths).toEqual([`${WORKSPACE_ATTACHMENTS_DIR}/shot.png`]);
 	});
 
-	it("never overwrites a path an earlier paste already wrote", async () => {
-		const { deps } = makeDeps({ existing: new Set([`${DIR}/shot.png`]) });
-		expect(
-			await sendAttachmentsToWorkspace({
-				deps,
-				route: "remote",
-				workspaceId: "ws-1",
-				files: [png("shot.png")],
-			}),
-		).toEqual([`${WORKSPACE_ATTACHMENTS_DIR}/shot_1.png`]);
+	it("never overwrites a path an earlier paste already wrote, even after many pastes", async () => {
+		const { deps } = makeDeps({
+			existing: new Set([
+				`${DIR}/shot.png`,
+				...Array.from({ length: 60 }, (_, i) => `${DIR}/shot_${i + 1}.png`),
+			]),
+		});
+		const [path] = await sendAttachmentsToWorkspace({
+			deps,
+			route: "remote",
+			workspaceId: "ws-1",
+			files: [png("shot.png")],
+		});
+		expect(path).toMatch(
+			new RegExp(`^${WORKSPACE_ATTACHMENTS_DIR}/shot_\\d{13,}\\.png$`),
+		);
 	});
 
 	it("refuses a relay-reached host a file over the inline cap", async () => {
