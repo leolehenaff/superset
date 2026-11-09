@@ -21,6 +21,8 @@ import {
 	WorkspaceSidebarPanel,
 } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useHistoryNavigationShortcuts } from "renderer/routes/_authenticated/_dashboard/hooks/useHistoryNavigationShortcuts";
+import { useOpenNewWorkspaceInViewedProject } from "renderer/routes/_authenticated/_dashboard/hooks/useOpenNewWorkspaceInViewedProject";
+import { useChatTabsStore } from "renderer/routes/_authenticated/_dashboard/stores/chatTabsStore";
 import { useCloudSidebarStore } from "renderer/routes/_authenticated/_dashboard/stores/cloudSidebarStore";
 import { useDevSeedV2Sidebar } from "renderer/routes/_authenticated/hooks/useDevSeedV2Sidebar";
 import { useHostWorkspaces } from "renderer/routes/_authenticated/providers/HostWorkspacesProvider";
@@ -82,6 +84,7 @@ function DashboardLayout() {
 		const stopAutomationFailuresSync = syncPersistedStoreAcrossWindows(
 			useAutomationFailuresStore,
 		);
+		const stopChatTabsSync = syncPersistedStoreAcrossWindows(useChatTabsStore);
 
 		return () => {
 			stopWorkspaceSidebarSync();
@@ -89,6 +92,7 @@ function DashboardLayout() {
 			stopAgentStateSync();
 			stopCloudSidebarSync();
 			stopAutomationFailuresSync();
+			stopChatTabsSync();
 		};
 	}, []);
 	// Get current workspace from route to pre-select project in new workspace modal
@@ -127,6 +131,7 @@ function DashboardLayout() {
 				: null,
 		[hostWorkspaces, currentV2WorkspaceId],
 	);
+	const openNewWorkspaceInViewedProject = useOpenNewWorkspaceInViewedProject();
 	useWorkspaceNamingFailedToast();
 
 	const toggleWorkspaceSidebarCollapsed = useWorkspaceSidebarStore(
@@ -144,9 +149,9 @@ function DashboardLayout() {
 	});
 	useHotkey("TOGGLE_WORKSPACE_SIDEBAR", toggleWorkspaceSidebarCollapsed);
 	useHotkey("NEW_WORKSPACE", () =>
-		openNewWorkspace(
-			currentWorkspace?.projectId ?? currentV2Workspace?.projectId ?? undefined,
-		),
+		currentWorkspace?.projectId
+			? openNewWorkspace(currentWorkspace.projectId)
+			: openNewWorkspaceInViewedProject(),
 	);
 	useHotkey(
 		"QUICK_CREATE_WORKSPACE",

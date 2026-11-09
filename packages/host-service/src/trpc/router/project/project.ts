@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { basename, resolve as resolvePath } from "node:path";
 import {
 	type ParsedGitHubRemote,
@@ -5,12 +6,13 @@ import {
 } from "@superset/shared/github-remote";
 import { BRANCH_PREFIX_MODES } from "@superset/shared/workspace-launch";
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { z } from "zod";
-import { projects } from "../../../db/schema";
+import { projects, workspaces } from "../../../db/schema";
 import type { TagSettingSnapshot } from "../../../events/types";
 import {
 	emitProjectChanged,
+	getLiveProjectAtPath,
 	getLocalProject,
 	toProjectSnapshot,
 	updateLocalProject,
@@ -19,6 +21,7 @@ import {
 	listDeletedProjects,
 	purgeDeletedProject,
 	readDeletionImpact,
+	repoTakenError,
 	restoreProject,
 	softDeleteProject,
 } from "../../../projects/project-deletion";
@@ -28,14 +31,23 @@ import {
 	getAllTagFolderSettings,
 	upsertTagFolderSetting,
 } from "../../../tag-folders";
+import { getStrictShellEnvironment } from "../../../terminal/clean-shell-env";
+import { gitDetectExternalWorktreesTask } from "../../../workers/tasks/git";
 import { updateLocalWorkspace } from "../../../workspaces/local-workspace-store";
-import { machineOnlyProcedure, protectedProcedure, router } from "../../index";
+import {
+	machineOnlyProcedure,
+	protectedProcedure,
+	queryProcedure,
+	router,
+} from "../../index";
+import { offLoop } from "../../off-loop";
 import { projectDirExists } from "../workspace-creation/shared/local-project";
 import {
 	normalizeSparseCheckoutPaths,
 	parseSparseCheckoutPaths,
 	serializeSparseCheckoutPaths,
 } from "../workspace-creation/shared/sparse-checkout";
+import { normalizeWorktreePath } from "../workspace-creation/shared/worktree-list";
 import { normalizeWorktreeBaseDir } from "../workspace-creation/shared/worktree-paths";
 import {
 	createFromClone,
@@ -498,14 +510,7 @@ export const projectRouter = router({
 				!!cloneUrl &&
 				cloneUrl.toLowerCase() === expectedUrlLower;
 
-			const localProject = ctx.db.query.projects
-				.findFirst({
-					where: and(
-						eq(projects.repoPath, gitRoot),
-						isNull(projects.deletedAt),
-					),
-				})
-				.sync();
+			const localProject = getLiveProjectAtPath(ctx.db, gitRoot);
 
 			// A local-DB row keyed by this repo's git root is authoritative:
 			// the repo is already a v2 project on this device ("local is
@@ -800,17 +805,9 @@ export const projectRouter = router({
 					// would clobber the first. Cloud-side GitHub URL collisions
 					// are allowed (see findBackfillConflict), but local-path
 					// collisions are not.
-					const localOwner = ctx.db
-						.select({ id: projects.id })
-						.from(projects)
-						.where(eq(projects.repoPath, resolved.repoPath))
-						.get();
+					const localOwner = getLiveProjectAtPath(ctx.db, resolved.repoPath);
 					if (localOwner && localOwner.id !== input.projectId) {
-						throw new TRPCError({
-							code: "CONFLICT",
-							message:
-								"Repository is already set up as another project on this device.",
-						});
+						throw repoTakenError();
 					}
 
 					rejectIfRepoint(resolved.repoPath);
@@ -876,6 +873,30 @@ export const projectRouter = router({
 		}),
 
 	listDeleted: protectedProcedure.query(({ ctx }) => listDeletedProjects(ctx)),
+
+	/** Git worktrees that other agent tools (Conductor, T3 Code, Orca, …) left on
+	 * this machine and no workspace tracks yet, grouped by repository. */
+	detectExternalWorktrees: queryProcedure.query(async (args) => ({
+		repos: await offLoop({
+			task: gitDetectExternalWorktreesTask,
+			prepare: async ({ ctx }) => ({
+				homeDir: homedir(),
+				trackedWorktreePaths: ctx.db
+					.select({ worktreePath: workspaces.worktreePath })
+					.from(workspaces)
+					.leftJoin(projects, eq(projects.id, workspaces.projectId))
+					.where(
+						or(isNull(workspaces.archivedAt), isNotNull(projects.deletedAt)),
+					)
+					.all()
+					.map((row) => normalizeWorktreePath(row.worktreePath)),
+				gitEnv: await getStrictShellEnvironment().catch(
+					() => process.env as Record<string, string>,
+				),
+			}),
+			options: () => ({ timeoutMs: 4_000 }),
+		})(args),
+	})),
 
 	deletionImpact: protectedProcedure
 		.input(z.object({ projectId: z.string().uuid() }))

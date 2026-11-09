@@ -2,6 +2,7 @@ import { msg } from "@lingui/core/macro";
 import { i18n } from "@superset/i18n";
 import type { PortChangedPayload } from "@superset/workspace-client";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useMatchRoute } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { useHostProjects } from "renderer/hooks/host-projects/useHostProjects";
 import { useKnownHosts } from "renderer/hooks/known-hosts/useKnownHosts";
@@ -11,6 +12,7 @@ import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
 import { useVisibleSidebarWorkspaceIds } from "renderer/routes/_authenticated/hooks/useVisibleSidebarWorkspaceIds";
 import { useHostWorkspaces } from "renderer/routes/_authenticated/providers/HostWorkspacesProvider";
 import { useLocalHostService } from "renderer/routes/_authenticated/providers/LocalHostServiceProvider";
+import { useSandboxAccess } from "renderer/routes/_authenticated/providers/SandboxAccessProvider";
 import {
 	applyPortEventsToHostPortsResult,
 	type DashboardSidebarPortGroup,
@@ -43,8 +45,23 @@ export function useDashboardSidebarPortsData(enabled = true): {
 
 	const { hosts, organizationId: knownHostsOrgId } = useKnownHosts();
 
+	const { targets: sandboxes } = useSandboxAccess();
+	const openMatch = useMatchRoute()({
+		to: "/v2-workspace/$workspaceId",
+		fuzzy: true,
+	});
+	const openWorkspaceId = openMatch ? openMatch.workspaceId : undefined;
+	const openSandbox = useMemo(
+		() =>
+			sandboxes.find((sandbox) => sandbox.workspaceId === openWorkspaceId) ??
+			null,
+		[sandboxes, openWorkspaceId],
+	);
+
 	const { workspaces: allWorkspaces } = useHostWorkspaces();
 	const { projects } = useHostProjects();
+	// A cloud workspace's row comes from the cloud list, not a sidebar
+	// placement, so the open one is kept by id.
 	const workspaces = useMemo(() => {
 		const projectNames = new Map(
 			projects.map((project) => [project.projectKey, project.name]),
@@ -53,7 +70,8 @@ export function useDashboardSidebarPortsData(enabled = true): {
 			.filter(
 				(workspace) =>
 					workspace.hostId === machineId ||
-					visibleWorkspaceIds.has(workspace.id),
+					visibleWorkspaceIds.has(workspace.id) ||
+					workspace.id === openSandbox?.workspaceId,
 			)
 			.map((workspace) => ({
 				id: workspace.id,
@@ -65,7 +83,7 @@ export function useDashboardSidebarPortsData(enabled = true): {
 						: workspace.name,
 				hostId: workspace.hostId,
 			}));
-	}, [allWorkspaces, projects, visibleWorkspaceIds, machineId]);
+	}, [allWorkspaces, projects, visibleWorkspaceIds, machineId, openSandbox]);
 
 	// Skip per-host queries, polling, and `port:changed` subscriptions when
 	// nothing will render ports (e.g. inline mode with the sidebar collapsed).
@@ -82,10 +100,12 @@ export function useDashboardSidebarPortsData(enabled = true): {
 						relayUrl,
 						workspaces,
 						fallbackOrganizationId: knownHostsOrgId,
+						openSandbox,
 					})
 				: [],
 		[
 			enabled,
+			openSandbox,
 			activeHostUrl,
 			hosts,
 			knownHostsOrgId,
