@@ -114,9 +114,6 @@ describe("Tasks and pull requests navigation", () => {
 		);
 
 		const v2Sources = [
-			readComponent(
-				"../../../components/DashboardSidebar/components/DashboardSidebarHeader/DashboardSidebarHeader.tsx",
-			),
 			readComponent("../../../components/NavigationRail/NavigationRail.tsx"),
 		];
 		for (const source of v2Sources) {
