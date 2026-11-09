@@ -13,11 +13,11 @@ import type { Configuration } from "electron-builder";
 import baseConfig from "./electron-builder";
 import pkg from "./package.json";
 
-const productName = "Superset Leo";
+const productName = "Hive";
 
 const config: Configuration = {
 	...baseConfig,
-	appId: "com.superset.desktop.leo-fork",
+	appId: "com.leolehenaff.hive",
 	productName,
 	publish: null,
 
@@ -33,7 +33,7 @@ const config: Configuration = {
 		identity: "-",
 		hardenedRuntime: false,
 		notarize: false,
-		artifactName: `Superset-Leo-\${version}-\${arch}.\${ext}`,
+		artifactName: `Hive-\${version}-\${arch}.\${ext}`,
 		extendInfo: {
 			...baseConfig.mac?.extendInfo,
 			CFBundleName: productName,
