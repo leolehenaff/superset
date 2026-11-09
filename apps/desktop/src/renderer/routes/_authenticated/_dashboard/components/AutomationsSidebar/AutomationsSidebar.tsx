@@ -62,6 +62,7 @@ interface SidebarSection {
 	defaultCollapsed?: boolean;
 	dropGroup?: string | null;
 	showGroup?: boolean;
+	archived?: boolean;
 }
 
 function swallowNextClick() {
@@ -97,6 +98,10 @@ export function AutomationsSidebar() {
 	} = cloudTrpc.automation.list.useQuery(undefined, {
 		refetchInterval: 60_000,
 	});
+	const { data: archivedAutomations = [] } = cloudTrpc.automation.list.useQuery(
+		{ archived: true },
+		{ refetchInterval: 60_000, staleTime: 30_000 },
+	);
 	const { setGroup } = useSetAutomationGroup();
 	const sensors = useSensors(
 		useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -166,11 +171,29 @@ export function AutomationsSidebar() {
 					: [],
 				showGroup: true,
 			},
+			{
+				key: "archived",
+				title: "Archivées",
+				dotClassName: "bg-muted-foreground/40",
+				defaultCollapsed: true,
+				items: archivedAutomations.filter(
+					(a) => !query || a.name.toLowerCase().includes(query),
+				),
+				showGroup: true,
+				archived: true,
+			},
 		];
 		return all.filter(
 			(section) => section.items.length > 0 || section.dropGroup === null,
 		);
-	}, [automations, search, currentUserId, failedIds, dragged]);
+	}, [
+		automations,
+		archivedAutomations,
+		search,
+		currentUserId,
+		failedIds,
+		dragged,
+	]);
 
 	const groups = useMemo(
 		() => listAutomationGroups(automations),
@@ -315,8 +338,9 @@ export function AutomationsSidebar() {
 											groups={groups}
 											onMoveToGroup={moveToGroup}
 											editable={
-												!currentUserId ||
-												automation.ownerUserId === currentUserId
+												!section.archived &&
+												(!currentUserId ||
+													automation.ownerUserId === currentUserId)
 											}
 											dimmed={dragged?.id === automation.id}
 										/>
