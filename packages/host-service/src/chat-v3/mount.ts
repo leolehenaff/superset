@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { NodeWebSocket } from "@hono/node-ws";
@@ -27,6 +27,7 @@ import { HOST_CHAT_RESUME_MARKER_FILE } from "@superset/shared/host-version";
 import type { Hono, MiddlewareHandler } from "hono";
 import type { HostDb } from "../db";
 import { reportAttachmentResolveFailure } from "../sentry";
+import type { TerminalAgentBinding } from "../terminal-agents/types";
 import { storedChatConfig } from "../trpc/router/agents/agents";
 import { importCloudAttachments } from "../trpc/router/attachments/attachments";
 import type { ApiClient } from "../types";
@@ -51,6 +52,16 @@ import {
 const RECORD_DEBOUNCE_MS = 300;
 
 const CLOSED_CHATS_FILE = "chat-closed-mid-turn.json";
+const BOUND_CHATS_FILE = "chat-agents.json";
+
+function readBoundChats(path: string): TerminalAgentBinding[] {
+	try {
+		const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+		return Array.isArray(parsed) ? parsed : [];
+	} catch {
+		return [];
+	}
+}
 
 export const CHAT_V3_TRPC_PATH = "/chat-v3/trpc";
 export const CHAT_V3_STREAM_PATH = "/chat-v3/sessions/:sessionId/stream";
@@ -162,6 +173,7 @@ export function createChatV3Mount(options: {
 		HOST_CHAT_RESUME_MARKER_FILE,
 	);
 	const closedChatsPath = join(dirname(options.dbPath), CLOSED_CHATS_FILE);
+	const boundChatsPath = join(dirname(options.dbPath), BOUND_CHATS_FILE);
 
 	let recordTimer: ReturnType<typeof setTimeout> | null = null;
 	/**
@@ -219,7 +231,12 @@ export function createChatV3Mount(options: {
 			),
 			observer,
 			checkpoints: createGitCheckpoints(),
-			onSessionChanged: options.onSessionChanged,
+			onSessionChanged: (change) => {
+				options.onSessionChanged?.(change);
+				if (built?.sessions.get(change.sessionId)?.closedAt) {
+					options.agents?.closed(change.sessionId);
+				}
+			},
 			onAppend: options.onAppend,
 		});
 		return built;
@@ -242,6 +259,11 @@ export function createChatV3Mount(options: {
 			await built?.commands.closeScope(scopeId);
 		},
 		resumeAfterUpdate: () => {
+			for (const binding of readBoundChats(boundChatsPath)) {
+				if (typeof binding?.chatSessionId !== "string") continue;
+				const row = runtime().sessions.get(binding.chatSessionId);
+				if (row && !row.closedAt) options.agents?.restored(binding);
+			}
 			const update = resumeUnfinishedChats({
 				markerPath,
 				runtime,
@@ -272,6 +294,14 @@ export function createChatV3Mount(options: {
 		resumeClosedMidTurn: () => closedChats.resume(),
 		keepClosedMidTurnPaused: () => closedChats.keepPaused(),
 		recordUnfinished: () => {
+			try {
+				writeFileSync(
+					boundChatsPath,
+					JSON.stringify(options.agents?.boundChats() ?? []),
+				);
+			} catch (error) {
+				console.warn("[chat-v3] could not record the open chats", error);
+			}
 			if (!built || !recordUnfinishedChats(built, markerPath)) {
 				const recorded = recordClosed();
 				console.log(

@@ -15,6 +15,7 @@ import {
 } from "@superset/shared/agent-catalog";
 import type { AgentLifecycleEventType } from "../events";
 import { chatPortTerminalIds, portManager } from "../ports/port-manager";
+import type { TerminalAgentBinding } from "../terminal-agents/types";
 import { fanOutAgentLifecycle } from "../trpc/router/notifications/fan-out-agent-lifecycle";
 import type { SessionAccount } from "../trpc/router/usage/session-account/session-account";
 import type { HostServiceContext } from "../types";
@@ -75,6 +76,11 @@ export type ChatAgentBridge = LiveSessionObserver & {
 	accountCaptured(sessionId: string, account: SessionAccount): void;
 	/** A chat Paradev closed mid-turn, shown as unseen until someone looks. */
 	closedMidTurn(chat: ClosedChat): void;
+	boundChats(): TerminalAgentBinding[];
+	/** A chat open at the last shutdown, listed until its pane starts it again. */
+	restored(binding: TerminalAgentBinding): void;
+	/** A chat closed while no harness ran for it. */
+	closed(sessionId: string): void;
 };
 
 export function agentIdForHarness(
@@ -320,6 +326,32 @@ export function createChatAgentBridge(
 				occurredAt: Date.now(),
 			});
 			bindingsChanged(closed.scopeId);
+		},
+
+		boundChats: () => ctx.terminalAgentStore.listChats(),
+
+		restored(binding) {
+			if (!binding.chatSessionId) return;
+			ctx.terminalAgentStore.recordChatEvent({
+				terminalId: binding.terminalId,
+				workspaceId: binding.workspaceId,
+				eventType: binding.lastEventType,
+				agentId: binding.agentId,
+				agentSessionId: binding.agentSessionId,
+				chatSessionId: binding.chatSessionId,
+				...(binding.account ? { account: binding.account } : {}),
+				occurredAt: binding.lastEventAt,
+			});
+			bindingsChanged(binding.workspaceId);
+		},
+
+		closed(sessionId) {
+			const binding = ctx.terminalAgentStore
+				.listChats()
+				.find((chat) => chat.chatSessionId === sessionId);
+			if (!binding) return;
+			ctx.terminalAgentStore.endChat(binding.terminalId);
+			bindingsChanged(binding.workspaceId);
 		},
 
 		stopped(sessionId) {

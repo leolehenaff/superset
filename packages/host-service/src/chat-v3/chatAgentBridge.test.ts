@@ -85,6 +85,25 @@ describe("createChatAgentBridge", () => {
 		expect(terminalAgentStore.listByWorkspace(WORKSPACE)).toEqual([]);
 	});
 
+	it("lists a chat open at the last shutdown again, until it is closed", () => {
+		const first = setup();
+		first.start("chat-1");
+		first.status("chat-1", "running");
+		first.status("chat-1", "idle");
+		const [saved] = JSON.parse(JSON.stringify(first.bridge.boundChats()));
+
+		const { bridge, terminalAgentStore } = setup();
+		bridge.restored(saved);
+		expect(terminalAgentStore.getChat(TERMINAL)).toMatchObject({
+			chatSessionId: "chat-1",
+			lastEventType: "Stop",
+			lastEventAt: saved.lastEventAt,
+		});
+
+		bridge.closed("chat-1");
+		expect(terminalAgentStore.getChat(TERMINAL)).toBeUndefined();
+	});
+
 	it("reports a turn as Start then Stop with the agent's reply", () => {
 		const { bridge, lifecycle, status, reply, start } = setup();
 		start("chat-1");
