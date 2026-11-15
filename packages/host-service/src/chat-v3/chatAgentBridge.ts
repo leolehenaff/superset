@@ -211,6 +211,14 @@ export function createChatAgentBridge(
 					? { agentSessionId: options.resume.harnessSessionId }
 					: {}),
 			};
+			for (const stale of ctx.terminalAgentStore.listChats()) {
+				if (
+					stale.chatSessionId === options.sessionId &&
+					stale.terminalId !== chat.terminalId
+				) {
+					ctx.terminalAgentStore.endChat(stale.terminalId);
+				}
+			}
 			chats.set(options.sessionId, chat);
 			sessionByTerminal.set(chat.terminalId, options.sessionId);
 			chatPortTerminalIds.add(chat.terminalId);
@@ -346,12 +354,11 @@ export function createChatAgentBridge(
 		},
 
 		closed(sessionId) {
-			const binding = ctx.terminalAgentStore
-				.listChats()
-				.find((chat) => chat.chatSessionId === sessionId);
-			if (!binding) return;
-			ctx.terminalAgentStore.endChat(binding.terminalId);
-			bindingsChanged(binding.workspaceId);
+			for (const binding of ctx.terminalAgentStore.listChats()) {
+				if (binding.chatSessionId !== sessionId) continue;
+				ctx.terminalAgentStore.endChat(binding.terminalId);
+				bindingsChanged(binding.workspaceId);
+			}
 		},
 
 		stopped(sessionId) {

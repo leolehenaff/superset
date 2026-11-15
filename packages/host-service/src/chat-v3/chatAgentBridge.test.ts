@@ -104,6 +104,23 @@ describe("createChatAgentBridge", () => {
 		expect(terminalAgentStore.getChat(TERMINAL)).toBeUndefined();
 	});
 
+	it("drops a restored chat when its pane starts it in another terminal", () => {
+		const { bridge, terminalAgentStore, start } = setup();
+		bridge.restored({
+			terminalId: "old-terminal",
+			workspaceId: WORKSPACE,
+			agentId: "claude",
+			chatSessionId: "chat-1",
+			startedAt: 0,
+			lastEventAt: 0,
+			lastEventType: "Stop",
+		});
+		start("chat-1");
+		expect(terminalAgentStore.listChats()).toMatchObject([
+			{ terminalId: TERMINAL, chatSessionId: "chat-1" },
+		]);
+	});
+
 	it("reports a turn as Start then Stop with the agent's reply", () => {
 		const { bridge, lifecycle, status, reply, start } = setup();
 		start("chat-1");

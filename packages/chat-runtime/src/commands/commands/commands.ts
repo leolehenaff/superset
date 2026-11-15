@@ -974,7 +974,9 @@ export function createCommands(options: CommandsOptions): ChatCommands {
 
 		async closeSession(input) {
 			const parsed: CloseSessionInput = closeSessionInputSchema.parse(input);
-			const wasLive = options.live.get(parsed.sessionId) !== null;
+			const firstClose =
+				options.live.get(parsed.sessionId) !== null ||
+				!options.sessions.get(parsed.sessionId)?.closedAt;
 			options.sessions.markClosed(parsed.sessionId, {
 				byUser: parsed.userClosed === true,
 			});
@@ -986,7 +988,7 @@ export function createCommands(options: CommandsOptions): ChatCommands {
 			try {
 				await options.live.dispose(parsed.sessionId);
 			} finally {
-				if (wasLive) options.journal.announce(parsed.sessionId);
+				if (firstClose) options.journal.announce(parsed.sessionId);
 			}
 		},
 

@@ -67,6 +67,24 @@ describe("chat commands", () => {
 		await runtime.dispose();
 	});
 
+	test("closeSession reports a chat that no agent runs for", async () => {
+		const scopes: string[] = [];
+		const runtime = createTestRuntime({
+			harnesses: fakeHarnessRegistry(SCRIPT).harnesses,
+			onSessionChanged: ({ scopeId }) => {
+				scopes.push(scopeId);
+			},
+		});
+		const created = createSession(runtime, "workspace-2");
+		await runtime.live.dispose(created.sessionId);
+		scopes.length = 0;
+
+		await runtime.commands.closeSession({ sessionId: created.sessionId });
+
+		expect(scopes).toEqual(["workspace-2"]);
+		await runtime.dispose();
+	});
+
 	test("closeSession records whether a person closed the chat", async () => {
 		const { runtime } = newRuntime();
 		const byUser = createSession(runtime);
