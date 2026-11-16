@@ -14,15 +14,49 @@ describe("describeMoveError", () => {
 		expect(describeMoveError(MOVE_CANCELLED).reason).toBe(
 			"The move was cancelled.",
 		);
+	});
+
+	test("says a timed-out move timed out, not that it was cancelled", () => {
 		expect(describeMoveError("This operation was aborted").reason).toBe(
-			"The move was cancelled.",
+			"The move timed out.",
 		);
+	});
+
+	test("explains a host the relay cannot reach", () => {
+		expect(describeMoveError("Host is not online").reason).toBe(
+			"The workspace couldn't be reached. Check that it is running, then try again.",
+		);
+	});
+
+	test("explains a cloud workspace that is not running", () => {
+		expect(describeMoveError("The cloud workspace is stopped").reason).toBe(
+			"The cloud workspace is not running. Start it, then try again.",
+		);
+	});
+
+	test("drops a procedure path from a readable host error", () => {
+		const raw =
+			"teleport.prepareWorkspace: Moving a workspace needs a GitHub repository";
+		expect(describeMoveError(raw)).toEqual({
+			reason: "Moving a workspace needs a GitHub repository",
+			details: raw,
+		});
 	});
 
 	test("explains an unreachable move service", () => {
 		expect(describeMoveError("Moves refused the call (500)").reason).toBe(
 			"The move service couldn't be reached.",
 		);
+	});
+
+	test("explains a host too old for the move, keeping the stored text", () => {
+		const raw =
+			'teleport.importChat: No procedure found on path "teleport.importChat"';
+		expect(describeMoveError(raw)).toEqual({
+			reason:
+				"The other side of the move runs an older version. Restart a cloud workspace or update the device's host, then try again.",
+			details: raw,
+		});
 	});
 
 	test("explains a lost connection", () => {
@@ -33,9 +67,9 @@ describe("describeMoveError", () => {
 
 	test("keeps a message that is already readable", () => {
 		expect(
-			describeMoveError("Add acme/web as a project on this computer first"),
+			describeMoveError("Add acme/web as a project on this device first"),
 		).toEqual({
-			reason: "Add acme/web as a project on this computer first",
+			reason: "Add acme/web as a project on this device first",
 			details: null,
 		});
 	});

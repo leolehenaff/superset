@@ -3,13 +3,18 @@ import { chatItems, chatSessions } from "@superset/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { and, count, eq, inArray } from "drizzle-orm";
-import { callMoves, type SelectChatMove } from "../../lib/moves";
+import {
+	callMoves,
+	isUnknownMoveOp,
+	type SelectChatMove,
+} from "../../lib/moves";
 import { personProcedure, userError } from "../../trpc";
 import { loadChatHistory } from "../chat-history/utils/loadChatHistory";
 import {
+	chatMoveAttemptInputSchema,
 	chatMoveEventsInputSchema,
-	chatMoveInputSchema,
 	chatMoveOfChatInputSchema,
+	chatMovesWaitingOnHostInputSchema,
 	failChatMoveInputSchema,
 	retryChatMoveInputSchema,
 } from "./schema";
@@ -37,6 +42,27 @@ async function loadOwnMove(
 	if (!move || move.createdBy !== mover.userId)
 		throw new TRPCError({ code: "NOT_FOUND", message: "Move not found" });
 	return move;
+}
+
+/** A failed move whose chat did switch, as when its job stopped between the switch and recording it, is ready. */
+async function reconciled(move: SelectChatMove): Promise<SelectChatMove> {
+	if (move.status !== "failed") return move;
+	const chat = await db.query.chatSessions.findFirst({
+		where: eq(chatSessions.id, move.sessionId),
+		columns: { v2WorkspaceId: true },
+	});
+	if (chat?.v2WorkspaceId !== move.toWorkspaceId) return move;
+	const ready = await callMoves(move.organizationId, {
+		op: "reconcile",
+		id: move.id,
+	}).then(
+		(reply) => reply.ready,
+		(error: unknown) => {
+			if (isUnknownMoveOp(error)) return false;
+			throw error;
+		},
+	);
+	return ready ? { ...move, status: "ready", error: null } : move;
 }
 
 /** A claim whose answer was lost: the same owner may take up the copy again. */
@@ -83,12 +109,19 @@ export const chatMoveRouter = {
 		.input(chatMoveOfChatInputSchema)
 		.query(async ({ ctx, input }) => {
 			const mover = await moverOf(ctx);
-			const { move } = await callMoves(mover.organizationId, {
-				op: "latestChatMove",
-				sessionId: input.chatSessionId,
-				createdBy: mover.userId,
-			});
-			if (!move) return null;
+			const latestBy = async (createdBy: string | null) =>
+				(
+					await callMoves(mover.organizationId, {
+						op: "latestChatMove",
+						sessionId: input.chatSessionId,
+						createdBy,
+					})
+				).move;
+			const found =
+				(input.anyone ? await latestBy(null) : null) ??
+				(await latestBy(mover.userId));
+			if (!found) return null;
+			const move = await reconciled(found);
 			const [messages] = await db
 				.select({ value: count() })
 				.from(chatItems)
@@ -98,16 +131,41 @@ export const chatMoveRouter = {
 						inArray(chatItems.kind, MESSAGE_KINDS),
 					),
 				);
+			// Someone else's chat history is private: their move shows only where it stands.
+			const isMine = move.createdBy === mover.userId;
 			return {
 				id: move.id,
+				isMine,
 				status: move.status,
-				error: move.error,
+				error: isMine ? move.error : null,
 				fromWorkspaceId: move.fromWorkspaceId,
 				toWorkspaceId: move.toWorkspaceId,
-				toHostId: move.toHostId,
-				messageCount: messages?.value ?? 0,
+				toHostId: isMine ? move.toHostId : null,
+				messageCount: isMine ? (messages?.value ?? 0) : 0,
 				updatedAt: move.updatedAt,
 			};
+		}),
+
+	/**
+	 * The caller's moves to this computer that no run has finished, oldest
+	 * first, for its desktop to take up after a restart.
+	 */
+	waitingOnHost: personProcedure
+		.input(chatMovesWaitingOnHostInputSchema)
+		.query(async ({ ctx, input }) => {
+			const mover = await moverOf(ctx);
+			const { ids } = await callMoves(mover.organizationId, {
+				op: "waitingOnHost",
+				toHostId: input.hostId,
+				createdBy: mover.userId,
+			}).catch((error: unknown) => {
+				// Realtime deploys apart from the API and may not know this op yet.
+				if (error instanceof TRPCError && error.code === "BAD_REQUEST") {
+					return { ids: [] as string[] };
+				}
+				throw error;
+			});
+			return { moveIds: ids };
 		}),
 
 	/** Tries a failed move again, to the same workspace. */
@@ -131,13 +189,15 @@ export const chatMoveRouter = {
 	 * `events` pages through.
 	 */
 	claim: personProcedure
-		.input(chatMoveInputSchema)
+		.input(chatMoveAttemptInputSchema)
 		.mutation(async ({ ctx, input }) => {
 			const mover = await moverOf(ctx);
 			assertRunsOnComputer(await loadOwnMove(mover, input.moveId));
-			const move =
-				(await claimMove(mover.organizationId, input.moveId)) ??
-				(await reclaimedMove(mover, input.moveId));
+			// A desktop that names its attempt gets its copy back only from the move store; one that does not reclaims by owner.
+			const move = input.attemptId
+				? await claimMove(mover.organizationId, input.moveId, input.attemptId)
+				: ((await claimMove(mover.organizationId, input.moveId)) ??
+					(await reclaimedMove(mover, input.moveId)));
 			if (!move) {
 				throw new TRPCError({
 					code: "CONFLICT",
@@ -147,7 +207,7 @@ export const chatMoveRouter = {
 			try {
 				return await buildChatImportHeader(move);
 			} catch (error) {
-				await failChatMove(move, error);
+				await failChatMove(move, error, { attempt: input.attemptId });
 				throw error;
 			}
 		}),
@@ -186,7 +246,7 @@ export const chatMoveRouter = {
 	 * the copy left behind. The desktop starts the agent afterwards.
 	 */
 	complete: personProcedure
-		.input(chatMoveInputSchema)
+		.input(chatMoveAttemptInputSchema)
 		.mutation(async ({ ctx, input }) => {
 			const mover = await moverOf(ctx);
 			const move = await loadOwnMove(mover, input.moveId);
@@ -195,6 +255,7 @@ export const chatMoveRouter = {
 				move,
 				{ hostFor: workspaceHost },
 				{ kind: "computer" },
+				input.attemptId,
 			);
 			return { moveId: move.id };
 		}),
@@ -206,7 +267,9 @@ export const chatMoveRouter = {
 			const mover = await moverOf(ctx);
 			const move = await loadOwnMove(mover, input.moveId);
 			assertRunsOnComputer(move);
-			await failChatMove(move, new Error(input.error));
+			await failChatMove(move, new Error(input.error), {
+				attempt: input.attemptId,
+			});
 			return { moveId: move.id };
 		}),
 } satisfies TRPCRouterRecord;

@@ -9,6 +9,8 @@ interface DeadKey {
  * the writer.
  */
 export const DEAD_KEYS: DeadKey[] = [
+	// New workspace composer width; the resize handles were removed
+	{ key: "new-workspace-width", match: "exact" },
 	// The task page's inline agent picker; Start work opens New Workspace instead
 	{ key: "lastSelectedV2TaskAgent", match: "exact" },
 	{ key: "getting-started-v1", match: "exact" },

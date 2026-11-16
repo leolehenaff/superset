@@ -1,15 +1,11 @@
 import { cn } from "@superset/ui/utils";
-import {
-	createFileRoute,
-	Outlet,
-	useMatchRoute,
-	useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { CommandPaletteHost } from "renderer/commandPalette";
 import { Redirect } from "renderer/components/Redirect";
 import { useWorkspaceNamingFailedToast } from "renderer/hooks/host-service/useWorkspaceNamingFailedToast";
 import { useIsV2CloudEnabled } from "renderer/hooks/useIsV2CloudEnabled";
+import { useMatchRoute } from "renderer/hooks/useMatchRoute";
 import { useOpenNewWorkspace } from "renderer/hooks/useOpenNewWorkspace";
 import { useQuickCreateWorkspace } from "renderer/hooks/useQuickCreateWorkspace";
 import { useHotkey } from "renderer/hotkeys";
@@ -22,6 +18,7 @@ import {
 } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
 import { useHistoryNavigationShortcuts } from "renderer/routes/_authenticated/_dashboard/hooks/useHistoryNavigationShortcuts";
 import { useOpenNewWorkspaceInViewedProject } from "renderer/routes/_authenticated/_dashboard/hooks/useOpenNewWorkspaceInViewedProject";
+import { useResumeMovesToThisComputer } from "renderer/routes/_authenticated/_dashboard/hooks/useResumeMovesToThisComputer";
 import { useChatTabsStore } from "renderer/routes/_authenticated/_dashboard/stores/chatTabsStore";
 import { useCloudSidebarStore } from "renderer/routes/_authenticated/_dashboard/stores/cloudSidebarStore";
 import { useDevSeedV2Sidebar } from "renderer/routes/_authenticated/hooks/useDevSeedV2Sidebar";
@@ -133,6 +130,7 @@ function DashboardLayout() {
 	);
 	const openNewWorkspaceInViewedProject = useOpenNewWorkspaceInViewedProject();
 	useWorkspaceNamingFailedToast();
+	useResumeMovesToThisComputer();
 
 	const toggleWorkspaceSidebarCollapsed = useWorkspaceSidebarStore(
 		(s) => s.toggleCollapsed,

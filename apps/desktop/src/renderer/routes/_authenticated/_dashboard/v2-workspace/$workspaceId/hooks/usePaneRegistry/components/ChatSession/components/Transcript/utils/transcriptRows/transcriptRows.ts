@@ -16,7 +16,10 @@ import type {
 	TurnError,
 	UserMessage,
 } from "@superset/chat/protocol";
-import type { PageLink, PageLinkFinder } from "../../../../utils/pageLinks";
+import type {
+	PageLink,
+	PageLinkFinder,
+} from "../../../../../../utils/pageLinks";
 import {
 	changesFiles,
 	type TurnFileChange,
@@ -156,26 +159,8 @@ export function transcriptRows(
 			groupStart = false;
 		};
 		const turn = group.turn;
-		let clockPlaced = turn === null;
-		const placeClock = () => {
-			if (clockPlaced || !turn) return;
-			clockPlaced = true;
-			push({
-				kind: "working",
-				key: `working:${group.turnId}`,
-				groupStart,
-				startedAtMs: turn.startedAtMs,
-				completedAtMs: turn.completedAtMs,
-				running: turn.status === "running",
-				waiting: turn.status === "running" && group.entries.some(asksTheUser),
-				stopped: stoppedByUser(turn),
-			});
-		};
 		const turnSettled = turn !== null && turn.status !== "running";
 		const links = turnPageLinks(group.entries, turnSettled, findPageLinks);
-		const lastPrompt = group.entries.findLastIndex(
-			(entry) => entry.kind === "item" && entry.item.kind === "user_message",
-		);
 		const lastTools = group.entries.findLastIndex(
 			(entry) => entry.kind === "tool_run" || entry.item.kind === "tool_call",
 		);
@@ -256,7 +241,6 @@ export function transcriptRows(
 			push(run);
 		};
 		for (const [index, entry] of group.entries.entries()) {
-			if (index > lastPrompt) placeClock();
 			if (entry.kind === "user_stop") {
 				endRun();
 				push({
@@ -314,7 +298,6 @@ export function transcriptRows(
 			addTools(chunk, chunk, index);
 		}
 		unwrapLoneCall();
-		placeClock();
 		if (turn?.status === "running" && run && rows.at(-1) === run)
 			run.active = true;
 		const files = turnSettled ? turnChangedFiles(calls) : [];
@@ -330,6 +313,18 @@ export function transcriptRows(
 			};
 			if (lastReplyAt === -1) push(card);
 			else rows.splice(lastReplyAt + 1, 0, card);
+		}
+		if (turn) {
+			push({
+				kind: "working",
+				key: `working:${group.turnId}`,
+				groupStart,
+				startedAtMs: turn.startedAtMs,
+				completedAtMs: turn.completedAtMs,
+				running: turn.status === "running",
+				waiting: turn.status === "running" && group.entries.some(asksTheUser),
+				stopped: stoppedByUser(turn),
+			});
 		}
 		const stopShown =
 			turn !== null &&

@@ -14,7 +14,7 @@ import type {
 	ToolCall,
 	UserMessage,
 } from "@superset/chat/protocol";
-import { pageLinkFinder } from "../../../../utils/pageLinks";
+import { pageLinkFinder } from "../../../../../../utils/pageLinks";
 import { transcriptRows } from "./transcriptRows";
 
 const WEB_URL = "https://app.superset.sh";
@@ -104,8 +104,8 @@ describe("transcriptRows", () => {
 		);
 		expect(rows.map((row) => row.kind)).toEqual([
 			"item",
-			"working",
 			"item",
+			"working",
 			"turn_status",
 		]);
 		expect(rows.at(-1)).toMatchObject({
@@ -294,10 +294,10 @@ describe("transcriptRows", () => {
 
 		expect(rows.map((row) => row.kind)).toEqual([
 			"item",
-			"working",
 			"tool_run",
 			"item",
 			"changed_files",
+			"working",
 		]);
 		expect(
 			run?.kind === "tool_run" && run.steps.map((step) => step.id),
@@ -321,7 +321,7 @@ describe("transcriptRows", () => {
 		).toEqual(["client-1"]);
 	});
 
-	test("the turn clock sits under the prompt, above the agent's work", () => {
+	test("the turn clock sits at the end of the turn, under the agent's work", () => {
 		const turn: TurnGroup = {
 			turnId: "t1",
 			turn: { id: "t1", status: "running", startedAtMs: 2 },
@@ -334,7 +334,7 @@ describe("transcriptRows", () => {
 			],
 		};
 		const rows = transcriptRows([turn], [], new Set(), find);
-		expect(rows.map((row) => row.kind)).toEqual(["item", "working", "item"]);
+		expect(rows.map((row) => row.kind)).toEqual(["item", "item", "working"]);
 		expect(rows[0]?.groupStart).toBe(true);
 	});
 
@@ -365,32 +365,6 @@ describe("transcriptRows", () => {
 			).find((row) => row.kind === "working");
 		expect(held("pending")).toMatchObject({ running: true, waiting: true });
 		expect(held("answered")).toMatchObject({ running: true, waiting: false });
-	});
-
-	test("a message sent mid-turn moves the clock under it", () => {
-		const steer = { ...prompt, id: "u2", clientId: "c2" };
-		const rows = transcriptRows(
-			[
-				{
-					turnId: "t1",
-					turn: { id: "t1", status: "running", startedAtMs: 2 },
-					entries: [
-						{ kind: "item", item: prompt },
-						{ kind: "item", item: publish("b1", 3) },
-						{ kind: "item", item: steer },
-					],
-				},
-			],
-			[],
-			new Set(),
-			find,
-		);
-		expect(rows.map((row) => row.kind)).toEqual([
-			"item",
-			"item",
-			"item",
-			"working",
-		]);
 	});
 
 	test("thinking between tool calls folds into one run, and a lone call stays a row", () => {
@@ -643,7 +617,7 @@ test("a failed turn says its failure once, on the turn's own row, keeping the st
 	const rows = transcriptRows([failed], [], new Set(), find);
 	expect(
 		rows.map((row) => (row.kind === "item" ? row.item.id : row.kind)),
-	).toEqual(["item-1", "working", "n2", "turn_status"]);
+	).toEqual(["item-1", "n2", "working", "turn_status"]);
 	expect(rows.at(-1)).toMatchObject({
 		kind: "turn_status",
 		turnId: "t1",
@@ -695,9 +669,9 @@ describe("the changed-files card", () => {
 	test("closes a settled turn that edited files", () => {
 		expect(kinds([turnGroup("completed", [edit])])).toEqual([
 			"item-1",
-			"working",
 			"tool_run",
 			"changed_files",
+			"working",
 		]);
 		expect(kinds([turnGroup("interrupted", [edit])])).toContain(
 			"changed_files",

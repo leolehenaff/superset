@@ -11,8 +11,8 @@ import type {
 } from "@superset/chat/protocol";
 import { isImageAttachment } from "@superset/chat/protocol";
 import type { ReactNode } from "react";
+import type { PageLink } from "../../../../../../utils/pageLinks";
 import type { ChatForkTarget } from "../../../../types";
-import type { PageLink } from "../../../../utils/pageLinks";
 import { PageLinkCard } from "../../../PageLinkCard";
 import type { TranscriptRow } from "../../utils/transcriptRows";
 import { AttachmentRail, type RailImage } from "../AttachmentRail";
@@ -112,6 +112,9 @@ export function TurnGroupSection({
 				<div className="mt-2 flex items-center gap-2.5">
 					<AgentAvatar harness={harness} />
 					<WorkingFor
+						background={
+							row.running && snapshot.session?.awaitingBackground === true
+						}
 						completedAtMs={row.completedAtMs}
 						startedAtMs={row.startedAtMs}
 						stopped={row.stopped}

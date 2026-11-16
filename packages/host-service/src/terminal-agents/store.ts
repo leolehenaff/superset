@@ -315,6 +315,10 @@ export class TerminalAgentStore extends EventEmitter {
 		return [...this.chatByTerminal.values()];
 	}
 
+	getChatOrTerminalAgent(terminalId: string): TerminalAgentBinding | undefined {
+		return this.chatByTerminal.get(terminalId) ?? this.get(terminalId);
+	}
+
 	hasChat(terminalId: string): boolean {
 		return this.chatByTerminal.has(terminalId);
 	}

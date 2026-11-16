@@ -27,6 +27,7 @@ import { MessageScroller } from "@superset/chat-ui/MessageScroller";
 import type { ComposerDraft } from "@superset/chat-ui/PromptInput";
 import { ChatHistorySidebarScroller } from "@superset/ui/chat-history-sidebar";
 import { toast } from "@superset/ui/sonner";
+import { workspaceTrpc } from "@superset/workspace-client";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { env } from "renderer/env.renderer";
@@ -51,6 +52,8 @@ import { editableMessageIds, rewindTranscript } from "../../utils/messageEdit";
 import { modelDisplayName } from "../../utils/modelDisplayName";
 import { promptHistory } from "../../utils/promptHistory";
 import { railMessages } from "../../utils/railMessages";
+import { splitOutbox } from "../../utils/splitOutbox";
+import { unrunPrompt } from "../../utils/unrunPrompt";
 import {
 	type AgentChoice,
 	type AgentSwitcher,
@@ -64,6 +67,7 @@ import { SubagentView } from "../SubagentView";
 import { Transcript, type TranscriptHandle } from "../Transcript";
 import { useChildrenByParent } from "../Transcript/hooks/useChildrenByParent";
 import { NestedItemsProvider } from "../Transcript/providers/NestedItemsProvider";
+import { SessionModeProvider } from "../Transcript/providers/SessionModeProvider";
 import { TranscriptPluginsProvider } from "../Transcript/providers/TranscriptPluginsProvider";
 import {
 	type DrawerExit,
@@ -76,19 +80,20 @@ import {
 	type SwitchableAgent,
 	UsageLimitNotice,
 } from "./components/UsageLimitNotice";
+import { useAgentSignIn } from "./hooks/useAgentSignIn";
 import { useFailureRecovery } from "./hooks/useFailureRecovery";
 import { useLaunchPromptDelivered } from "./hooks/useLaunchPromptDelivered";
 import { useMainSend } from "./hooks/useMainSend";
-import { useManualSignIn } from "./hooks/useManualSignIn";
 import { useMoveToBackground } from "./hooks/useMoveToBackground";
 import { usePendingPrompts } from "./hooks/usePendingPrompts";
 import { useRestoreUnsentPrompts } from "./hooks/useRestoreUnsentPrompts";
+import { useStoredHistory } from "./hooks/useStoredHistory";
 import { useSubagentNavigation } from "./hooks/useSubagentNavigation";
 import { useSubagentTarget } from "./hooks/useSubagentTarget";
 import { escapeBack } from "./utils/escapeBack";
 import { settledToolCalls } from "./utils/settledToolCalls";
 import { setupEnvironmentId } from "./utils/setupEnvironmentLink";
-import { withStoredHistory } from "./utils/withStoredHistory";
+import { subagentsInTurn } from "./utils/subagentsInTurn";
 
 const RESUME_FOLLOW_PX = 24;
 const NO_COMMANDS: AvailableCommand[] = [];
@@ -244,13 +249,7 @@ export function SessionView({
 		}
 	}, [outbox]);
 	useRestoreUnsentPrompts(draftKey, outbox, draftOf);
-	const shownSnapshot = useMemo(
-		() =>
-			storedSnapshot
-				? withStoredHistory(storedSnapshot, session.snapshot)
-				: session.snapshot,
-		[storedSnapshot, session.snapshot],
-	);
+	const shownSnapshot = useStoredHistory(storedSnapshot, session.snapshot);
 	const timeline = useTimeline(shownSnapshot, { nestChildItems: true });
 	const rail = useStableList(
 		useMemo(() => railMessages(timeline), [timeline]),
@@ -284,12 +283,17 @@ export function SessionView({
 		() => findRunningTurnId(session.snapshot.turns),
 		[session.snapshot.turns],
 	);
-	const liveRefreshKey = useMemo(
-		() =>
-			settledToolCalls(
-				timeline.find((group) => group.turnId === runningTurnId),
-			),
+	const runningGroup = useMemo(
+		() => timeline.find((group) => group.turnId === runningTurnId),
 		[timeline, runningTurnId],
+	);
+	const liveRefreshKey = useMemo(
+		() => settledToolCalls(runningGroup),
+		[runningGroup],
+	);
+	const runningTurnSubagents = useMemo(
+		() => subagentsInTurn(runningGroup),
+		[runningGroup],
 	);
 	const turnChanges = useMemo<TurnChangesSource>(
 		() => ({
@@ -311,6 +315,9 @@ export function SessionView({
 		}),
 		[client, workspaceId],
 	);
+	const worktreePath = workspaceTrpc.workspace.get.useQuery({
+		id: workspaceId,
+	}).data?.worktreePath;
 	const sessionUsage = useMemo(
 		() => latestSessionUsage(session.snapshot.turns),
 		[session.snapshot.turns],
@@ -407,10 +414,13 @@ export function SessionView({
 		},
 		[onModeChange, setMode],
 	);
-	const editableIds = useMemo(
-		() => editableMessageIds(timeline, harness),
-		[timeline, harness],
+	const editableIdList = useStableList(
+		useMemo(
+			() => [...editableMessageIds(timeline, harness)],
+			[timeline, harness],
+		),
 	);
+	const editableIds = useMemo(() => new Set(editableIdList), [editableIdList]);
 	const editable = onEditMessage !== undefined && held === undefined;
 	const editMessage = useMemo(
 		() =>
@@ -547,9 +557,22 @@ export function SessionView({
 				: null,
 		[loaded, runningTurnId, awaitingBackground, cancelTurn, held],
 	);
+	const sentOutbox = useMemo(
+		() => splitOutbox(session.outbox, runningTurnId !== null),
+		[session.outbox, runningTurnId],
+	);
+	const sendingPrompts = useMemo(
+		() =>
+			sentOutbox.queue.filter(
+				(sending) =>
+					!queuedPrompts.some((prompt) => prompt.clientId === sending.clientId),
+			),
+		[sentOutbox.queue, queuedPrompts],
+	);
 	const promptQueue = useMemo(
 		() => ({
 			prompts: queuedPrompts,
+			sending: sendingPrompts,
 			paused: sessionState?.queuePaused === true,
 			pausedByLimit:
 				sessionState?.usageLimit !== undefined ||
@@ -563,6 +586,7 @@ export function SessionView({
 		}),
 		[
 			queuedPrompts,
+			sendingPrompts,
 			sessionState?.queuePaused,
 			sessionState?.usageLimit,
 			sessionState?.queuePausedByLimit,
@@ -617,16 +641,17 @@ export function SessionView({
 	const transcriptOutbox = useMemo(
 		() =>
 			heldOutbox.length > 0
-				? [...session.outbox, ...heldOutbox]
-				: session.outbox,
-		[session.outbox, heldOutbox],
+				? [...sentOutbox.transcript, ...heldOutbox]
+				: sentOutbox.transcript,
+		[sentOutbox.transcript, heldOutbox],
 	);
 	const booting = sessionState?.status === "starting";
 	const openModelPicker = useCallback(
 		() => composerRef.current?.openModelPicker(),
 		[],
 	);
-	const { manualSignIn, openAgentSettings } = useManualSignIn(presetId);
+	const { manualSignIn, openAgentSettings, agentSignIn } =
+		useAgentSignIn(presetId);
 	const { failureActions, onSetConfigOption, onModelPickerOpenChange } =
 		useFailureRecovery({
 			blocked:
@@ -639,6 +664,8 @@ export function SessionView({
 			configOptions,
 			manualSignIn,
 			openAgentSettings,
+			agentSignIn,
+			lastPrompt: unrunPrompt(timeline),
 			onRestartAndContinue,
 			onStartNewChat,
 			openModelPicker,
@@ -661,6 +688,7 @@ export function SessionView({
 			openLink={openLink}
 			getOpenFilePaths={getOpenFilePaths}
 			workspaceId={workspaceId}
+			worktreePath={worktreePath}
 		>
 			<ComposerDropZone
 				className="flex h-full min-h-0 w-full min-w-0 flex-col"
@@ -687,39 +715,41 @@ export function SessionView({
 					scrollPreviousItemPeek={0}
 				>
 					<div className="@container relative flex min-h-0 flex-1">
-						<TranscriptPluginsProvider value={plugins}>
-							<NestedItemsProvider value={nestedItems}>
-								{focusedSubagentId ? (
-									<SubagentView
-										itemId={focusedSubagentId}
-										queued={subagent.queued}
-									/>
-								) : (
-									<TurnFailureActionsProvider value={failureActions}>
-										<Transcript
-											approvals={approvals}
-											canForkToWorktree={canForkToWorktree}
-											groups={timeline}
-											hasOlder={session.hasOlder}
-											isActive={isActive}
-											onCloseFind={focusComposer}
-											onDiscardPrompt={session.discardPrompt}
-											onFork={onFork ? forkWithTranscript : undefined}
-											onLoadOlder={loadOlder}
-											onRequestItemBodies={session.requestItemBodies}
-											onRespond={onRespond}
-											onMessageRevealed={clearRevealMessage}
-											onRetryPrompt={session.retryPrompt}
-											outbox={transcriptOutbox}
-											ref={transcriptRef}
-											revealMessageId={revealMessageId}
-											sessionId={client.sessionId}
-											snapshot={shownSnapshot}
+						<SessionModeProvider value={sessionState?.modeId}>
+							<TranscriptPluginsProvider value={plugins}>
+								<NestedItemsProvider value={nestedItems}>
+									{focusedSubagentId ? (
+										<SubagentView
+											itemId={focusedSubagentId}
+											queued={subagent.queued}
 										/>
-									</TurnFailureActionsProvider>
-								)}
-							</NestedItemsProvider>
-						</TranscriptPluginsProvider>
+									) : (
+										<TurnFailureActionsProvider value={failureActions}>
+											<Transcript
+												approvals={approvals}
+												canForkToWorktree={canForkToWorktree}
+												groups={timeline}
+												hasOlder={session.hasOlder}
+												isActive={isActive}
+												onCloseFind={focusComposer}
+												onDiscardPrompt={session.discardPrompt}
+												onFork={onFork ? forkWithTranscript : undefined}
+												onLoadOlder={loadOlder}
+												onRequestItemBodies={session.requestItemBodies}
+												onRespond={onRespond}
+												onMessageRevealed={clearRevealMessage}
+												onRetryPrompt={session.retryPrompt}
+												outbox={transcriptOutbox}
+												ref={transcriptRef}
+												revealMessageId={revealMessageId}
+												sessionId={client.sessionId}
+												snapshot={shownSnapshot}
+											/>
+										</TurnFailureActionsProvider>
+									)}
+								</NestedItemsProvider>
+							</TranscriptPluginsProvider>
+						</SessionModeProvider>
 						{!focusedSubagentId && rail.length > 1 && (
 							<ChatHistorySidebarScroller
 								className="absolute inset-y-0 left-0 my-auto hidden h-fit max-h-full flex-col pl-3 @[56rem]:flex"
@@ -732,6 +762,9 @@ export function SessionView({
 				{!focusedSubagentId && (
 					<ComposerChips
 						backgroundTasks={sessionState?.backgroundTasks}
+						hiddenSubagents={
+							awaitingBackground ? undefined : runningTurnSubagents
+						}
 						liveRefreshKey={liveRefreshKey}
 						onMoveToBackground={onBackgroundSubagent}
 						onOpenSubagent={openSubagent}

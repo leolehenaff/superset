@@ -12,6 +12,7 @@ import {
 	beginWorkspaceMove,
 } from "../chat-move/utils/createWorkspaceMove";
 import { moverOf } from "../chat-move/utils/moverOf";
+import { failChatMove } from "../chat-move/utils/runChatMove";
 import { startChatMove } from "../chat-move/utils/startChatMove";
 import {
 	abandonWorkspaceMoveInputSchema,
@@ -47,8 +48,24 @@ export const workspaceMoveRouter = {
 			});
 			const started = [];
 			for (const move of moves) {
-				const { moveId } = await startChatMove(move);
-				started.push({ moveId, chatSessionId: move.sessionId });
+				const outcome = await startChatMove(move).catch(
+					async (error: unknown) => {
+						await failChatMove(move, error).catch((failError: unknown) =>
+							console.error(
+								`[workspace-move] could not fail move ${move.id}`,
+								failError,
+							),
+						);
+						skipped.push({ chatSessionId: move.sessionId, reason: "failed" });
+						return null;
+					},
+				);
+				if (outcome) {
+					started.push({
+						moveId: outcome.moveId,
+						chatSessionId: move.sessionId,
+					});
+				}
 			}
 			if (moves.length === 0 && !(await isProvisioning(input.toWorkspaceId))) {
 				await callMoves(mover.organizationId, {
@@ -63,13 +80,16 @@ export const workspaceMoveRouter = {
 			};
 		}),
 
-	/** Ends a begun move whose work could not be pushed or whose destination could not be made. */
+	/** Ends a begun move whose work could not be pushed or whose destination could not be made; its chats still moving fail. */
 	abandon: personProcedure
 		.input(abandonWorkspaceMoveInputSchema)
 		.mutation(async ({ ctx, input }) => {
 			const mover = await moverOf(ctx);
-			await abandonWorkspaceMove({ ...input, ...mover });
-			return { workspaceMoveId: input.workspaceMoveId };
+			const { movedChatSessionIds } = await abandonWorkspaceMove({
+				...input,
+				...mover,
+			});
+			return { workspaceMoveId: input.workspaceMoveId, movedChatSessionIds };
 		}),
 
 	/**
@@ -87,10 +107,16 @@ export const workspaceMoveRouter = {
 			if (!move || move.createdBy !== mover.userId) {
 				throw new TRPCError({ code: "NOT_FOUND", message: "Move not found" });
 			}
-			return callMoves(mover.organizationId, {
+			const { alive } = await callMoves(mover.organizationId, {
 				op: "touchWorkspaceMove",
 				id: input.workspaceMoveId,
-			}).then(({ alive }) => ({ alive }));
+			});
+			if (alive) return { alive, error: null };
+			const ended = await callMoves(mover.organizationId, {
+				op: "workspaceMove",
+				id: input.workspaceMoveId,
+			});
+			return { alive, error: ended.move?.error ?? null };
 		}),
 
 	/** The newest move out of or into a workspace, or null when it never moved. */
@@ -98,20 +124,26 @@ export const workspaceMoveRouter = {
 		.input(workspaceMoveOfWorkspaceInputSchema)
 		.query(async ({ ctx, input }) => {
 			const mover = await moverOf(ctx);
-			const { move, chats } = await callMoves(mover.organizationId, {
-				op: "latestWorkspaceMove",
-				workspaceId: input.workspaceId,
-				createdBy: mover.userId,
-			});
+			const latestBy = (createdBy: string | null) =>
+				callMoves(mover.organizationId, {
+					op: "latestWorkspaceMove",
+					workspaceId: input.workspaceId,
+					createdBy,
+				});
+			let found = input.anyone ? await latestBy(null) : null;
+			if (!found?.move) found = await latestBy(mover.userId);
+			const { move, chats } = found;
 			if (!move) return null;
+			const isMine = move.createdBy === mover.userId;
 			return {
 				id: move.id,
+				isMine,
 				status: move.status,
-				error: move.error,
+				error: isMine ? move.error : null,
 				fromWorkspaceId: move.fromWorkspaceId,
 				toWorkspaceId: move.toWorkspaceId,
-				toHostId: move.toHostId,
-				branch: move.branch,
+				toHostId: isMine ? move.toHostId : null,
+				branch: isMine ? move.branch : null,
 				chats,
 				createdAt: move.createdAt,
 			};

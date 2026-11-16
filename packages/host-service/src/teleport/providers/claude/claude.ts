@@ -21,12 +21,11 @@ const SESSION_DIR = "session";
  */
 export const claudeTeleportProvider: TeleportProvider = {
 	harnesses: ["claude-acp", "claude-code"],
+	terminalAgents: ["claude"],
 
 	async collect({ harnessSessionId, worktreePath, locate, stageDir }) {
 		const mainFile = await locate();
-		if (!mainFile) {
-			throw new Error("Could not find this conversation's Claude session file");
-		}
+		if (!mainFile) return null;
 		const sourceDir = dirname(mainFile);
 		const target = join(stageDir, SESSION_DIR);
 		await mkdir(target, { recursive: true });
