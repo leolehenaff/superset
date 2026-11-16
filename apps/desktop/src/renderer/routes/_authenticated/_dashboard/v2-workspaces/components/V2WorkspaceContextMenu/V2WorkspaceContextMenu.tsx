@@ -26,7 +26,10 @@ import { useHostUrl } from "renderer/hooks/host-service/useHostTargetUrl";
 import { useActiveOrganizationId } from "renderer/hooks/useActiveOrganizationId";
 import { useCopyToClipboard } from "renderer/hooks/useCopyToClipboard";
 import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
+import { CONTEXT_MENU_PARTS } from "renderer/lib/menuParts";
+import { WorkspaceMoveMenu } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceMoveMenu";
 import { useCopyShareLink } from "renderer/routes/_authenticated/_dashboard/hooks/useCopyShareLink";
+import { useWorkspaceMoveDirections } from "renderer/routes/_authenticated/_dashboard/hooks/useWorkspaceMoveDirections";
 import { useCloudSidebarStore } from "renderer/routes/_authenticated/_dashboard/stores/cloudSidebarStore";
 import { navigateToV2Workspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";
 import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
@@ -89,6 +92,7 @@ export function V2WorkspaceContextMenu({
 	const canRestore = isArchived && (isCloud || workspace.type !== "session");
 	const isRestoreBlocked = canRestore && !isCloud && !canReachHost;
 	const canRemoveFromSidebar = !(isCloud && workspace.isCreatedByCurrentUser);
+	const moveDirections = useWorkspaceMoveDirections(workspace.hostId);
 
 	// Opening the row is looking at it: the finished-unread mark clears the
 	// same way it does from the sidebar. Written once the navigation has
@@ -321,6 +325,21 @@ export function V2WorkspaceContextMenu({
 				) : null}
 				{isArchived ? null : (
 					<>
+						{moveDirections.length > 0 && (
+							<>
+								<ContextMenuSeparator />
+								<WorkspaceMoveMenu
+									parts={CONTEXT_MENU_PARTS}
+									workspace={{
+										id: workspace.id,
+										hostId: workspace.hostId,
+										projectId: workspace.projectId,
+										name: workspace.name,
+									}}
+									directions={moveDirections}
+								/>
+							</>
+						)}
 						<ContextMenuSeparator />
 						{workspace.isInSidebar ? (
 							canRemoveFromSidebar ? (
