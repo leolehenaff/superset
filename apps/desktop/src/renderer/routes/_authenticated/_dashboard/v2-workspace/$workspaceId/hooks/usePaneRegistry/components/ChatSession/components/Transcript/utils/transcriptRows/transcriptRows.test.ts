@@ -104,8 +104,8 @@ describe("transcriptRows", () => {
 		);
 		expect(rows.map((row) => row.kind)).toEqual([
 			"item",
-			"item",
 			"working",
+			"item",
 			"turn_status",
 		]);
 		expect(rows.at(-1)).toMatchObject({
@@ -294,10 +294,10 @@ describe("transcriptRows", () => {
 
 		expect(rows.map((row) => row.kind)).toEqual([
 			"item",
+			"working",
 			"tool_run",
 			"item",
 			"changed_files",
-			"working",
 		]);
 		expect(
 			run?.kind === "tool_run" && run.steps.map((step) => step.id),
@@ -321,7 +321,7 @@ describe("transcriptRows", () => {
 		).toEqual(["client-1"]);
 	});
 
-	test("the turn clock sits at the end of the turn, under the agent's work", () => {
+	test("the turn clock heads the turn, above the agent's work", () => {
 		const turn: TurnGroup = {
 			turnId: "t1",
 			turn: { id: "t1", status: "running", startedAtMs: 2 },
@@ -334,7 +334,7 @@ describe("transcriptRows", () => {
 			],
 		};
 		const rows = transcriptRows([turn], [], new Set(), find);
-		expect(rows.map((row) => row.kind)).toEqual(["item", "item", "working"]);
+		expect(rows.map((row) => row.kind)).toEqual(["item", "working", "item"]);
 		expect(rows[0]?.groupStart).toBe(true);
 	});
 
@@ -617,7 +617,7 @@ test("a failed turn says its failure once, on the turn's own row, keeping the st
 	const rows = transcriptRows([failed], [], new Set(), find);
 	expect(
 		rows.map((row) => (row.kind === "item" ? row.item.id : row.kind)),
-	).toEqual(["item-1", "n2", "working", "turn_status"]);
+	).toEqual(["item-1", "working", "n2", "turn_status"]);
 	expect(rows.at(-1)).toMatchObject({
 		kind: "turn_status",
 		turnId: "t1",
@@ -669,9 +669,9 @@ describe("the changed-files card", () => {
 	test("closes a settled turn that edited files", () => {
 		expect(kinds([turnGroup("completed", [edit])])).toEqual([
 			"item-1",
+			"working",
 			"tool_run",
 			"changed_files",
-			"working",
 		]);
 		expect(kinds([turnGroup("interrupted", [edit])])).toContain(
 			"changed_files",
