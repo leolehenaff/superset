@@ -278,7 +278,12 @@ export function createChatV3Mount(options: {
 					`[chat-v3] resumed ${update.resumed} chat(s) after the update`,
 				);
 			}
-			const waiting = [...restoreClosedChats(closedChatsPath), ...update.offer];
+			const waiting = [
+				...restoreClosedChats(closedChatsPath),
+				...update.offer,
+			].filter(
+				(chat) => !runtime().sessions.get(chat.sessionId)?.closedByUser,
+			);
 			for (const chat of waiting) {
 				closedChats.add(chat);
 				options.agents?.closedMidTurn(chat);
