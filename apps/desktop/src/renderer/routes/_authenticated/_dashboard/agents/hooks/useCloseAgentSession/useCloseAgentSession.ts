@@ -23,7 +23,7 @@ async function closeChatSession(hostUrl: string, sessionId: string) {
 				}),
 			],
 		});
-		await chatTransportFromTrpc(client).closeSession({ sessionId });
+		await chatTransportFromTrpc(client).closeSession({ sessionId, userClosed: true });
 	} catch (error) {
 		reopen();
 		throw error;
