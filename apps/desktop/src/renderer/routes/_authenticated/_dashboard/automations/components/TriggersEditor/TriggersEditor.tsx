@@ -114,7 +114,10 @@ export function TriggersEditor({
 	const providers = useMemo(() => {
 		const kinds = enabledTriggerKinds(enabledKinds);
 		return TRIGGER_PROVIDERS.filter(
-			(provider) => provider.kind === "schedule" || kinds.has(provider.kind),
+			(provider) =>
+				provider.kind === "schedule" ||
+				provider.kind === "webhook" ||
+				kinds.has(provider.kind),
 		);
 	}, [enabledKinds]);
 
