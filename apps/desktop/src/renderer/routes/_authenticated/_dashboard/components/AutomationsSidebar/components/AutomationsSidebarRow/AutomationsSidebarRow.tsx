@@ -12,11 +12,20 @@ import { cn } from "@superset/ui/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { memo } from "react";
 import { LuCloud } from "react-icons/lu";
+import { cloudTrpc } from "renderer/lib/cloud-trpc";
 import { AutomationGroupMenuItems } from "renderer/routes/_authenticated/_dashboard/automations/components/AutomationGroupMenuItems";
+import {
+	TRIGGER_PROVIDERS,
+	type TriggerProvider,
+} from "renderer/routes/_authenticated/_dashboard/automations/components/providers";
 import { RUN_STATUS_META } from "renderer/routes/_authenticated/_dashboard/automations/utils/runStatus";
 import type { AutomationLastRun } from "renderer/routes/_authenticated/_dashboard/hooks/useFailedAutomations";
 
 type AutomationListItem = RouterOutputs["automation"]["list"][number];
+
+const PROVIDER_BY_KIND = new Map<string, TriggerProvider>(
+	TRIGGER_PROVIDERS.map((provider) => [provider.kind, provider]),
+);
 
 interface AutomationsSidebarRowProps {
 	automation: AutomationListItem;
@@ -48,11 +57,19 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 		id: automation.id,
 		disabled: !editable,
 	});
+	const eventOnly = !automation.rrule && automation.triggerCount > 0;
 	const scheduleLabel = automation.rrule
 		? describeSchedule(automation.rrule)
-		: automation.triggerCount > 0
+		: eventOnly
 			? "Sur événement"
 			: "Aucun déclencheur";
+	const { data: detail } = cloudTrpc.automation.get.useQuery(
+		{ id: automation.id },
+		{ enabled: eventOnly },
+	);
+	const triggerKinds = eventOnly
+		? [...new Set(detail?.triggers.map((trigger) => trigger.kind))]
+		: [];
 	const nextRunAt =
 		automation.enabled && automation.nextRunAt
 			? new Date(automation.nextRunAt).getTime()
@@ -110,6 +127,12 @@ export const AutomationsSidebarRow = memo(function AutomationsSidebarRow({
 						) : null}
 					</div>
 					<div className="flex min-w-0 items-center gap-1 pl-3.5 text-[11px] text-muted-foreground">
+						{triggerKinds.map((kind) => {
+							const Icon = PROVIDER_BY_KIND.get(kind)?.icon;
+							return Icon ? (
+								<Icon key={kind} className="size-3 shrink-0 opacity-70" />
+							) : null;
+						})}
 						<span className="min-w-0 flex-1 truncate">
 							{showGroup && automation.group
 								? `${automation.group} · ${scheduleLabel}`
