@@ -1,6 +1,6 @@
 import type { WorkspaceStore } from "@superset/panes";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import type { PaneViewerData } from "renderer/routes/_authenticated/_dashboard/v2-workspace/$workspaceId/types";
+import type { PaneViewerData } from "renderer/routes/_authenticated/_dashboard/workspace/$workspaceId/types";
 import {
 	getV2PaneLayoutStore,
 	subscribeV2PaneLayoutStores,

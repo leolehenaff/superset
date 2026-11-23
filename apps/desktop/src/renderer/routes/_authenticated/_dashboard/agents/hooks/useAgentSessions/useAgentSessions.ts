@@ -7,10 +7,10 @@ import { useKnownHosts } from "renderer/hooks/known-hosts/useKnownHosts";
 import { useRelayUrl } from "renderer/hooks/useRelayUrl";
 import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
 import { derivePullRequestQueryTargets } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/hooks/useDashboardSidebarData/derivePullRequestQueryTargets";
-import { useAccessibleV2Workspaces } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
-import { WHERE_FILTER_ANYWHERE } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
+import { useAccessibleWorkspaces } from "renderer/routes/_authenticated/_dashboard/workspaces/hooks/useAccessibleWorkspaces";
+import { WHERE_FILTER_ANYWHERE } from "renderer/routes/_authenticated/_dashboard/workspaces/stores/workspacesFilterStore";
 import { useLocalHostService } from "renderer/routes/_authenticated/providers/LocalHostServiceProvider";
-import { useV2NotificationStore } from "renderer/stores/v2-notifications";
+import { useNotificationStore } from "renderer/stores/notifications";
 import type { PaneStatus } from "shared/tabs-types";
 
 export interface AgentSession {
@@ -56,7 +56,7 @@ export function useAgentSessions(): {
 	sessions: AgentSession[];
 	isReady: boolean;
 } {
-	const { all: workspaces, isReady } = useAccessibleV2Workspaces({
+	const { all: workspaces, isReady } = useAccessibleWorkspaces({
 		whereFilter: WHERE_FILTER_ANYWHERE,
 	});
 	const { machineId, activeHostUrl } = useLocalHostService();
@@ -125,9 +125,7 @@ export function useAgentSessions(): {
 		})),
 	});
 
-	const terminalSeenAt = useV2NotificationStore(
-		(state) => state.terminalSeenAt,
-	);
+	const terminalSeenAt = useNotificationStore((state) => state.terminalSeenAt);
 
 	const sessions = useMemo(() => {
 		const workspacesById = new Map(

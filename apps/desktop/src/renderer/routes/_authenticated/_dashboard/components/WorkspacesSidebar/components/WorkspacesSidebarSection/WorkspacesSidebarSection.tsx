@@ -2,9 +2,9 @@ import { i18n } from "@superset/i18n";
 import { cn } from "@superset/ui/utils";
 import { useState } from "react";
 import { LuChevronRight } from "react-icons/lu";
-import { BoardColumnIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/BoardColumnIcon";
-import { BOARD_COLUMN_LABELS } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/deriveBoardColumn";
-import type { StatusSection } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/groupByStatus";
+import { BoardColumnIcon } from "renderer/routes/_authenticated/_dashboard/workspaces/components/BoardColumnIcon";
+import { BOARD_COLUMN_LABELS } from "renderer/routes/_authenticated/_dashboard/workspaces/utils/deriveBoardColumn";
+import type { StatusSection } from "renderer/routes/_authenticated/_dashboard/workspaces/utils/groupByStatus";
 import { WorkspacesSidebarRow } from "../WorkspacesSidebarRow";
 
 interface WorkspacesSidebarSectionProps {

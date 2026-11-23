@@ -2,6 +2,7 @@ import path from "node:path";
 import { SUPPORTED_LOCALES } from "@superset/i18n/locales";
 import { ANDROID_APP, IOS_APP } from "@superset/shared/app-identity";
 import { BRAND } from "@superset/shared/brand";
+import { withOwnDomainTwins } from "@superset/shared/own-domains";
 import { config } from "dotenv";
 import type { ConfigContext } from "expo/config";
 import { withAndroidLabel } from "./config-plugins/withAndroidLabel";
@@ -20,20 +21,25 @@ if (process.env.MOBILE_EAS_BUILD !== "1") {
 }
 
 const webUrl = new URL(
-	process.env.EXPO_PUBLIC_WEB_URL || "https://app.superset.sh",
+	process.env.EXPO_PUBLIC_WEB_URL || "https://app.paradev.com",
 );
-const appLinksHost = webUrl.protocol === "https:" ? webUrl.hostname : undefined;
-const associatedDomains = appLinksHost && [`applinks:${appLinksHost}`];
+// Links already shared on the other own root domain must keep opening the app.
+const appLinksHosts =
+	webUrl.protocol === "https:" ? withOwnDomainTwins([webUrl.hostname]) : [];
+const associatedDomains =
+	appLinksHosts.length > 0 && appLinksHosts.map((host) => `applinks:${host}`);
 // Same paths as apple-app-site-association in apps/web.
-const appLinkIntentFilters = appLinksHost && [
+const appLinkIntentFilters = appLinksHosts.length > 0 && [
 	{
 		action: "VIEW",
 		autoVerify: true,
-		data: ["/page/", "/workspaces/"].map((pathPrefix) => ({
-			scheme: "https",
-			host: appLinksHost,
-			pathPrefix,
-		})),
+		data: appLinksHosts.flatMap((host) =>
+			["/page/", "/workspaces/"].map((pathPrefix) => ({
+				scheme: "https",
+				host,
+				pathPrefix,
+			})),
+		),
 		category: ["BROWSABLE", "DEFAULT"],
 	},
 ];
@@ -62,7 +68,8 @@ export default ({ config }: ConfigContext) => ({
 	orientation: "portrait",
 	icon: "./assets/icon.png",
 	userInterfaceStyle: "dark",
-	scheme: "superset",
+	// The first scheme is the one Linking.createURL emits.
+	scheme: ["superset", "paradev"],
 	runtimeVersion: { policy: "fingerprint" as const },
 	updates: {
 		url: "https://u.expo.dev/fa9332a8-896a-4d2a-be5b-d82469b46e5d",
@@ -100,7 +107,7 @@ export default ({ config }: ConfigContext) => ({
 			// went with `GlassComposer`. Without it `SFSpeechRecognizer`'s
 			// authorization request terminates the app.
 			NSSpeechRecognitionUsageDescription:
-				"Superset uses speech recognition to turn your voice into text.",
+				"Paradev uses speech recognition to turn your voice into text.",
 		},
 	},
 	android: {
@@ -169,11 +176,11 @@ export default ({ config }: ConfigContext) => ({
 			"expo-image-picker",
 			{
 				photosPermission:
-					"Superset needs access to your photo library so you can attach images to chat messages.",
+					"Paradev needs access to your photo library so you can attach images to chat messages.",
 				cameraPermission:
-					"Superset uses the camera so you can attach photos to chat messages.",
+					"Paradev uses the camera so you can attach photos to chat messages.",
 				microphonePermission:
-					"Superset uses the microphone so you can dictate chat messages.",
+					"Paradev uses the microphone so you can dictate chat messages.",
 			},
 		],
 		"expo-document-picker",
@@ -183,9 +190,9 @@ export default ({ config }: ConfigContext) => ({
 			"@config-plugins/react-native-webrtc",
 			{
 				cameraPermission:
-					"Superset uses the camera so you can attach photos to chat messages.",
+					"Paradev uses the camera so you can attach photos to chat messages.",
 				microphonePermission:
-					"Superset uses the microphone for voice mode and to dictate chat messages.",
+					"Paradev uses the microphone for voice mode and to dictate chat messages.",
 			},
 		],
 		["expo-notifications", { enableBackgroundRemoteNotifications: false }],

@@ -8,7 +8,7 @@ import { getHostServiceHeaders } from "renderer/lib/host-service-auth";
 import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
 import type { AgentSession } from "renderer/routes/_authenticated/_dashboard/agents/hooks/useAgentSessions";
 import { useNavigateAwayFromWorkspace } from "renderer/routes/_authenticated/_dashboard/components/DashboardSidebar/hooks/useNavigateAwayFromWorkspace";
-import { markChatSessionClosed } from "renderer/routes/_authenticated/_dashboard/v2-workspace/$workspaceId/utils/closedChatSessions";
+import { markChatSessionClosed } from "renderer/routes/_authenticated/_dashboard/workspace/$workspaceId/utils/closedChatSessions";
 import { closeTerminalPanes } from "renderer/routes/_authenticated/components/GlobalPaneLayoutRequests/hooks/usePaneLayoutRequests";
 import { useCollections } from "renderer/routes/_authenticated/providers/CollectionsProvider";
 
@@ -23,7 +23,10 @@ async function closeChatSession(hostUrl: string, sessionId: string) {
 				}),
 			],
 		});
-		await chatTransportFromTrpc(client).closeSession({ sessionId, userClosed: true });
+		await chatTransportFromTrpc(client).closeSession({
+			sessionId,
+			userClosed: true,
+		});
 	} catch (error) {
 		reopen();
 		throw error;

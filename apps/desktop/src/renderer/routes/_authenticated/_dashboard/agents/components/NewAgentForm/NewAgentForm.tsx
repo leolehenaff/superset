@@ -34,10 +34,10 @@ import {
 import { resolveProjectIconUrl } from "renderer/hooks/host-projects/resolveProjectIconUrl";
 import { useHostProjects } from "renderer/hooks/host-projects/useHostProjects";
 import { useAcpChatEnabled } from "renderer/hooks/useAcpChatEnabled";
-import { useV2AgentChoices } from "renderer/hooks/useV2AgentChoices";
+import { useAgentChoices } from "renderer/hooks/useAgentChoices";
 import { getHostServiceClientByUrl } from "renderer/lib/host-service-client";
 import { projectStripeColor } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
-import { navigateToV2Workspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";
+import { navigateToWorkspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";
 import { ProjectThumbnail } from "renderer/routes/_authenticated/components/ProjectThumbnail";
 import { useHostWorkspaces } from "renderer/routes/_authenticated/providers/HostWorkspacesProvider";
 import { useLocalHostService } from "renderer/routes/_authenticated/providers/LocalHostServiceProvider";
@@ -66,7 +66,7 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 	const { machineId, activeHostUrl } = useLocalHostService();
 	const { projects } = useHostProjects();
 	const { workspaces } = useHostWorkspaces();
-	const { agents } = useV2AgentChoices(activeHostUrl);
+	const { agents } = useAgentChoices(activeHostUrl);
 	const { submit } = useWorkspaceCreates();
 	const isDark = useIsDarkTheme();
 
@@ -166,7 +166,7 @@ export function NewAgentForm({ onDone }: NewAgentFormProps) {
 		onSuccess: ({ workspaceId, terminalId, chatSessionId }) => {
 			onDone();
 			localStorage.setItem("lastViewedWorkspaceId", workspaceId);
-			void navigateToV2Workspace(workspaceId, navigate, {
+			void navigateToWorkspace(workspaceId, navigate, {
 				search: {
 					...(chatSessionId ? { sessionId: chatSessionId } : { terminalId }),
 					focusRequestId: crypto.randomUUID(),

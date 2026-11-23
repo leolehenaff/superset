@@ -21,7 +21,7 @@ import {
 	groupSessionsByColumn,
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/agentColumns";
 import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
-import { useV2NotificationStore } from "renderer/stores/v2-notifications";
+import { useNotificationStore } from "renderer/stores/notifications";
 import { SidebarHeader } from "../SidebarHeader";
 import { AgentsSidebarRow } from "./components/AgentsSidebarRow";
 import { AgentsSidebarSection } from "./components/AgentsSidebarSection";
@@ -40,7 +40,7 @@ export function AgentsSidebar({ activeWorkspaceId }: AgentsSidebarProps) {
 	const byColumn = useMemo(() => groupSessionsByColumn(sessions), [sessions]);
 	const [isNewAgentOpen, setIsNewAgentOpen] = useState(false);
 	const [dragged, setDragged] = useState<AgentSession | null>(null);
-	const pruneTerminalSeen = useV2NotificationStore(
+	const pruneTerminalSeen = useNotificationStore(
 		(state) => state.pruneTerminalSeen,
 	);
 	// Distance keeps a plain click opening the workspace.

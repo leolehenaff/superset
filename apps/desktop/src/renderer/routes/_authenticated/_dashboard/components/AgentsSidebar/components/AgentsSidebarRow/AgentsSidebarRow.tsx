@@ -23,8 +23,8 @@ import {
 	projectStripeColor,
 } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
 import { StatusGlyph } from "renderer/routes/_authenticated/_dashboard/components/StatusGlyph";
-import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
-import { useV2NotificationStore } from "renderer/stores/v2-notifications";
+import { WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/workspaces/components/WorkspaceProjectIcon";
+import { useNotificationStore } from "renderer/stores/notifications";
 
 interface AgentsSidebarRowProps {
 	session: AgentSession;
@@ -42,7 +42,7 @@ export const AgentsSidebarRow = memo(function AgentsSidebarRow({
 		id: session.terminalId,
 		disabled: isOverlay || !canMarkForReview,
 	});
-	const pruneTerminalSeen = useV2NotificationStore(
+	const pruneTerminalSeen = useNotificationStore(
 		(state) => state.pruneTerminalSeen,
 	);
 	const navigate = useNavigate();
@@ -89,7 +89,7 @@ export const AgentsSidebarRow = memo(function AgentsSidebarRow({
 						/>
 					) : null}
 					<div className="flex min-w-0 items-center gap-2">
-						<V2WorkspaceProjectIcon
+						<WorkspaceProjectIcon
 							projectName={session.projectName ?? "Session"}
 							iconUrl={session.projectIconUrl}
 							size="sm"

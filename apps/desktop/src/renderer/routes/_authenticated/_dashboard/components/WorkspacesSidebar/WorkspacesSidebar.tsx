@@ -3,10 +3,10 @@ import { useMemo } from "react";
 import { LuPlus } from "react-icons/lu";
 import { useOpenNewWorkspace } from "renderer/hooks/useOpenNewWorkspace";
 import { APP_CHASSIS_BG_CLASS } from "renderer/routes/_authenticated/_dashboard/components/WorkspaceSidebarPanel";
-import { V2WorkspacesSortMenu } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspacesSortMenu";
-import { useFilteredV2Workspaces } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useFilteredV2Workspaces";
-import { useV2WorkspacesFilterStore } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/stores/v2WorkspacesFilterStore";
-import { groupByStatus } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/groupByStatus";
+import { V2WorkspacesSortMenu } from "renderer/routes/_authenticated/_dashboard/workspaces/components/V2WorkspacesSortMenu";
+import { useFilteredV2Workspaces } from "renderer/routes/_authenticated/_dashboard/workspaces/hooks/useFilteredV2Workspaces";
+import { useWorkspacesFilterStore } from "renderer/routes/_authenticated/_dashboard/workspaces/stores/workspacesFilterStore";
+import { groupByStatus } from "renderer/routes/_authenticated/_dashboard/workspaces/utils/groupByStatus";
 import { SidebarHeader } from "../SidebarHeader";
 import { WorkItemsSearch } from "../WorkItemsSearch";
 import { WorkspacesSidebarSection } from "./components/WorkspacesSidebarSection";
@@ -22,14 +22,12 @@ export function WorkspacesSidebar({
 	activeWorkspaceId,
 }: WorkspacesSidebarProps) {
 	const { workspaces, isReady } = useFilteredV2Workspaces();
-	const searchQuery = useV2WorkspacesFilterStore((state) => state.searchQuery);
-	const setSearchQuery = useV2WorkspacesFilterStore(
+	const searchQuery = useWorkspacesFilterStore((state) => state.searchQuery);
+	const setSearchQuery = useWorkspacesFilterStore(
 		(state) => state.setSearchQuery,
 	);
-	const showArchived = useV2WorkspacesFilterStore(
-		(state) => state.showArchived,
-	);
-	const orderBy = useV2WorkspacesFilterStore((state) => state.orderBy);
+	const showArchived = useWorkspacesFilterStore((state) => state.showArchived);
+	const orderBy = useWorkspacesFilterStore((state) => state.orderBy);
 	const sections = useMemo(
 		() => groupByStatus(workspaces, showArchived, orderBy),
 		[workspaces, showArchived, orderBy],

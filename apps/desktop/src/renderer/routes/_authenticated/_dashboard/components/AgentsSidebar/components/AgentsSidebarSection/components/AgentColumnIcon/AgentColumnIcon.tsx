@@ -1,5 +1,5 @@
 import { LuCircleX } from "react-icons/lu";
-import { BoardColumnIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/BoardColumnIcon";
+import { BoardColumnIcon } from "renderer/routes/_authenticated/_dashboard/workspaces/components/BoardColumnIcon";
 import type { PaneStatus } from "shared/tabs-types";
 
 export function AgentColumnIcon({

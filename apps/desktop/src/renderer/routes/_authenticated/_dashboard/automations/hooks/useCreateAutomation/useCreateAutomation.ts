@@ -5,8 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { GATED_FEATURES, usePaywall } from "renderer/components/Paywall";
 import { useRecentProjects } from "renderer/hooks/host-projects/useRecentProjects";
+import { useAgentChoices } from "renderer/hooks/useAgentChoices";
 import { useCreateAgentSession } from "renderer/hooks/useCreateAgentSession";
-import { useV2AgentChoices } from "renderer/hooks/useV2AgentChoices";
 import { apiTrpcClient } from "renderer/lib/api-trpc-client";
 import { cloudTrpc } from "renderer/lib/cloud-trpc";
 import { AGENT_STORAGE_KEY } from "renderer/routes/_authenticated/components/DashboardNewWorkspaceModal/components/DashboardNewWorkspaceForm/PromptGroup/types";
@@ -32,7 +32,7 @@ export function useCreateAutomation() {
 	const utils = cloudTrpc.useUtils();
 	const recentProjects = useRecentProjects();
 	const { machineId, activeHostUrl } = useLocalHostService();
-	const { agents: agentChoices } = useV2AgentChoices(activeHostUrl);
+	const { agents: agentChoices } = useAgentChoices(activeHostUrl);
 	const { createSession, isPending: isCreatingWithAgent } =
 		useCreateAgentSession();
 	// Automations are Pro. Creating, running, and resuming go through the

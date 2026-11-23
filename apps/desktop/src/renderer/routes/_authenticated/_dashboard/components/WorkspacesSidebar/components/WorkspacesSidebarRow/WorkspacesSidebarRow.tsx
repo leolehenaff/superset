@@ -3,11 +3,11 @@ import { cn } from "@superset/ui/utils";
 import { memo } from "react";
 import { LuGitBranch, LuSquareTerminal } from "react-icons/lu";
 import { projectStripeColor } from "renderer/routes/_authenticated/_dashboard/agents/utils/sessionVisuals";
-import { V2WorkspaceContextMenu } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceContextMenu";
-import { V2WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/V2WorkspaceProjectIcon";
-import { WorkspaceResourceMeters } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/components/WorkspaceResourceMeters";
-import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/hooks/useAccessibleV2Workspaces";
-import { workspaceActivityAt } from "renderer/routes/_authenticated/_dashboard/v2-workspaces/utils/sortWorkspaces";
+import { WorkspaceContextMenu } from "renderer/routes/_authenticated/_dashboard/workspaces/components/WorkspaceContextMenu";
+import { WorkspaceProjectIcon } from "renderer/routes/_authenticated/_dashboard/workspaces/components/WorkspaceProjectIcon";
+import { WorkspaceResourceMeters } from "renderer/routes/_authenticated/_dashboard/workspaces/components/WorkspaceResourceMeters";
+import type { AccessibleV2Workspace } from "renderer/routes/_authenticated/_dashboard/workspaces/hooks/useAccessibleWorkspaces";
+import { workspaceActivityAt } from "renderer/routes/_authenticated/_dashboard/workspaces/utils/sortWorkspaces";
 
 interface WorkspacesSidebarRowProps {
 	workspace: AccessibleV2Workspace;
@@ -24,7 +24,7 @@ export const WorkspacesSidebarRow = memo(function WorkspacesSidebarRow({
 	const hasDiff = !!diff && (diff.additions > 0 || diff.deletions > 0);
 
 	return (
-		<V2WorkspaceContextMenu workspace={workspace} isCurrentRoute={isActive}>
+		<WorkspaceContextMenu workspace={workspace} isCurrentRoute={isActive}>
 			{(actions) => (
 				<button
 					type="button"
@@ -51,7 +51,7 @@ export const WorkspacesSidebarRow = memo(function WorkspacesSidebarRow({
 						/>
 					) : null}
 					<div className="flex min-w-0 items-center gap-2">
-						<V2WorkspaceProjectIcon
+						<WorkspaceProjectIcon
 							projectName={workspace.projectName ?? workspace.name}
 							iconUrl={workspace.projectIconUrl}
 							size="sm"
@@ -107,6 +107,6 @@ export const WorkspacesSidebarRow = memo(function WorkspacesSidebarRow({
 					) : null}
 				</button>
 			)}
-		</V2WorkspaceContextMenu>
+		</WorkspaceContextMenu>
 	);
 });

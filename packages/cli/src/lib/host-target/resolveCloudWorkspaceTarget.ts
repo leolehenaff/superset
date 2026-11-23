@@ -4,6 +4,7 @@ import { resolveAppHomeDir } from "@superset/agent-setup/paths";
 import { CLIError } from "@superset/cli-framework";
 import type { AppRouter as HostServiceRouter } from "@superset/host-service/trpc";
 import { getHostId } from "@superset/shared/host-info";
+import { SUPERSET_LAUNCH_SOURCE_HEADER } from "@superset/shared/host-routing";
 import {
 	createSandboxAccess,
 	type SandboxGrant,
@@ -12,9 +13,10 @@ import { callWithWake } from "@superset/shared/sandbox/reach";
 import { createTRPCClient, httpBatchLink, TRPCClientError } from "@trpc/client";
 import SuperJSON from "superjson";
 import type { ApiClient } from "../api-client";
-import type {
-	HostServiceClient,
-	ResolvedHostTarget,
+import {
+	HOST_MAX_URL_LENGTH,
+	type HostServiceClient,
+	type ResolvedHostTarget,
 } from "./resolveHostTarget";
 
 type HostWorkspaceRows = Awaited<
@@ -123,7 +125,7 @@ async function askApi(
 			`Cloud workspace ${options.workspaceId}: ${error.message}`,
 			code === "TIMEOUT"
 				? "The sandbox is still starting; try again in a few seconds"
-				: "Check it with: superset workspaces list",
+				: "Check it with: paradev workspaces list",
 		);
 	}
 }
@@ -136,10 +138,12 @@ function targetFor(workspaceId: string, ticket: Ticket): ResolvedHostTarget {
 			links: [
 				httpBatchLink({
 					url: `${ticket.url}/trpc`,
+					maxURLLength: HOST_MAX_URL_LENGTH,
 					transformer: SuperJSON,
 					headers: {
 						Authorization: `Bearer ${ticket.token}`,
 						"x-superset-client-machine-id": getHostId(),
+						[SUPERSET_LAUNCH_SOURCE_HEADER]: "cli",
 					},
 				}),
 			],

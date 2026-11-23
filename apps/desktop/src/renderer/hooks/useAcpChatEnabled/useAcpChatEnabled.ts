@@ -5,6 +5,10 @@ export function useAcpChatEnabled(): boolean {
 	return useAcpChatStore((state) => state.enabled) !== false;
 }
 
+export function useAcpChatSettled(): boolean {
+	return useAcpChatStore.persist.hasHydrated();
+}
+
 export function useResolveAcpChatEnabled(): () => Promise<boolean> {
 	return useCallback(
 		() => Promise.resolve(useAcpChatStore.getState().enabled !== false),
