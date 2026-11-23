@@ -11,7 +11,7 @@ export const useParadevShellStore = create<ParadevShellState>()(
 	devtools(
 		persist(
 			(set) => ({
-				enabled: true,
+				enabled: false,
 				setEnabled: (enabled) => set({ enabled }),
 			}),
 			{ name: "paradev-shell" },
